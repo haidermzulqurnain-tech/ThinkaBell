@@ -1,0 +1,11 @@
+name = "thinkabell-edge-worker"
+main = "src/index.ts"
+compatibility_date = "2024-04-01"
+
+[placement]
+mode = "smart"
+
+# Route to intercept traffic on thinkabell.click
+# routes = [
+#   { pattern = "thinkabell.click/*", zone_name = "thinkabell.click" }
+# ]

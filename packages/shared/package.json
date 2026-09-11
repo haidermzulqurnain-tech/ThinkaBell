@@ -1,0 +1,20 @@
+{
+  "name": "@thinkabell/shared",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "lint": "echo 'shared: lint ok'"
+  },
+  "dependencies": {
+    "@thinkabell/config": "workspace:*",
+    "@thinkabell/database": "workspace:*",
+    "@upstash/redis": "^1.34.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "typescript": "^5.7.3"
+  }
+}

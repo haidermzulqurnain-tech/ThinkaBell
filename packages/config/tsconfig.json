@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@thinkabell/config": ["./src/index.ts"]
+    }
+  },
+  "include": ["src/**/*"]
+}

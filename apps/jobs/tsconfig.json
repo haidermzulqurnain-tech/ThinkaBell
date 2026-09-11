@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@thinkabell/jobs/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*", "trigger.config.ts"]
+}

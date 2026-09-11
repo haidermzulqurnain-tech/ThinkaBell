@@ -1,0 +1,10 @@
+{
+  "root": true,
+  "ignorePatterns": ["node_modules/", "dist/", ".next/", ".turbo/"],
+  "overrides": [
+    {
+      "files": ["apps/web/**/*.{ts,tsx}"],
+      "extends": ["next/core-web-vitals"]
+    }
+  ]
+}
