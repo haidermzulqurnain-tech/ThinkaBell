@@ -6,6 +6,7 @@ import { ArrowUpRight, TrendingDown } from "lucide-react";
 import type { Product } from "@thinkabell/shared";
 import { trackEvent } from "../lib/posthog";
 import { CompareToggle } from "./CompareToggle";
+import { fallbackImageUrl } from "../lib/fallbackImages";
 
 interface DealCardProps {
   product: Product;
@@ -19,10 +20,7 @@ export function DealCard({ product }: DealCardProps) {
     ? Math.round(((previousPrice - currentPrice) / previousPrice) * 100)
     : 0;
 
-  const fallbackImage =
-    product.category === "physical"
-      ? "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80"
-      : "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80";
+  const fallbackImage = fallbackImageUrl(product.category);
 
   const handleCardClick = () => {
     trackEvent("deal_card_click", {

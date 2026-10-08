@@ -1,6 +1,7 @@
 import { getSupabaseAnonClient } from "@thinkabell/database";
 import { redis } from "@thinkabell/shared";
 import type { Product } from "@thinkabell/shared";
+import { fallbackImageUrl } from "../lib/fallbackImages";
 import { DealCard } from "../components/DealCard";
 import { SubscribeCTA } from "../components/SubscribeCTA";
 import Link from "next/link";
@@ -154,7 +155,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <div className="flex items-start gap-4">
                     <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
                        <Image
-                         src={product.image_url || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=200&q=80"}
+                          src={product.image_url || fallbackImageUrl(product.category, 200)}
                          alt={product.name}
                          fill
                          sizes="64px"
@@ -208,7 +209,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <div className="flex flex-col lg:flex-row lg:items-center gap-6">
                <div className="relative h-48 sm:h-56 w-full lg:w-80 flex-shrink-0 overflow-hidden rounded-2xl bg-white shadow-sm">
                  <Image
-                   src={dealOfTheDay.image_url || "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80"}
+                    src={dealOfTheDay.image_url || fallbackImageUrl(dealOfTheDay.category, 800)}
                    alt={dealOfTheDay.name}
                    fill
                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 320px"

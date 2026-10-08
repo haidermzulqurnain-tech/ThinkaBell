@@ -10,6 +10,7 @@ import type { Product, PriceHistory } from "@thinkabell/shared";
 import { PriceHistoryChart } from "../../../components/PriceHistoryChart";
 import { ArrowLeft, ExternalLink, ShieldCheck, Tag, TrendingDown } from "lucide-react";
 import { getNonce } from "../../../lib/csp";
+import { fallbackImageUrl } from "../../../lib/fallbackImages";
 import { TransparencyBanner } from "../../../components/TransparencyBanner";
 import { DealCountdown } from "../../../components/DealCountdown";
 import { PromoCodeCopy } from "../../../components/PromoCodeCopy";
@@ -280,10 +281,7 @@ export default async function DealPage({ params }: DealPageProps) {
 
           <div className="relative h-full w-full">
             <Image
-              src={
-                product.image_url ||
-                "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80"
-              }
+              src={product.image_url || fallbackImageUrl(product.category, 800)}
               alt={product.name}
               fill
               priority
@@ -387,7 +385,7 @@ export default async function DealPage({ params }: DealPageProps) {
               >
                 <div className="relative h-32 w-full overflow-hidden rounded-xl bg-gray-100 mb-4">
                   <Image
-                    src={relatedProduct.image_url || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=400&q=80"}
+                    src={relatedProduct.image_url || fallbackImageUrl(relatedProduct.category, 400)}
                     alt={relatedProduct.name}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

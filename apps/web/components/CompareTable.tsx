@@ -7,13 +7,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowUpRight, Trophy, X } from "lucide-react";
 import type { Product } from "@thinkabell/shared";
 import { trackEvent } from "../lib/posthog";
+import { fallbackImageUrl } from "../lib/fallbackImages";
 
 interface CompareTableProps {
   products: Product[];
 }
-
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80";
 
 function formatPrice(price: number | null | undefined): string {
   return typeof price === "number" ? `$${price.toFixed(2)}` : "—";
@@ -80,7 +78,7 @@ export function CompareTable({ products }: CompareTableProps) {
                   >
                     <div className="relative h-32 w-full overflow-hidden rounded-xl bg-gray-100">
                       <Image
-                        src={product.image_url || FALLBACK_IMAGE}
+                        src={product.image_url || fallbackImageUrl(product.category)}
                         alt={product.name}
                         fill
                         sizes="(max-width: 768px) 50vw, 200px"

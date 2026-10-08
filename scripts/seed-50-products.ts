@@ -882,7 +882,7 @@ function generateSlugs(): ProductSeed[] {
   }));
 }
 
-const appUrl = env.NEXT_PUBLIC_APP_URL || "https://thinkabell.click";
+const appUrl = env.NEXT_PUBLIC_APP_URL;
 
 // Env-driven Amazon affiliate link. Fails closed to the plain product
 // URL when the partner tag is not configured — never a hardcoded tag.

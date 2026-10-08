@@ -135,7 +135,7 @@ export async function runSendAlerts(): Promise<{ processed: number; notification
 
     logger.info(`[sendAlerts] Processing ${alerts.length} pending alerts`);
 
-    const appUrl = env.NEXT_PUBLIC_APP_URL || "https://thinkabell.click";
+    const appUrl = env.NEXT_PUBLIC_APP_URL;
     let totalNotifications = 0;
     let failedCount = 0;
     const batchSize = 50;

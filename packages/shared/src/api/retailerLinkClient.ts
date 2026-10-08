@@ -11,7 +11,7 @@ export interface IRetailerLinkClient {
 export class RetailerLinkClient implements IRetailerLinkClient {
   async getAffiliateUrl(productId: number, retailer: RetailerType): Promise<string | null> {
     try {
-      const baseUrl = env.NEXT_PUBLIC_APP_URL || "https://thinkabell.click";
+      const baseUrl = env.NEXT_PUBLIC_APP_URL;
       const response = await fetch(`${baseUrl}/api/retailer-links?productId=${productId}&retailer=${retailer}`);
 
       if (!response.ok) {
@@ -28,7 +28,7 @@ export class RetailerLinkClient implements IRetailerLinkClient {
 
   async getSponsoredRetailer(productId: number): Promise<RetailerType | null> {
     try {
-      const baseUrl = env.NEXT_PUBLIC_APP_URL || "https://thinkabell.click";
+      const baseUrl = env.NEXT_PUBLIC_APP_URL;
       const response = await fetch(`${baseUrl}/api/retailer-links/sponsored?productId=${productId}`);
 
       if (!response.ok) {
@@ -45,7 +45,7 @@ export class RetailerLinkClient implements IRetailerLinkClient {
 
   async recordClick(linkId: number): Promise<void> {
     try {
-      const baseUrl = env.NEXT_PUBLIC_APP_URL || "https://thinkabell.click";
+      const baseUrl = env.NEXT_PUBLIC_APP_URL;
       await fetch(`${baseUrl}/api/retailer-links/${linkId}/click`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
