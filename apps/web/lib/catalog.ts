@@ -53,6 +53,7 @@ export interface DealItem {
 export interface SearchQuery {
   q?: string;
   category?: "physical" | "software";
+  deal_type?: string;
   min_discount?: number;
   cursor?: string;
 }
@@ -73,6 +74,10 @@ export async function searchProducts(query: SearchQuery): Promise<SearchResponse
 
   if (query.category) {
     dbQuery = dbQuery.eq("category", query.category);
+  }
+
+  if (query.deal_type) {
+    dbQuery = dbQuery.eq("deal_type", query.deal_type);
   }
 
   if (query.min_discount && Number.isFinite(query.min_discount)) {

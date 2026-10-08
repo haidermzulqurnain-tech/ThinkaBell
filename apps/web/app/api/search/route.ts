@@ -9,7 +9,6 @@ interface SearchParams {
   category?: "physical" | "software";
   deal_type?: string;
   min_discount?: number;
-  compatible_with?: string;
   cursor?: string;
 }
 
@@ -20,7 +19,6 @@ export async function GET(request: Request) {
     const category = normalizeCategory(url.searchParams.get("category"));
     const dealType = url.searchParams.get("deal_type")?.trim() || undefined;
     const minDiscount = url.searchParams.get("min_discount");
-    const compatibleWith = url.searchParams.get("compatible_with")?.trim() || undefined;
     const cursor = url.searchParams.get("cursor") || undefined;
 
     const forwardedFor = request.headers.get("x-forwarded-for");
@@ -39,13 +37,13 @@ export async function GET(request: Request) {
       category,
       deal_type: dealType,
       min_discount: minDiscount ? Number(minDiscount) : undefined,
-      compatible_with: compatibleWith,
       cursor,
     };
 
     const { count, results, nextCursor } = await searchProducts({
       q,
       category,
+      deal_type: dealType,
       min_discount: params.min_discount,
       cursor,
     });
