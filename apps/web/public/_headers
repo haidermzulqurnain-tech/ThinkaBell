@@ -1,0 +1,47 @@
+/*
+  Cloudflare _headers file for thinkabell.click
+  Place this in apps/web/public/_headers for Cloudflare to apply
+  Reference: https://developers.cloudflare.com/pages/platform/headers/
+*/
+
+/*
+  Security headers applied globally
+*/
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+*/
+
+/*
+  Cache static assets aggressively
+*/
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/images/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=3600
+
+/*
+  API routes should never be cached
+*/
+/api/*
+  Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate
+
+/*
+  HTML pages: cache at edge for 5 minutes, revalidate in background
+*/
+/*
+  HTML pages
+*/
+/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=60
+*/

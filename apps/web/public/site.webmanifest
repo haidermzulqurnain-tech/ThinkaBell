@@ -1,0 +1,21 @@
+{
+  "name": "ThinkaBell",
+  "short_name": "ThinkaBell",
+  "description": "Real-time deal alerts and price tracking for AI gadgets, smart home hardware, and developer software.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

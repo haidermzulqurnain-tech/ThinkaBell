@@ -7,12 +7,14 @@ import { logger } from "./logger";
  * @param identifier Unique rate-limiting key (e.g. `subscribe:${ip}`)
  * @param limit Maximum allowed requests within the window
  * @param windowSeconds Duration of the rate-limit window in seconds
+ * @param failClosed Optional. If true, returns false on Redis error instead of failing open
  * @returns boolean `true` if allowed, `false` if rate limit exceeded
  */
 export async function rateLimit(
   identifier: string,
   limit: number,
   windowSeconds: number,
+  failClosed = false,
 ): Promise<boolean> {
   const key = `ratelimit:${identifier}`;
 
@@ -20,7 +22,6 @@ export async function rateLimit(
     const current = await redis.incr(key);
 
     if (current === 1) {
-      // First hit in this window: set TTL
       await redis.expire(key, windowSeconds);
     }
 
@@ -32,7 +33,9 @@ export async function rateLimit(
     return true;
   } catch (error) {
     logger.error(`[RateLimit] Error checking rate limit for ${identifier}`, error);
-    // Fail-open strategy to prevent blocking legitimate users during cache degradation
+    if (failClosed) {
+      return false;
+    }
     return true;
   }
 }

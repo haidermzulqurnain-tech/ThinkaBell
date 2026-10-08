@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ArrowUpRight, TrendingDown } from "lucide-react";
 import type { Product } from "@thinkabell/shared";
 import { trackEvent } from "../lib/posthog";
+import { CompareToggle } from "./CompareToggle";
 
 interface DealCardProps {
   product: Product;
@@ -60,7 +61,6 @@ export function DealCard({ product }: DealCardProps) {
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
-          unoptimized
         />
       </Link>
 
@@ -86,7 +86,7 @@ export function DealCard({ product }: DealCardProps) {
         <div className="mt-auto pt-4 flex items-end justify-between border-t border-gray-100">
           <div>
             {hasDiscount && (
-              <p className="text-xs text-gray-400 line-through">
+              <p className="text-xs text-gray-500 line-through">
                 ${previousPrice.toFixed(2)}
               </p>
             )}
@@ -95,10 +95,14 @@ export function DealCard({ product }: DealCardProps) {
             </p>
           </div>
 
+          <div className="flex items-center gap-2">
+            <CompareToggle slug={product.slug} name={product.name} />
+          </div>
+
           <Link
             href={`/deal/${product.slug}`}
             onClick={handleCardClick}
-            className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-600 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-4 py-2.5 text-xs font-semibold text-blue-700 hover:bg-blue-600 hover:text-white transition-colors min-h-[44px]"
           >
             <span>View Deal</span>
             <ArrowUpRight className="h-3.5 w-3.5" />

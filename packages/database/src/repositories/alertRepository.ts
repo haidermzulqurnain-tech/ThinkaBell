@@ -11,20 +11,23 @@ export class AlertRepository {
    */
   static async enqueueAlert(
     productId: number,
+    subscriberId: number,
     oldPrice: number,
     newPrice: number,
     discountPercent: number,
   ): Promise<AlertQueueRow> {
     const supabase = getSupabaseServiceClient();
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from("alert_queue")
       .insert({
         product_id: productId,
+        subscriber_id: subscriberId,
         old_price: oldPrice,
         new_price: newPrice,
         discount_percent: discountPercent,
         sent: false,
-      })
+      }) as any)
+      .onConflict("product_id,subscriber_id,sent")
       .select()
       .single();
 

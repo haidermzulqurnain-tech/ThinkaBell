@@ -1,22 +1,27 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@thinkabell/database";
+import { getSupabaseAnonClient } from "@thinkabell/database";
 import { redis } from "@thinkabell/shared";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const startTime = Date.now();
-  let dbStatus = "ok";
-  let cacheStatus = "ok";
+  const checks: Record<string, string> = {};
+  let isHealthy = true;
 
   // 1. Check Supabase DB
   try {
+    const supabase = getSupabaseAnonClient();
     const { error } = await supabase.from("products").select("id").limit(1);
     if (error) {
-      dbStatus = `degraded: ${error.message}`;
+      checks.database = `degraded: ${error.message}`;
+      isHealthy = false;
+    } else {
+      checks.database = "ok";
     }
   } catch (err) {
-    dbStatus = `error: ${err instanceof Error ? err.message : "unreachable"}`;
+    checks.database = `error: ${err instanceof Error ? err.message : "unreachable"}`;
+    isHealthy = false;
   }
 
   // 2. Check Redis
@@ -24,13 +29,15 @@ export async function GET() {
     await redis.set("health-ping", "pong", { ex: 10 });
     const ping = await redis.get("health-ping");
     if (ping !== "pong") {
-      cacheStatus = "degraded: ping mismatch";
+      checks.cache = "degraded: ping mismatch";
+    } else {
+      checks.cache = "ok";
     }
   } catch (err) {
-    cacheStatus = `error: ${err instanceof Error ? err.message : "unreachable"}`;
+    checks.cache = `error: ${err instanceof Error ? err.message : "unreachable"}`;
+    isHealthy = false;
   }
 
-  const isHealthy = !dbStatus.startsWith("error");
   const responseTimeMs = Date.now() - startTime;
 
   return NextResponse.json(
@@ -38,10 +45,7 @@ export async function GET() {
       status: isHealthy ? "healthy" : "unhealthy",
       timestamp: new Date().toISOString(),
       responseTimeMs,
-      checks: {
-        database: dbStatus,
-        cache: cacheStatus,
-      },
+      checks,
     },
     { status: isHealthy ? 200 : 503 },
   );

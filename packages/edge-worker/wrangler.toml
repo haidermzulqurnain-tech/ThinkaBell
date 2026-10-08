@@ -5,6 +5,17 @@ compatibility_date = "2024-04-01"
 [placement]
 mode = "smart"
 
+# Required secrets (the worker fails closed with 5xx when unset):
+#   ORIGIN_URL      Hostinger origin base URL, e.g. https://thinkabell.click
+#   AMAZON_US_TAG   Affiliate tag for www.amazon.com
+#   AMAZON_GB_TAG   Affiliate tag for www.amazon.co.uk
+#   AMAZON_DE_TAG   Affiliate tag for www.amazon.de
+#   AMAZON_CA_TAG   Affiliate tag for www.amazon.ca
+# Set with: wrangler secret put <NAME>
+#
+# Optional:
+#   DEFAULT_COUNTRY  Fallback country code when Cloudflare provides none (default: US)
+
 # Route to intercept traffic on thinkabell.click
 # routes = [
 #   { pattern = "thinkabell.click/*", zone_name = "thinkabell.click" }

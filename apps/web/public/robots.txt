@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /subscribe/
+Disallow: /contact/
+Disallow: /alerts/
+Disallow: /unsubscribe/
+
+Sitemap: https://thinkabell.click/sitemap.xml

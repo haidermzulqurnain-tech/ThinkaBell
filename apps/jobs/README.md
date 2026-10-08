@@ -1,11 +1,11 @@
-# @thinkabell/jobs (Trigger.dev v3)
+# @thinkabell/jobs
 
 Background cron jobs for scheduled price tracking and alert notification dispatching.
 
 ## Jobs Included
 
 1. **`fetch-prices`**:
-   - Schedule: Every 15 minutes (`*/15 * * * *`)
+   - Schedule: Every 15 minutes via Vercel Cron or Supabase `pg_cron`
    - Queries tracked products from Supabase (Amazon ASIN or eBay EPID).
    - Concurrency-controlled via `p-limit` (10 concurrent requests).
    - Fetches live prices from Amazon PA-API 5.0 and eBay Browse API.
@@ -14,23 +14,25 @@ Background cron jobs for scheduled price tracking and alert notification dispatc
    - Proactively triggers `send-alerts` upon new drops.
 
 2. **`send-alerts`**:
-   - Schedule: Every 5 minutes (`*/5 * * * *`) or triggered immediately by `fetch-prices`.
+   - Schedule: Every 5 minutes via Vercel Cron or Supabase `pg_cron`
    - Reads pending alerts from `alert_queue`.
    - Filters subscribers by category preferences and minimum discount thresholds.
    - Dispatches browser push notifications via OneSignal REST API.
-   - Dispatches price drop email notifications via MailerLite API.
+   - Dispatches price drop email notifications via Brevo API.
    - Marks alerts as `sent = true` in Supabase.
 
 ## Local Development
 
 ```bash
 # In apps/jobs
-npx trigger.dev@latest dev
+pnpm dev
 ```
 
 ## Production Deployment
 
-```bash
-# In apps/jobs
-npx trigger.dev@latest deploy
-```
+Jobs are deployed as serverless functions via Vercel Cron or Supabase `pg_cron`. No separate job-runner deployment is required.
+
+## API Endpoints
+
+- `GET /api/cron/fetch-prices` — Vercel Cron endpoint for price fetching
+- `GET /api/cron/send-alerts` — Vercel Cron endpoint for alert dispatch

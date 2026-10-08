@@ -11,13 +11,36 @@
  * 7. Alert queue completion mark
  */
 
-import { supabase } from "../packages/database/src/client";
-import { notificationClient, redis, logger } from "../packages/shared/src";
+import { getSupabaseServiceClient } from "../packages/database/src/client";
+import {
+  AmazonAffiliateLinkError,
+  buildAmazonProductUrl,
+  generateAmazonAffiliateLink,
+  notificationClient,
+  redis,
+  logger,
+} from "../packages/shared/src";
+
+// Env-driven Amazon affiliate link; falls back to the plain product URL
+// when the partner tag is not configured (fail closed — never a
+// hardcoded tag).
+function amazonLink(asin: string): string {
+  try {
+    return generateAmazonAffiliateLink(asin);
+  } catch (error) {
+    if (error instanceof AmazonAffiliateLinkError) {
+      return buildAmazonProductUrl(asin);
+    }
+    throw error;
+  }
+}
 
 async function simulatePipeline() {
   console.log("=================================================");
   console.log("    ThinkaBell E2E Deal Alert Pipeline Test      ");
   console.log("=================================================\n");
+
+  const supabase = getSupabaseServiceClient();
 
   // Step 1: Query or initialize a test product
   console.log("[Step 1/6] Selecting test product...");
@@ -51,7 +74,7 @@ async function simulatePipeline() {
           previous_price: 2199.0,
           price_updated_at: new Date().toISOString(),
           image_url: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80",
-          affiliate_links: { amazon: "https://amazon.com/dp/B0CM5N4G3T?tag=thinkabell-20" },
+           affiliate_links: { amazon: amazonLink("B0CM5N4G3T") },
         },
         { onConflict: "slug" },
       )

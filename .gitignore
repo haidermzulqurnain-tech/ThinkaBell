@@ -14,6 +14,10 @@ dist-hostinger
 # Turborepo
 .turbo
 
+# Cloudflare Wrangler (local dev artifacts; may embed configured
+# partner tags and must never be committed)
+.wrangler
+
 # Trigger.dev
 .trigger
 
@@ -34,6 +38,7 @@ Thumbs.db
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
+.kilo/
 
 # Logs
 npm-debug.log*
@@ -43,3 +48,6 @@ pnpm-debug.log*
 
 # Sentry
 .sentry-native
+
+# WooCommerce backup archive
+thinkabell-woo-backup-*

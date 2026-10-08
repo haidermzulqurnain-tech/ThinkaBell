@@ -7,13 +7,15 @@
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@sentry/nextjs": "^8.54.0",
     "@thinkabell/config": "workspace:*",
     "@thinkabell/database": "workspace:*",
     "@thinkabell/shared": "workspace:*",
+    "@thinkabell/jobs": "workspace:*",
     "lucide-react": "^0.475.0",
     "next": "^14.2.24",
     "posthog-js": "^1.216.0",
@@ -30,6 +32,7 @@
     "eslint-config-next": "^14.2.24",
     "postcss": "^8.5.2",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.0"
   }
 }

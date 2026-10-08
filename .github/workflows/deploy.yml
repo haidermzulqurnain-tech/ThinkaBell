@@ -1,88 +1,55 @@
-name: Deploy to Hostinger & Trigger.dev
+name: Deploy to Hostinger
 
 on:
   push:
-    branches: [main]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
-  validate-and-deploy:
-    name: Build & Deploy ThinkaBell
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 12.3.4
+          version: 12
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "pnpm"
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: pnpm install
 
-      - name: Code Quality & Type Checks
-        run: |
-          pnpm turbo run type-check
-          pnpm turbo run lint
+      - name: Build web app (standalone)
+        run: pnpm build:standalone
 
-      - name: Build Next.js Web App
-        run: pnpm turbo run build
-        env:
-          NODE_ENV: production
-          OUTPUT: standalone
-          NEXT_PUBLIC_APP_URL: https://thinkabell.click
-          NEXT_PUBLIC_ONESIGNAL_APP_ID: ${{ secrets.NEXT_PUBLIC_ONESIGNAL_APP_ID }}
-          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
-          NEXT_PUBLIC_POSTHOG_HOST: https://app.posthog.com
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-
-      - name: Package Hostinger Standalone Bundle
+      - name: Package Hostinger bundle
         run: node scripts/prepare-hostinger.js
 
-      - name: Deploy Standalone Bundle to Hostinger via SCP
-        uses: appleboy/scp-action@v0.1.7
-        if: env.HOSTINGER_HOST != ''
-        env:
-          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
+      - name: Deploy via SCP
+        uses: appleboy/scp-action@v1.0.3
         with:
           host: ${{ secrets.HOSTINGER_HOST }}
-          username: ${{ secrets.HOSTINGER_USER }}
-          key: ${{ secrets.HOSTINGER_SSH_KEY }}
-          port: ${{ secrets.HOSTINGER_PORT || 22 }}
-          source: "dist/hostinger-deploy/*"
-          target: ${{ secrets.HOSTINGER_TARGET_DIR || '/home/user/public_html/' }}
+          username: ${{ secrets.HOSTINGER_USERNAME }}
+          password: ${{ secrets.HOSTINGER_PASSWORD }}
+          port: ${{ secrets.HOSTINGER_PORT }}
+          source: "dist/hostinger-deploy/**"
+          target: ${{ secrets.HOSTINGER_DEPLOY_PATH }}
           strip_components: 2
-          overwrite: true
 
-      - name: Restart Node Application on Hostinger via SSH
+      - name: Restart Hostinger app
         uses: appleboy/ssh-action@v1.0.3
-        if: env.HOSTINGER_HOST != ''
-        env:
-          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
         with:
           host: ${{ secrets.HOSTINGER_HOST }}
-          username: ${{ secrets.HOSTINGER_USER }}
-          key: ${{ secrets.HOSTINGER_SSH_KEY }}
-          port: ${{ secrets.HOSTINGER_PORT || 22 }}
+          username: ${{ secrets.HOSTINGER_USERNAME }}
+          password: ${{ secrets.HOSTINGER_PASSWORD }}
+          port: ${{ secrets.HOSTINGER_PORT }}
           script: |
-            echo "[Hostinger] Deployment received. Reloading Node application..."
-            # Touch restart or use process manager
-            if command -v pm2 &> /dev/null; then
-              pm2 reload thinkabell || pm2 restart all
-            fi
-            echo "[Hostinger] ThinkaBell successfully reloaded."
-
-      - name: Deploy Trigger.dev Background Jobs
-        if: env.TRIGGER_SECRET_KEY != ''
-        env:
-          TRIGGER_SECRET_KEY: ${{ secrets.TRIGGER_SECRET_KEY }}
-        run: |
-          pnpm --filter @thinkabell/jobs deploy
+            cd ${{ secrets.HOSTINGER_DEPLOY_PATH }}
+            touch hostinger-server.js

@@ -9,10 +9,16 @@ export interface SubscriberPreferences {
 
 export class SubscriberRepository {
   /**
-   * Register or update an alert subscriber by email
+   * Register or update an alert subscriber.
+   *
+   * `email` is the value to store (encrypted at the call site when
+   * ENCRYPTION_KEY is configured). `emailHash` is the blind index used as
+   * the unique upsert key (keyed HMAC-SHA256 in production, lower-case
+   * email in dev fallback).
    */
   static async upsertSubscriber(
     email: string,
+    emailHash: string,
     pushSubscriptionId?: string | null,
     preferences?: SubscriberPreferences,
   ): Promise<SubscriberRow> {
@@ -21,17 +27,18 @@ export class SubscriberRepository {
       .from("subscribers")
       .upsert(
         {
-          email: email.toLowerCase().trim(),
+          email,
+          email_hash: emailHash,
           push_subscription_id: pushSubscriptionId || null,
           preferences: preferences || { categories: ["physical", "software"], min_discount: 10 },
         },
-        { onConflict: "email" },
+        { onConflict: "email_hash" },
       )
       .select()
       .single();
 
     if (error) {
-      console.error(`[SubscriberRepository] Upsert error for ${email}:`, error.message);
+      console.error(`[SubscriberRepository] Upsert error for hash ${emailHash}:`, error.message);
       throw error;
     }
 
@@ -39,35 +46,43 @@ export class SubscriberRepository {
   }
 
   /**
-   * Fetch all subscribers eligible for an alert based on category and discount percent
+   * Fetch a subscriber by blind index (hashed email).
+   */
+  static async getSubscriberByEmailHash(emailHash: string): Promise<SubscriberRow | null> {
+    const supabase = getSupabaseAnonClient();
+    const { data, error } = await supabase
+      .from("subscribers")
+      .select("*")
+      .eq("email_hash", emailHash)
+      .maybeSingle();
+
+    if (error) {
+      console.error(`[SubscriberRepository] Lookup error for hash ${emailHash}:`, error.message);
+      return null;
+    }
+
+    return (data as SubscriberRow | null) ?? null;
+  }
+
+  /**
+   * Fetch all subscribers eligible for an alert based on category and discount percent.
+   * Filtering is performed server-side via the get_subscribers_for_alert RPC.
    */
   static async getSubscribersForAlert(
     category: ProductCategory,
     discountPercent: number,
   ): Promise<SubscriberRow[]> {
     const supabase = getSupabaseServiceClient();
-    const { data, error } = await supabase.from("subscribers").select("*");
+    const { data, error } = await supabase.rpc("get_subscribers_for_alert", {
+      p_category: category,
+      p_min_discount: discountPercent,
+    });
 
     if (error) {
       console.error("[SubscriberRepository] Error fetching subscribers:", error.message);
       return [];
     }
 
-    const subscribers = (data ?? []) as SubscriberRow[];
-
-    return subscribers.filter((sub) => {
-      const prefs = sub.preferences || {};
-      // Filter by category if specified
-      if (prefs.categories && Array.isArray(prefs.categories) && prefs.categories.length > 0) {
-        if (!prefs.categories.includes(category)) return false;
-      }
-
-      // Filter by minimum discount threshold if specified
-      if (typeof prefs.min_discount === "number" && prefs.min_discount > 0) {
-        if (discountPercent < prefs.min_discount) return false;
-      }
-
-      return true;
-    });
+    return (data ?? []) as SubscriberRow[];
   }
 }

@@ -62,8 +62,9 @@ export function Footer() {
           <p className="text-xs text-gray-500 leading-relaxed">
             <strong>Affiliate Disclosure:</strong> ThinkaBell is a reader-supported deal portal. When you purchase through links on our site, we may earn an affiliate commission at no additional cost to you. Amazon, the Amazon logo, and Amazon Associates are trademarks of Amazon.com, Inc. or its affiliates. eBay and the eBay logo are trademarks of eBay Inc.
           </p>
-          <p className="mt-4 text-xs text-gray-400">
+          <p className="mt-4 text-xs text-gray-500">
             &copy; {new Date().getFullYear()} ThinkaBell (thinkabell.click). All rights reserved.
+            <Link href="/legal/privacy-policy" className="ml-2 text-gray-500 hover:text-gray-600">Privacy Policy</Link>
           </p>
         </div>
       </div>

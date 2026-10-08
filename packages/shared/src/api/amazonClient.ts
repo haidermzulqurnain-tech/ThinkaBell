@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { env } from "@thinkabell/config";
 import { logger } from "../utils/logger";
+import { retryWithBackoff } from "../utils/retry";
 
 export interface IAmazonClient {
   getPrice(asin: string): Promise<number | null>;
@@ -75,8 +76,7 @@ class AmazonPaApiClient implements IAmazonClient {
 
   async getPrice(asin: string): Promise<number | null> {
     if (!this.hasCredentials()) {
-      logger.debug(`[AmazonClient] No API credentials found. Returning simulated price for ASIN: ${asin}`);
-      return this.simulatePrice(asin);
+      throw new Error("Amazon PA-API credentials are not configured");
     }
 
     const payload = JSON.stringify({
@@ -94,17 +94,26 @@ class AmazonPaApiClient implements IAmazonClient {
     const headers = this.generateHeaders(payload, target);
 
     try {
-      const response = await fetch(`https://${this.host}/paapi5/getitems`, {
-        method: "POST",
-        headers,
-        body: payload,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        logger.error(`[AmazonClient] PA-API request failed HTTP ${response.status}`, errorText);
-        return this.simulatePrice(asin);
-      }
+      const response = await retryWithBackoff(
+        () =>
+          fetch(`https://${this.host}/paapi5/getitems`, {
+            method: "POST",
+            headers,
+            body: payload,
+          }).then(async (res) => {
+            if (!res.ok) {
+              const errorText = await res.text();
+              const err = new Error(`HTTP ${res.status}: ${errorText}`) as Error & { status: number };
+              err.status = res.status;
+              throw err;
+            }
+            return res;
+          }),
+        {
+          maxAttempts: 3,
+          retryableStatuses: [429, 500, 502, 503, 504],
+        },
+      );
 
       const json = (await response.json()) as {
         ItemsResult?: {
@@ -126,21 +135,8 @@ class AmazonPaApiClient implements IAmazonClient {
       return typeof amount === "number" ? amount : null;
     } catch (error) {
       logger.error(`[AmazonClient] Network error fetching ASIN ${asin}:`, error);
-      return this.simulatePrice(asin);
+      throw error;
     }
-  }
-
-  /**
-   * Deterministic simulated price for development and mock pipeline tests
-   */
-  private simulatePrice(asin: string): number {
-    let hash = 0;
-    for (let i = 0; i < asin.length; i++) {
-      hash = (hash << 5) - hash + asin.charCodeAt(i);
-      hash |= 0;
-    }
-    const base = Math.abs(hash % 300) + 49.99;
-    return Math.round(base * 100) / 100;
   }
 }
 

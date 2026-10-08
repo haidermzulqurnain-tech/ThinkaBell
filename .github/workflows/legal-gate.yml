@@ -1,0 +1,63 @@
+name: Legal Compliance Gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  check-legal-pages:
+    name: Check Legal Pages Exist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Privacy Policy exists
+        run: |
+          if [ ! -f "apps/web/app/legal/privacy-policy/page.tsx" ]; then
+            echo "::error::Privacy Policy page is missing"
+            exit 1
+          fi
+
+      - name: Check Terms of Service exists
+        run: |
+          if [ ! -f "apps/web/app/legal/terms-of-service/page.tsx" ]; then
+            echo "::error::Terms of Service page is missing"
+            exit 1
+          fi
+
+      - name: Check Cookie Consent component exists
+        run: |
+          if [ ! -f "apps/web/components/CookieConsent.tsx" ]; then
+            echo "::error::Cookie Consent component is missing"
+            exit 1
+          fi
+
+  check-compliance-links:
+    name: Check Compliance Links in Footer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify footer contains legal links
+        run: |
+          if [ -f "apps/web/app/layout.tsx" ]; then
+            if ! grep -q "privacy-policy" apps/web/app/layout.tsx && \
+               ! grep -q "terms-of-service" apps/web/app/layout.tsx; then
+              echo "::warning::Footer should contain links to Privacy Policy and Terms of Service"
+            fi
+          fi
+
+  check-data-retention:
+    name: Check Data Retention Policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify data retention policy exists
+        run: |
+          if [ ! -f "docs/DATA_RETENTION.md" ]; then
+            echo "::error::Data Retention policy is missing"
+            exit 1
+          fi

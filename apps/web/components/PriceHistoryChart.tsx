@@ -11,26 +11,23 @@ interface PriceHistoryChartProps {
 export function PriceHistoryChart({ history, currentPrice }: PriceHistoryChartProps) {
   const [hoveredPoint, setHoveredPoint] = useState<{ price: number; date: string; source: string } | null>(null);
 
-  // If no historical data points exist yet, synthesize an entry with current price
-  const points =
-    history.length > 0
-      ? history
-      : [
-          {
-            id: 1,
-            product_id: 1,
-            price: currentPrice * 1.15,
-            source: "historic",
-            recorded_at: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
-          },
-          {
-            id: 2,
-            product_id: 1,
-            price: currentPrice,
-            source: "current",
-            recorded_at: new Date().toISOString(),
-          },
-        ];
+  // If no historical data points exist yet, show empty state
+  if (history.length === 0) {
+    return (
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mb-4">
+          <h3 className="text-base font-bold text-gray-900">Price History</h3>
+          <p className="text-xs text-gray-500">Tracked price fluctuations over time</p>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <p className="text-sm text-gray-500">No price history available yet.</p>
+          <p className="text-xs text-gray-400 mt-1">Price tracking begins after the first price fetch.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const points = history;
 
   const prices = points.map((p) => p.price);
   const minPrice = Math.min(...prices, currentPrice);

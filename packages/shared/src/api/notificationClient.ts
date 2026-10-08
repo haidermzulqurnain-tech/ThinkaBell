@@ -10,12 +10,16 @@ export interface INotificationClient {
 class NotificationClient implements INotificationClient {
   private oneSignalAppId: string;
   private oneSignalApiKey: string;
-  private mailerLiteApiKey: string;
+  private brevoApiKey: string;
+  private brevoSenderEmail: string;
+  private brevoSenderName: string;
 
   constructor() {
     this.oneSignalAppId = env.ONESIGNAL_APP_ID || env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
     this.oneSignalApiKey = env.ONESIGNAL_REST_API_KEY;
-    this.mailerLiteApiKey = env.MAILERLITE_API_KEY;
+    this.brevoApiKey = env.BREVO_API_KEY;
+    this.brevoSenderEmail = env.BREVO_SENDER_EMAIL;
+    this.brevoSenderName = env.BREVO_SENDER_NAME;
   }
 
   /**
@@ -23,13 +27,7 @@ class NotificationClient implements INotificationClient {
    */
   async sendPush(subscriptionIdOrPlayerId: string, payload: PushNotificationPayload): Promise<boolean> {
     if (!this.oneSignalAppId || !this.oneSignalApiKey) {
-      logger.info("[NotificationClient:Push] (Simulation) OneSignal push sent:", {
-        recipient: subscriptionIdOrPlayerId,
-        title: payload.title,
-        message: payload.message,
-        url: payload.url,
-      });
-      return true;
+      throw new Error("OneSignal credentials are not configured");
     }
 
     try {
@@ -65,20 +63,14 @@ class NotificationClient implements INotificationClient {
   }
 
   /**
-   * Dispatch email notification via MailerLite API
+   * Dispatch email notification via Brevo API
    */
   async sendEmail(email: string, payload: EmailNotificationPayload): Promise<boolean> {
-    if (!this.mailerLiteApiKey) {
-      logger.info("[NotificationClient:Email] (Simulation) MailerLite email sent:", {
-        recipient: email,
-        subject: payload.subject,
-        body: payload.body.substring(0, 100) + "...",
-      });
-      return true;
+    if (!this.brevoApiKey) {
+      throw new Error("Brevo API key is not configured");
     }
 
     try {
-      // MailerLite transactional / subscriber campaign dispatch
       const htmlContent =
         payload.html ||
         `
@@ -98,26 +90,34 @@ class NotificationClient implements INotificationClient {
           <p style="font-size: 12px; color: #9ca3af; margin-top: 12px;">
             You received this email because you subscribed to ThinkaBell deal alerts.
           </p>
+          <p style="font-size: 11px; color: #9ca3af; margin-top: 8px;">
+            <a href="${env.NEXT_PUBLIC_APP_URL}/unsubscribe?email=${email}" style="color: #6b7280;">Unsubscribe</a> from deal alerts.
+          </p>
         </div>
       `;
 
-      const response = await fetch("https://connect.mailerlite.com/api/messages", {
+      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          Authorization: `Bearer ${this.mailerLiteApiKey}`,
+          "api-key": this.brevoApiKey,
         },
         body: JSON.stringify({
-          to: email,
+          sender: { email: this.brevoSenderEmail, name: this.brevoSenderName },
+          to: [{ email }],
           subject: payload.subject,
-          html: htmlContent,
+          htmlContent,
+          headers: {
+            "List-Unsubscribe": `<${env.NEXT_PUBLIC_APP_URL}/unsubscribe?email=${encodeURIComponent(email)}>`,
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+          },
         }),
       });
 
       if (!response.ok) {
-        // Some accounts use the subscribers API to trigger automated flows
-        logger.warn(`[NotificationClient:Email] MailerLite API responded with status ${response.status}`);
+        const errorText = await response.text();
+        logger.warn(`[NotificationClient:Email] Brevo API responded with status ${response.status}: ${errorText}`);
         return false;
       }
 

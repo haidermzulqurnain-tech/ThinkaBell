@@ -41,7 +41,7 @@ console.log("==========================================");
 
 if (!fs.existsSync(STANDALONE_DIR)) {
   console.error("❌ Standalone build not found at:", STANDALONE_DIR);
-  console.error("   Run `pnpm --filter @thinkabell/web build` first.");
+  console.error("   Run `pnpm build:standalone` first (a plain build does not emit .next/standalone).");
   process.exit(1);
 }
 

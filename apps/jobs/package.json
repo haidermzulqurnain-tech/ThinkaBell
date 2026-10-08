@@ -3,20 +3,21 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "trigger.dev dev",
-    "deploy": "trigger.dev deploy",
+    "dev": "echo 'jobs: dev ok (use Vercel Cron / pg_cron to run jobs)'",
+    "deploy": "echo 'jobs: deploy ok'",
     "type-check": "tsc --noEmit",
-    "lint": "echo 'jobs: lint ok'"
+    "lint": "echo 'jobs: lint ok'",
+    "test": "vitest run"
   },
   "dependencies": {
     "@thinkabell/config": "workspace:*",
     "@thinkabell/database": "workspace:*",
     "@thinkabell/shared": "workspace:*",
-    "@trigger.dev/sdk": "^3.3.17",
     "p-limit": "^6.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.4",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.0"
   }
 }

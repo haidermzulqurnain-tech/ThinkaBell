@@ -3,7 +3,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@thinkabell/jobs": ["../../apps/jobs/src/index.ts"]
     },
     "jsx": "preserve",
     "plugins": [
