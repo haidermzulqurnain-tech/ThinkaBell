@@ -17,14 +17,30 @@ process.env.HOSTNAME = HOSTNAME;
 
 console.log(`[Hostinger] Starting ThinkaBell server on http://${HOSTNAME}:${PORT}`);
 
-// Path to standalone server created by Next.js
-const standaloneServerPath = path.join(__dirname, ".next", "standalone", "apps", "web", "server.js");
+// Path to standalone server created by Next.js.
+// Two layouts are supported:
+// 1. Deployed Hostinger bundle: prepare-hostinger.js copies the standalone
+//    output to the bundle root, so the server lives at apps/web/server.js
+//    relative to this file.
+// 2. Repository checkout after `pnpm build:standalone`: the server lives
+//    under .next/standalone/apps/web/server.js.
+const bundleServerPath = path.join(__dirname, "apps", "web", "server.js");
+const repoServerPath = path.join(
+  __dirname,
+  ".next",
+  "standalone",
+  "apps",
+  "web",
+  "server.js",
+);
 const localServerPath = path.join(__dirname, "server.js");
 
 let serverEntry = null;
 
-if (fs.existsSync(standaloneServerPath)) {
-  serverEntry = standaloneServerPath;
+if (fs.existsSync(bundleServerPath)) {
+  serverEntry = bundleServerPath;
+} else if (fs.existsSync(repoServerPath)) {
+  serverEntry = repoServerPath;
 } else if (fs.existsSync(localServerPath)) {
   serverEntry = localServerPath;
 } else {
@@ -36,6 +52,9 @@ if (fs.existsSync(standaloneServerPath)) {
 if (serverEntry) {
   console.log(`[Hostinger] Loading server bundle from: ${serverEntry}`);
   require(serverEntry);
+} else {
+  console.error("[Hostinger] No server entry point found. Expected apps/web/server.js (deployed bundle) or .next/standalone/apps/web/server.js (repository build).");
+  process.exit(1);
 }
 
 // Graceful shutdown handling
