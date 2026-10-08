@@ -16,6 +16,7 @@
     "prepare:hostinger": "node scripts/prepare-hostinger.js",
     "build:standalone": "node scripts/build-standalone.js",
     "package:hostinger": "pnpm build:standalone && node scripts/prepare-hostinger.js",
+    "verify:hostinger": "tsx scripts/verify-hostinger-deploy.ts",
     "simulate": "tsx scripts/simulate-pipeline.ts",
     "clean": "turbo run clean"
   },

@@ -51,6 +51,9 @@ jobs:
       - name: Package Hostinger bundle
         run: node scripts/prepare-hostinger.js
 
+      - name: Verify Hostinger bundle
+        run: pnpm tsx scripts/verify-hostinger-deploy.ts
+
       - name: Deploy via SCP
         uses: appleboy/scp-action@v1.0.0
         with:

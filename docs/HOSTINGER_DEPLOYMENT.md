@@ -125,3 +125,41 @@ In the Hostinger Node.js control panel (**Environment** section), add the variab
 1. In the Hostinger Node.js panel, click **Run** or **Restart Application**.
 2. Visit `https://thinkabell.click/api/health` to confirm the server, database connection, and Redis cache are green (`200 OK`).
 3. Visit `https://thinkabell.click` to test deal browsing, search, and subscriptions.
+
+---
+
+## Troubleshooting
+
+### "Linked the GitHub repo in hPanel" is not enough
+
+Hostinger's **native GitHub integration** (hPanel → GitHub → connect repo) only pulls the repository files — it does **not** run `pnpm install` or `pnpm build:standalone`. ThinkaBell is a Next.js App Router monorepo that must be compiled into a standalone server before it can run, so a raw repo checkout has no `node_modules` and no `.next/standalone` output, and `hostinger-server.js` cannot start. This is the most common cause of a failed Hostinger deploy.
+
+**Use the GitHub Actions workflow instead** (`.github/workflows/deploy.yml`), which builds, packages, and uploads the standalone bundle to Hostinger over SCP. To enable it:
+
+1. In GitHub, go to **repo Settings → Secrets and variables → Actions** and add the five deploy secrets:
+   - `HOSTINGER_HOST` — your Hostinger server IP/hostname (hPanel → Hosting → SSH/FTP details)
+   - `HOSTINGER_USERNAME` — SSH username
+   - `HOSTINGER_PASSWORD` — SSH password
+   - `HOSTINGER_PORT` — SSH port (usually `65002` on Hostinger)
+   - `HOSTINGER_DEPLOY_PATH` — absolute path to the app directory on the server (e.g. `/home/u123456789/domains/thinkabell.click/public_html`)
+2. Push to `main` (or run **Actions → Deploy to Hostinger → Run workflow**).
+
+The workflow fails fast if any secret is missing, then builds the standalone bundle, packages `dist/hostinger-deploy/`, verifies it, uploads it via SCP, and touches `hostinger-server.js` to trigger a restart.
+
+### Preflight check
+
+Run the fail-closed preflight checker locally to see exactly what is missing before you deploy:
+
+```bash
+pnpm verify:hostinger
+```
+
+It reports `[PASS]`/`[WARN]`/`[FAIL]` for the standalone build, entrypoint, packaged bundle, runtime environment variables, and deploy-workflow secrets, and exits non-zero if the bundle would ship broken.
+
+### App starts but `/api/health` is unhealthy
+
+The server is up but a fail-closed integration is unconfigured. Set the **Core**, **Security**, **Notifications**, and **Affiliate** variables in Step 4 on the Hostinger Node.js panel (**Environment** section), then **Restart Application**. The most common gaps are `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY` (database) and `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` (cache).
+
+### GitHub Pages vs Hostinger
+
+GitHub Pages (`https://<user>.github.io/ThinkaBell/`) only serves static files. ThinkaBell needs a Node.js runtime (API routes, middleware, server components, ISR), so GitHub Pages cannot run the full app — it is a static preview at best. Hostinger Node.js hosting is the production target.
