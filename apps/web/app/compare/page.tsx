@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CompareTable } from "@/components/CompareTable";
 import { getNonce } from "@/lib/csp";
+import { getCompareProducts } from "@/lib/compare";
 import { Scale } from "lucide-react";
 import type { Metadata } from "next";
 import type { Product } from "@thinkabell/shared";
@@ -15,19 +16,11 @@ interface ComparePageProps {
 async function fetchCompareProducts(
   searchParams: ComparePageProps["searchParams"],
 ): Promise<Product[]> {
-  const base = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const params = new URLSearchParams();
-
-  if (searchParams?.slugs) params.set("slugs", searchParams.slugs);
-  if (searchParams?.category) params.set("category", searchParams.category);
-
   try {
-    const res = await fetch(`${base}/api/compare?${params.toString()}`, {
-      next: { revalidate: 30 },
+    return await getCompareProducts({
+      slugs: searchParams?.slugs,
+      category: searchParams?.category,
     });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.products ?? []) as Product[];
   } catch {
     return [];
   }

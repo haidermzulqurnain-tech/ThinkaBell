@@ -5,6 +5,7 @@ import Image from "next/image";
 import { DealCard } from "@/components/DealCard";
 import { DealFilters } from "@/components/DealFilters";
 import { getNonce } from "@/lib/csp";
+import { fetchDeals as fetchDealsData, normalizeCategory, type DealsQuery } from "@/lib/catalog";
 import { Search } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -43,22 +44,17 @@ export async function generateMetadata({ searchParams }: DealsPageProps): Promis
 }
 
 async function fetchDeals(params: Record<string, string | undefined>) {
-  const base = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const searchParams = new URLSearchParams();
-
-  Object.entries(params).forEach(([key, value]) => {
-    if (value) searchParams.set(key, value);
-  });
-
-  const res = await fetch(`${base}/api/deals?${searchParams.toString()}`, {
-    next: { revalidate: 30 },
-  });
-
-  if (!res.ok) {
+  try {
+    return await fetchDealsData({
+      category: normalizeCategory(params.category),
+      deal_type: params.deal_type,
+      min_discount: params.min_discount ? Number(params.min_discount) : undefined,
+      sort: (params.sort as DealsQuery["sort"]) || undefined,
+      cursor: params.cursor,
+    });
+  } catch {
     return { results: [], count: 0, nextCursor: null, hasMore: false };
   }
-
-  return res.json();
 }
 
 function DealsGrid({ deals }: { deals: any[] }) {

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Search } from "lucide-react";
 import type { Metadata } from "next";
 import { DealCard } from "@/components/DealCard";
+import { searchProducts, normalizeCategory } from "@/lib/catalog";
 
 interface SearchPageProps {
   searchParams?: {
@@ -29,21 +30,15 @@ export async function generateMetadata({ searchParams }: SearchPageProps): Promi
 }
 
 async function searchDeals(query: string, category?: string, cursor?: string) {
-  const params = new URLSearchParams();
-  if (query) params.set("q", query);
-  if (category) params.set("category", category);
-  if (cursor) params.set("cursor", cursor);
-
-  const base = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const res = await fetch(`${base}/api/search?${params.toString()}`, {
-    next: { revalidate: 30 },
-  });
-
-  if (!res.ok) {
+  try {
+    return await searchProducts({
+      q: query || undefined,
+      category: normalizeCategory(category),
+      cursor: cursor || undefined,
+    });
+  } catch {
     return { results: [], count: 0, nextCursor: null };
   }
-
-  return res.json();
 }
 
 function SearchResults({ query, category, cursor }: { query: string; category?: string; cursor?: string }) {

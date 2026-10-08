@@ -1,19 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ComparisonRepository } from "@thinkabell/database";
 import { rateLimit } from "@thinkabell/shared";
+import { getCompareProducts, normalizeCategory } from "@/lib/compare";
 
 export const dynamic = "force-dynamic";
 
 const MAX_SLUGS = 20;
-const VALID_CATEGORIES = ["physical", "software"] as const;
-
-type Category = (typeof VALID_CATEGORIES)[number];
-
-function normalizeCategory(value: string | null): Category | null {
-  if (!value) return null;
-  const lower = value.toLowerCase();
-  return VALID_CATEGORIES.includes(lower as Category) ? (lower as Category) : null;
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,20 +21,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Validate the request contract (400) before fetching, so a bad
+    // request is never answered with a misleading 200 + empty set.
     if (rawSlugs) {
-      const slugArray = rawSlugs.split(",").map((s) => s.trim()).filter(Boolean).slice(0, MAX_SLUGS);
-      if (slugArray.length === 0) {
+      const hasValidSlug = rawSlugs.split(",").some((s) => s.trim());
+      if (!hasValidSlug) {
         return NextResponse.json({ error: "slugs query param must contain at least one slug" }, { status: 400 });
       }
-      const products = await ComparisonRepository.getBySlugs(slugArray);
-      return NextResponse.json({ products });
-    }
-
-    if (!category) {
+    } else if (!category) {
       return NextResponse.json({ error: "category or slugs query param is required" }, { status: 400 });
     }
 
-    const products = await ComparisonRepository.getComparableProducts(category, 4);
+    const products = await getCompareProducts({
+      slugs: rawSlugs ?? undefined,
+      category: searchParams.get("category") ?? undefined,
+    });
+
     return NextResponse.json({ products });
   } catch (error) {
     console.error("[Compare API] Error:", error);
