@@ -9,6 +9,27 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Verify Hostinger deploy secrets
+        env:
+          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
+          HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
+          HOSTINGER_PASSWORD: ${{ secrets.HOSTINGER_PASSWORD }}
+          HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
+          HOSTINGER_DEPLOY_PATH: ${{ secrets.HOSTINGER_DEPLOY_PATH }}
+        run: |
+          set -e
+          fail=0
+          for name in HOSTINGER_HOST HOSTINGER_USERNAME HOSTINGER_PASSWORD HOSTINGER_PORT HOSTINGER_DEPLOY_PATH; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name is empty or not set"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::Add the missing secrets under repo Settings -> Secrets and variables -> Actions, then re-run: Actions -> Deploy to Hostinger -> Run workflow."
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v7
 
