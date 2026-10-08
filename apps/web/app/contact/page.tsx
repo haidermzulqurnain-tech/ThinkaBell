@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ContactPageClient from "./ContactPageClient";
+import { env } from "@thinkabell/config";
 
 export const metadata: Metadata = {
   title: "Contact ThinkaBell | Real-Time Deal Alerts & Price Tracking",
@@ -9,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
-  return <ContactPageClient />;
+  return <ContactPageClient contactEmail={env.CONTACT_EMAIL || env.BREVO_SENDER_EMAIL} />;
 }

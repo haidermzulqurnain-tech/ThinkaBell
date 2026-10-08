@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { env } from "@thinkabell/config";
 import Image from "next/image";
 import { DealCard } from "@/components/DealCard";
 import { DealFilters } from "@/components/DealFilters";
@@ -131,7 +132,7 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
     return `/deals?${sp.toString()}`;
   };
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://thinkabell.click";
+  const baseUrl = env.NEXT_PUBLIC_APP_URL;
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",

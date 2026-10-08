@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Mail, Send, AlertCircle, CheckCircle2 } from "lucide-react";
 
-export default function ContactPage() {
+export default function ContactPage({ contactEmail }: { contactEmail: string }) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -150,8 +150,8 @@ export default function ContactPage() {
               <h3 className="text-sm font-bold text-gray-900">Email</h3>
             </div>
             <p className="text-sm text-gray-600">
-              <a href="mailto:hello@thinkabell.click" className="text-blue-600 hover:underline">
-                hello@thinkabell.click
+              <a href={`mailto:${contactEmail}`} className="text-blue-600 hover:underline">
+                {contactEmail}
               </a>
             </p>
           </div>

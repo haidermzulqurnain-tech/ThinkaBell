@@ -1,8 +1,9 @@
 import { MetadataRoute } from "next";
 import { getSupabaseAnonClient } from "@thinkabell/database";
+import { env } from "@thinkabell/config";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://thinkabell.click";
+  const baseUrl = env.NEXT_PUBLIC_APP_URL;
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {

@@ -31,7 +31,7 @@ export function middleware(request: NextRequest) {
     "style-src 'self' https://fonts.googleapis.com 'unsafe-inline'",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https:",
-    `connect-src 'self' https://api.thinkabell.click https://onesignal.com ${posthogHostname}`,
+    `connect-src 'self' https://onesignal.com ${posthogHostname}`,
     "frame-ancestors 'none'",
     "form-action 'self'",
     "base-uri 'self'",

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { env } from "@thinkabell/config";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { PostHogProvider } from "../components/PostHogProvider";
@@ -15,7 +16,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "ThinkaBell | Real-Time Deal Alerts & Price Tracking",
   description: "Track price drops on AI hardware, smart gadgets, and software tools. Get instant alerts before deals expire.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://thinkabell.click"),
+  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
   alternates: {
     canonical: "/",
     languages: {
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ThinkaBell | Real-Time Deal Alerts & Price Tracking",
     description: "Track price drops on AI hardware, smart gadgets, and software tools.",
-    url: "https://thinkabell.click",
+    url: env.NEXT_PUBLIC_APP_URL,
     siteName: "ThinkaBell",
     type: "website",
     images: ["/og-image.png"],
@@ -50,7 +51,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const nonce = await getNonce();
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://thinkabell.click";
+  const baseUrl = env.NEXT_PUBLIC_APP_URL;
 
   const webSiteJsonLd = {
     "@context": "https://schema.org",

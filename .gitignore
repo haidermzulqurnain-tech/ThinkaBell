@@ -11,6 +11,9 @@ dist
 build
 dist-hostinger
 
+# TypeScript incremental build cache
+*.tsbuildinfo
+
 # Turborepo
 .turbo
 

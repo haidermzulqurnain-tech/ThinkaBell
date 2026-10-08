@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
+import { env } from "@thinkabell/config";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -115,7 +116,7 @@ export default async function DealPage({ params }: DealPageProps) {
     "#";
 
   // Schema.org JSON-LD Structured Data for Google SEO and AEO
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://thinkabell.click";
+  const baseUrl = env.NEXT_PUBLIC_APP_URL;
 
   const jsonLd = {
     "@context": "https://schema.org/",
