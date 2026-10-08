@@ -12,7 +12,7 @@ Monitors prices across **eBay Browse API** and **SaaS Affiliate Networks** (Part
 thinkabell/
 ├── apps/
 │   ├── web/               # Next.js 14+ App Router, ISR, Tailwind CSS, OneSignal SDK
-│   └── jobs/              # Vercel Cron + Supabase pg_cron scheduled tasks (fetchPrices, sendAlerts)
+│   └── jobs/              # Scheduled job runners (fetchPrices, sendAlerts, productDiscovery) invoked by /api/cron/*
 ├── packages/
 │   ├── config/            # Zod runtime environment validation & app config
 │   ├── database/          # Supabase PostgreSQL schema, RLS policies, typed repositories
@@ -20,7 +20,7 @@ thinkabell/
 │   └── edge-worker/       # Cloudflare Worker for edge geo-routing & affiliate link localization
 ├── scripts/
 │   ├── simulate-pipeline.ts   # Full E2E price drop -> alert queue -> notification delivery simulation
-│   ├── seed-50-products.ts     # 50 manually curated products with real ASINs
+│   ├── seed-50-products.ts     # 50 placeholder products (unverified ASINs/prices)
 │   ├── build-standalone.js     # Cross-platform standalone build (injects OUTPUT=standalone)
 │   ├── prepare-hostinger.js   # Packages Next.js standalone bundle for Hostinger Node.js hosting
 │   └── compliance-check.ts    # FTC/sponsored/privacy/unsubscribe compliance scan
@@ -32,7 +32,9 @@ thinkabell/
 │   ├── LAUNCH_CHECKLIST.md     # Email sequences, social syndication, SEO checklist
 │   └── PRE_LAUNCH_AUDIT.md     # Security, business, UX, backend, SEO audit findings
 ├── .github/workflows/
-│   └── ci.yml              # CI pipeline: type-check, lint, test, post-deploy smoke test
+│   ├── ci.yml              # CI pipeline: type-check, lint, test
+│   ├── deploy.yml          # Hostinger deployment
+│   └── legal-gate.yml      # Compliance gates (sponsored/FTC/privacy/unsubscribe)
 ├── turbo.json              # Turborepo task pipeline & caching
 ├── agent.md                # Master implementation plan, board directives, sprint roadmap
 └── pnpm-workspace.yaml     # Workspace definition
@@ -68,8 +70,11 @@ For the complete step-by-step setup, module-by-module configuration, and trouble
 Required secrets:
 - `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`
 - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
-- `ALERTS_API_KEY` — bearer token for `/api/alerts` and `/api/contact`
+- `ALERTS_API_KEY` — bearer token for `/api/alerts`
 - `CRON_SECRET` — bearer token for `/api/cron/*`
+- `RETAILER_LINKS_API_KEY` — bearer token for POST `/api/retailer-links` (fail-closed when unset)
+- `REVALIDATION_SECRET` — token for on-demand ISR purge at `/api/revalidate` (fail-closed when unset)
+- `ENCRYPTION_KEY` / `BLIND_INDEX_KEY` — 64-char hex (`openssl rand -hex 32`) for PII encryption & blind-index lookups
 - SaaS API credentials (optional, fail-closed when missing): `AMAZON_*`, `EBAY_*`, `WALMART_API_KEY`, `PARTNERSTACK_API_KEY`, `APPSUMO_API_KEY`, `IMPACT_API_KEY`, `ONESIGNAL_*`, `BREVO_API_KEY`
 
 ### 4. Database Setup (Supabase)
@@ -115,12 +120,12 @@ The project uses **Vitest** with a comprehensive test suite covering:
 |---|---|---|
 | `@thinkabell/config` | Environment validation, Zod schema parsing, env singleton | ✅ 14/14 passing |
 | `@thinkabell/database` | Supabase client (fail-closed), repositories (Product, Alert, Subscriber, PriceHistory, RetailerLink, Comparison) | ✅ 67/67 passing |
-| `@thinkabell/shared` | API clients (Amazon, eBay, Walmart, AffiliateNetwork, Notification, PartnerStack, AppSumo, Impact), utilities (Redis, Retry, CircuitBreaker, Logger, RateLimit, ProgramStability, CursorPagination, FieldEncryption, BlindIndex) | ✅ 170/170 passing |
-| `@thinkabell/web` | Retailer Links API, Click Tracking, Sponsored Retailer routes, Search API, Compare API, Deal components, Compare components, Cookie Consent, Subscribe Modal, Error Boundary, Skeleton loaders | ✅ 98/98 passing |
-| `@thinkabell/jobs` | fetchPricesRunner, sendAlertsRunner with circuit breakers, DND, dead-letter handling, job-run monitoring | ✅ 26/26 passing |
-| `@thinkabell/edge-worker` | Edge worker index | ✅ 1/1 passing |
+| `@thinkabell/shared` | API clients (Amazon, eBay, Walmart, AffiliateNetwork, Notification, PartnerStack, AppSumo, Impact), utilities (Redis, Retry, CircuitBreaker, Logger, RateLimit, ProgramStability, CursorPagination, FieldEncryption, BlindIndex) | ✅ 236/236 passing |
+| `@thinkabell/web` | Retailer Links API, Click Tracking, Sponsored Retailer routes, Search API, Compare API, Deal components, Compare components, Cookie Consent, Subscribe Modal, Error Boundary, Skeleton loaders | ✅ 118/118 passing |
+| `@thinkabell/jobs` | fetchPricesRunner, sendAlertsRunner with circuit breakers, DND, dead-letter handling, job-run monitoring | ✅ 31/31 passing |
+| `@thinkabell/edge-worker` | Edge geo-routing, affiliate localization, origin proxy, anti-spoofing headers | ✅ 16/16 passing |
 
-**Total: 468 tests, all passing.**
+**Total: 482 tests, all passing.**
 
 ### Running Tests
 
@@ -161,8 +166,8 @@ pnpm --filter @thinkabell/jobs test
 | **Cookie Consent** | ✅ Complete | Consent banner with tracker-blocking event bus |
 | **Compliance CI Gates** | ✅ Complete | `rel="sponsored"`, FTC disclosure, privacy-policy link, Brevo unsubscribe header |
 | **CI/CD** | ✅ Complete | GitHub Actions CI with type-check, lint, test, post-deploy smoke test |
-| **Test Infrastructure** | ✅ Complete | 468 tests passing across config, database, shared, web, jobs, edge-worker |
-| **Seed Data** | ✅ Complete | 50 manually curated products with real ASINs and affiliate links |
+| **Test Infrastructure** | ✅ Complete | 482 tests passing across config, database, shared, web, jobs, edge-worker |
+| **Seed Data** | ✅ Complete | 50 placeholder products (unverified ASINs/prices); affiliate links generated from env config, fail-closed to plain URLs |
 | **Deal Detail Page** | ✅ Complete | Dual-track SaaS/physical rendering; JSON-LD (Product, BreadcrumbList, SpeakableSpecification) |
 | **Product Comparison** | ✅ Complete | `/compare` side-by-side table (price, discount, brand, tags) with best-price highlight; localStorage picker (max 4) via `CompareProvider`/`CompareToggle`/`CompareBar`; floating compare bar; rate-limited `/api/compare` endpoint |
 | **Alert Quality Score** | ✅ Complete | 0–100 score UI with color-coded confidence levels |
@@ -217,12 +222,12 @@ pnpm --filter @thinkabell/jobs test
 - **Brevo for email**: 9,000 emails/month free tier; `List-Unsubscribe` header for compliance.
 - **OneSignal for push**: 10,000 web push subscribers free; Telegram/Discord as zero-cost backups.
 - **Vercel Cron + pg_cron**: Replaced Trigger.dev to eliminate job-runner license costs.
-- **Manual curation first**: 50 products seeded manually with real ASINs; no PA-API dependency until eligibility earned.
+- **Placeholder catalog first**: 50 products seeded with unverified ASINs/prices; replace with genuinely curated entries via Amazon List curation (`AMAZON_LIST_URLS`) — no PA-API dependency until eligibility earned.
 - **SaaS-first revenue**: Physical commissions 1–4%; SaaS commissions 20–60% recurring. Year-one physical revenue projected at $0.
 - **Fail-closed integrations**: All SaaS API clients throw errors when credentials missing instead of returning simulated data.
 - **PII at rest**: Subscribers' email and push token are encrypted (AES-256-GCM) when `ENCRYPTION_KEY` is set; lookups use a keyed HMAC-SHA256 blind index (`subscribers.email_hash` via `BLIND_INDEX_KEY`) instead of plaintext email matching.
 - **Click attribution (no PII in URLs)**: `/api/route-link` records every click with a unique `attribution_token` and sets an HttpOnly `tb_click` cookie; `/api/subscribe` attributes that click to the subscriber via the cookie, and erasure (`/api/unsubscribe`) detaches the click links.
-- **Dynamic product discovery**: `DISCOVERY_SOURCES` JSON env var configures which sources to query; Amazon hunting harvests manually curated public lists (no API, no credentials). No hardcoded product lists or mock data.
+- **Dynamic product discovery**: `DISCOVERY_SOURCES` JSON env var configures which sources to query; Amazon hunting harvests manually curated public lists via `AMAZON_LIST_URLS` (no API, no credentials). No hardcoded product lists or mock data.
 - **Full product detail enrichment**: After search, each product detail endpoint fetches complete metadata including images, descriptions, and affiliate URLs.
 - **Modular source adapters**: Each marketplace/SaaS network implements the same `ProductSource` interface, making it trivial to add new sources.
 
@@ -306,7 +311,7 @@ link.
 | Metric | Value |
 |---|---|
 | **Packages** | 6 (@thinkabell/config, database, shared, edge-worker, @thinkabell/web, @thinkabell/jobs) |
-| **Test Coverage** | 468 tests, all passing |
+| **Test Coverage** | 482 tests, all passing |
 | **TypeScript** | Strict mode, all packages passing `tsc --noEmit` |
 | **Lint** | All packages clean |
 | **Database Tables** | 10+ tables with RLS, indexes, and seed data |
@@ -316,7 +321,7 @@ link.
 | **Pages** | Homepage, Deal Detail, Product Comparison, True Cost Calculator, Subscribe, Search, Legal (Privacy, Terms), Unsubscribe Confirmed, Not Found |
 | **SaaS Integrations** | PartnerStack, AppSumo, Impact clients with fail-closed behavior |
 | **Structured Data** | Product, BreadcrumbList, SpeakableSpecification, WebSite JSON-LD |
-| **Compliance** | FTC disclosure, rel="sponsored" coverage (97 passed), privacy policy, unsubscribe headers |
+| **Compliance** | FTC disclosure, rel="sponsored" coverage (98 passed), privacy policy, unsubscribe headers |
 
 ---
 

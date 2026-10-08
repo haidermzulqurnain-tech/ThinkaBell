@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-The engineering team has built a **credible technical scaffold** (TypeScript strict, 460 passing tests, RLS, circuit breakers, CI/CD, cookie consent, legal pages). **The product is launch-ready from an engineering standpoint** — all P0 and infrastructure findings are verified closed (see Appendix B). The P&L projections remain estimates; the 50-product catalog is manually curated with real ASINs/ePIDs (not synthetic), and critical Sprint 0 deliverables are closed.
+The engineering team has built a **credible technical scaffold** (TypeScript strict, 482 passing tests, RLS, circuit breakers, CI/CD, cookie consent, legal pages). **The product is launch-ready from an engineering standpoint** — all P0 and infrastructure findings are verified closed (see Appendix B). The P&L projections remain estimates; the 50-product catalog is placeholder data (product names are real, but ASINs/ePIDs/prices are unverified against live listings per the seeder's own header), and critical Sprint 0 deliverables are closed.
 
 **The $36K–$146K Year 1 ARR projections have zero basis in operational reality.**
 
@@ -17,7 +17,7 @@ The original audit flagged 25+ launch-blocking issues. As of 2026-10-07, **all P
 
 1. **No cron scheduler configured** — resolved: `vercel.json` defines 3 crons with `CRON_SECRET`-protected endpoints
 2. **Subscriber data exposed to anonymous modification** — resolved: service-role clients, token-based auth, RLS policies requiring `email`/`email_hash`
-3. **`rel="sponsored"` missing on all affiliate links** — resolved: compliance gate enforces 97 sponsored-link checks
+3. **`rel="sponsored"` missing on all affiliate links** — resolved: compliance gate enforces 98 sponsored-link checks
 4. **`/api/route-link` endpoint does not exist** — commission routing is non-functional
 5. **Database schema missing required columns** — `discount_percent`, `sources`, `commission_rate`
 6. **CSP `unsafe-inline`/`unsafe-eval` nullifies XSS protection**
@@ -572,7 +572,7 @@ This section records the verified state of the audit's launch-blocking findings 
 | 12 | CSP `unsafe-inline`/`unsafe-eval` | ✅ Closed | Per-request nonce via `apps/web/lib/csp.ts` + `middleware.ts`; inline scripts use the nonce |
 | 13 | `remotePatterns` unrestricted | ✅ Closed | `next.config.js` allowlists only `images.unsplash.com`, `m.media-amazon.com`, `i.ebayimg.com` |
 | 14 | No HSTS/Permissions-Policy | ✅ Closed | `next.config.js` headers: HSTS `max-age=63072000; includeSubDomains; preload`, Permissions-Policy `camera=(), microphone=(), geolocation=()` |
-| 15 | `rel="sponsored"` missing | ✅ Closed | Compliance gate: 97 sponsored-link checks passed |
+| 15 | `rel="sponsored"` missing | ✅ Closed | Compliance gate: 98 sponsored-link checks passed |
 | 16 | FTC disclosure not adjacent to CTA | ✅ Closed | Compliance gate: 2 FTC disclosure checks passed; `TransparencyBanner` component |
 | 17 | `/api/route-link` missing | ✅ Closed | `apps/web/app/api/route-link/route.ts` + 6 tests |
 | 18 | Mobile navigation broken | ✅ Closed | `Navbar.tsx` hamburger menu with `aria-expanded`/`aria-controls`, 44px touch targets |
@@ -617,8 +617,8 @@ This section records the verified state of the audit's launch-blocking findings 
 |------|--------|
 | `pnpm type-check` | 6/6 packages passing |
 | `pnpm lint` | Clean across all packages |
-| `pnpm test` | **468 tests passing** (config 14, database 67, edge-worker 16, jobs 31, shared 231, web 109) |
-| `pnpm tsx scripts/compliance-check.ts` | 97 sponsored / 2 FTC / 1 privacy / 1 unsubscribe — all passed |
+| `pnpm test` | **482 tests passing** (config 14, database 67, edge-worker 16, jobs 31, shared 236, web 118) |
+| `pnpm tsx scripts/compliance-check.ts` | 98 sponsored / 2 FTC / 1 privacy / 1 unsubscribe — all passed |
 | `pnpm --filter @thinkabell/web run build` | 22 pages + Middleware + `/go/amazon/[asin]` and `/api/cron/*` routes |
 
 ### B.5 Open items

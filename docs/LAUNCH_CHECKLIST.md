@@ -188,7 +188,7 @@ pnpm --filter @thinkabell/jobs dev
 # Run all checks
 pnpm run type-check    # TypeScript compilation (6/6 packages)
 pnpm run lint          # ESLint (5/5 packages)
-pnpm run test          # Vitest suite (468 tests)
+pnpm run test          # Vitest suite (482 tests)
 pnpm run compliance-check  # FTC/sponsored/privacy/unsubscribe scan
 ```
 

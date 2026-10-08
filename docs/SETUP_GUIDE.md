@@ -294,7 +294,7 @@ Run the full gate before any deployment:
 pnpm type-check                          # TypeScript across all 6 packages
 pnpm lint                                # ESLint across all packages
 pnpm tsx scripts/compliance-check.ts     # FTC gates: sponsored rel, disclosure, privacy, unsubscribe headers
-pnpm test                                # 468 Vitest tests (config 14, database 67, edge-worker 16, jobs 31, shared 231, web 109)
+pnpm test                                # 482 Vitest tests (config 14, database 67, edge-worker 16, jobs 31, shared 236, web 118)
 pnpm --filter @thinkabell/web run build  # production build: 22 pages + Middleware + /go/amazon/[asin] and /api/cron/* routes
 pnpm format:check                        # Prettier
 ```
