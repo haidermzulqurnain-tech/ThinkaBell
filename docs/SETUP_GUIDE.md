@@ -428,6 +428,7 @@ Vercel cron jobs send `POST` by default, which matches the route handlers. A `40
 | Very slow first `pnpm test` | One-time Vitest transform | Subsequent runs are faster |
 | `pnpm compliance-check` fails | Not a defined script | Correct command: `pnpm tsx scripts/compliance-check.ts` |
 | `pnpm run seed` fails | Not a defined script | Correct command: `pnpm tsx scripts/seed-50-products.ts` |
+| Deploy workflow reports `HOSTINGER_* is empty or not set` despite adding the secrets | Stale run (started before saving), wrong scope (Environment/Org instead of Repository), case-sensitive name typo, or wrong repository | Re-run the workflow after saving; confirm the five secrets appear under Settings → Secrets and variables → Actions (**Repository secrets**) with exact names in the same repo — see [HOSTINGER_DEPLOYMENT.md](HOSTINGER_DEPLOYMENT.md) |
 
 ### 10.8 Platform notes
 

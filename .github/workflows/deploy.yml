@@ -26,7 +26,7 @@ jobs:
             fi
           done
           if [ "$fail" -ne 0 ]; then
-            echo "::error::Add the missing secrets under repo Settings -> Secrets and variables -> Actions, then re-run: Actions -> Deploy to Hostinger -> Run workflow."
+            echo "::error::Hostinger secrets are not reaching this workflow. (1) Re-run AFTER saving — a run started before the secrets were saved will not see them. (2) Names are case-sensitive and must match exactly: HOSTINGER_HOST, HOSTINGER_USERNAME, HOSTINGER_PASSWORD, HOSTINGER_PORT, HOSTINGER_DEPLOY_PATH. (3) Add them at the repository level (Settings -> Secrets and variables -> Actions -> Repository secrets), not as Environment or Organization secrets. (4) They must be in the same repository that runs this workflow. Then re-run: Actions -> Deploy to Hostinger -> Run workflow."
             exit 1
           fi
 

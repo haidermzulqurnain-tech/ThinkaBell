@@ -146,6 +146,15 @@ Hostinger's **native GitHub integration** (hPanel → GitHub → connect repo) o
 
 The workflow fails fast if any secret is missing, then builds the standalone bundle, packages `dist/hostinger-deploy/`, verifies it, uploads it via SCP, and touches `hostinger-server.js` to trigger a restart.
 
+### Workflow says the secrets are empty even though I added them
+
+The most common cause is a **stale run**: a workflow run that started before you saved the secrets will not see them — GitHub does not inject secrets into a run retroactively. After adding the secrets, re-run the workflow (**Actions → Deploy to Hostinger → Run workflow**). If it still reports them empty, check:
+
+- **Exact names** — secret names are case-sensitive: `HOSTINGER_HOST`, `HOSTINGER_USERNAME`, `HOSTINGER_PASSWORD`, `HOSTINGER_PORT`, `HOSTINGER_DEPLOY_PATH`.
+- **Repository scope** — add them under **Settings → Secrets and variables → Actions → Repository secrets**. Secrets added to an *Environment* or *Organization* are not visible to this workflow (the job does not reference an environment).
+- **Same repository** — the secrets must be in the repository that runs the workflow (the one linked to Hostinger), not a fork or a different repo.
+- **Default branch** — the deploy workflow triggers on push to `main` (or manual **Run workflow**). If your default branch is not `main`, run it manually via **Actions → Deploy to Hostinger → Run workflow**.
+
 ### Preflight check
 
 Run the fail-closed preflight checker locally to see exactly what is missing before you deploy:
