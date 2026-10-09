@@ -33,27 +33,6 @@ jobs:
           echo "List this repository's secret names locally (values are never shown):"
           echo "  gh secret list --repo ${{ github.repository }}"
 
-      - name: Verify Hostinger deploy secrets
-        env:
-          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
-          HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
-          HOSTINGER_PASSWORD: ${{ secrets.HOSTINGER_PASSWORD }}
-          HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
-          HOSTINGER_DEPLOY_PATH: ${{ secrets.HOSTINGER_DEPLOY_PATH }}
-        run: |
-          set -e
-          fail=0
-          for name in HOSTINGER_HOST HOSTINGER_USERNAME HOSTINGER_PASSWORD HOSTINGER_PORT HOSTINGER_DEPLOY_PATH; do
-            if [ -z "${!name}" ]; then
-              echo "::error::$name is empty or not set"
-              fail=1
-            fi
-          done
-          if [ "$fail" -ne 0 ]; then
-            echo "::error::Hostinger secrets are not reaching this workflow (secrets.HOSTINGER_* is null). (1) Re-run AFTER saving — secrets are read when the run is queued. (2) Add them as Repository secrets (Settings -> Secrets and variables -> Actions -> Repository secrets), not Environment or Organization secrets — an Environment secret shadows a Repository secret and is unavailable unless the job references that environment. (3) Secrets are not passed from forked repositories — add them to the repo that runs this workflow. (4) Confirm what GitHub sees with: gh secret list --repo ${{ github.repository }}. Then re-run: Actions -> Deploy to Hostinger -> Run workflow."
-            exit 1
-          fi
-
       - name: Checkout repository
         uses: actions/checkout@v7
 
@@ -77,6 +56,35 @@ jobs:
 
       - name: Verify Hostinger bundle
         run: pnpm tsx scripts/verify-hostinger-deploy.ts
+
+      - name: Upload Hostinger bundle (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: hostinger-deploy
+          path: dist/hostinger-deploy
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Verify Hostinger deploy secrets
+        env:
+          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
+          HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
+          HOSTINGER_PASSWORD: ${{ secrets.HOSTINGER_PASSWORD }}
+          HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
+          HOSTINGER_DEPLOY_PATH: ${{ secrets.HOSTINGER_DEPLOY_PATH }}
+        run: |
+          set -e
+          fail=0
+          for name in HOSTINGER_HOST HOSTINGER_USERNAME HOSTINGER_PASSWORD HOSTINGER_PORT HOSTINGER_DEPLOY_PATH; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name is empty or not set"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::Hostinger secrets are not reaching this workflow (secrets.HOSTINGER_* is null), so the automatic SCP deploy was skipped. The built bundle is attached to this run as the 'hostinger-deploy' artifact — download it and upload it to Hostinger via File Manager (see HOSTINGER_DEPLOYMENT.md, Step 3 Option B). To enable automatic deploy: (1) Re-run AFTER saving — secrets are read when the run is queued. (2) Add them as Repository secrets (Settings -> Secrets and variables -> Actions -> Repository secrets), not Environment or Organization secrets. (3) Confirm with: gh secret list --repo ${{ github.repository }}. Then re-run: Actions -> Deploy to Hostinger -> Run workflow."
+            exit 1
+          fi
 
       - name: Deploy via SCP
         uses: appleboy/scp-action@v1.0.0

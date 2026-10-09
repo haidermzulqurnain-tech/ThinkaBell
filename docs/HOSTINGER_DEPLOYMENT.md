@@ -45,14 +45,23 @@ This compiles the application and packages all standalone server files, `.next/s
 
 ### Step 3: Upload Files to Hostinger
 
-#### Option A: Via GitHub Actions (Recommended)
-Pushing to the `main` branch automatically builds, bundles, and securely uploads to Hostinger via SCP using `.github/workflows/deploy.yml`.
+The deployable files are the **built standalone bundle** in `dist/hostinger-deploy/` — **not** the raw repository files. The raw repo (source code, `package.json`, `apps/`, `packages/`, `scripts/`) cannot run on Hostinger: it has no `node_modules` and no `.next/standalone` build output, so `hostinger-server.js` cannot start. If your Hostinger Application Root currently contains the raw repo files, replace them with the built bundle using one of the options below.
 
-#### Option B: Via File Manager / SFTP
-1. Compress the contents of `dist/hostinger-deploy/` into a `.zip` file.
-2. In Hostinger **File Manager**, upload the zip file to your **Application Root** (`public_html`).
-3. Extract the zip file in place.
-4. Verify that `hostinger-server.js`, `apps/`, and `.next/` exist in `public_html`.
+#### Option A: Via GitHub Actions (Recommended)
+Pushing to the `main` branch (or **Actions → Deploy to Hostinger → Run workflow**) builds the standalone bundle on a Linux runner and uploads it to Hostinger via SCP using `.github/workflows/deploy.yml`. This requires the five `HOSTINGER_*` repository secrets (see Troubleshooting).
+
+#### Option B: Via the workflow artifact (no SSH secrets needed)
+The workflow always attaches the built bundle as a **`hostinger-deploy` artifact** — even when the `HOSTINGER_*` secrets are missing (the automatic SCP deploy is skipped, but the artifact is still produced on GitHub's Linux runner, so no local build or symlink support is required):
+1. Run **Actions → Deploy to Hostinger → Run workflow**.
+2. Open the run → **Artifacts** → download **`hostinger-deploy`**.
+3. Extract the zip. Its contents (`hostinger-server.js`, `apps/`, `.next/`, `node_modules/`, `package.json`) are the deployable files.
+4. In Hostinger **File Manager**, upload them to your **Application Root** (`public_html`), replacing the raw repository files.
+5. Verify that `hostinger-server.js`, `apps/`, and `.next/` exist in `public_html`.
+
+#### Option C: Build locally, then upload
+1. Run `pnpm package:hostinger` (requires symlink support — on Windows, enable Developer Mode, or use Option B instead).
+2. Compress the contents of `dist/hostinger-deploy/` into a `.zip` file.
+3. In Hostinger **File Manager**, upload the zip to your **Application Root** (`public_html`) and extract it.
 
 ---
 
