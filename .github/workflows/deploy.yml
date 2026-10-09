@@ -5,10 +5,29 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
+# Minimal read-only token permissions: contents (checkout + repo metadata for
+# the diagnostic step). The deploy steps use HOSTINGER_* secrets, not the
+# GITHUB_TOKEN, so this does not widen the deploy's access.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Diagnose deploy secrets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Repo metadata (confirms which repo this workflow runs on):"
+          curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}" \
+            | grep -oE '"(full_name|default_branch|fork|private)": *("[^"]*"|true|false)' || echo "(could not read repo metadata)"
+          echo "List the repository's secret names locally (values are never shown):"
+          echo "  gh secret list --repo ${{ github.repository }}"
+
       - name: Verify Hostinger deploy secrets
         env:
           HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
@@ -26,7 +45,7 @@ jobs:
             fi
           done
           if [ "$fail" -ne 0 ]; then
-            echo "::error::Hostinger secrets are not reaching this workflow. (1) Re-run AFTER saving — a run started before the secrets were saved will not see them. (2) Names are case-sensitive and must match exactly: HOSTINGER_HOST, HOSTINGER_USERNAME, HOSTINGER_PASSWORD, HOSTINGER_PORT, HOSTINGER_DEPLOY_PATH. (3) Add them at the repository level (Settings -> Secrets and variables -> Actions -> Repository secrets), not as Environment or Organization secrets. (4) They must be in the same repository that runs this workflow. Then re-run: Actions -> Deploy to Hostinger -> Run workflow."
+            echo "::error::Hostinger secrets are not reaching this workflow (secrets.HOSTINGER_* is null). (1) Re-run AFTER saving — secrets are read when the run is queued. (2) Add them as Repository secrets (Settings -> Secrets and variables -> Actions -> Repository secrets), not Environment or Organization secrets — an Environment secret shadows a Repository secret and is unavailable unless the job references that environment. (3) Secrets are not passed from forked repositories — add them to the repo that runs this workflow. (4) Confirm what GitHub sees with: gh secret list --repo ${{ github.repository }}. Then re-run: Actions -> Deploy to Hostinger -> Run workflow."
             exit 1
           fi
 
