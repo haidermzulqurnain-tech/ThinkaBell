@@ -19,8 +19,11 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 
+const { copyStandaloneAssets } = require("./lib/standalone-assets");
+
 const ROOT_DIR = path.resolve(__dirname, "..");
-const STANDALONE_DIR = path.join(ROOT_DIR, "apps", "web", ".next", "standalone");
+const WEB_DIR = path.join(ROOT_DIR, "apps", "web");
+const STANDALONE_DIR = path.join(WEB_DIR, ".next", "standalone");
 
 function checkSymlinkSupport() {
   if (process.platform !== "win32") return true;
@@ -81,6 +84,13 @@ child.on("exit", (code) => {
     console.error("   Verify that no local `.env` file overrides OUTPUT.");
     process.exit(1);
   }
+
+  // `next build` with output:standalone emits only the server runtime.
+  // Copy the client assets (.next/static) and public/ files into the
+  // standalone output so the repository layout is runnable on its own
+  // (e.g. Hostinger's native GitHub integration, which builds in the
+  // repository rather than in a packaged bundle).
+  copyStandaloneAssets(ROOT_DIR, WEB_DIR, STANDALONE_DIR);
 
   console.log("==========================================");
   console.log("✅ Standalone build ready at:");

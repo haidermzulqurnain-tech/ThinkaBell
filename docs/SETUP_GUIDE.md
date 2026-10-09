@@ -320,6 +320,8 @@ The first Vitest run also transforms all files and is slower than subsequent run
 
 Full-project deployment (recommended, no symlink requirement): `docs/HOSTINGER_DEPLOYMENT.md`.
 
+**Native GitHub integration (build on Hostinger):** connect the repo via Node.js web app → Import Git repository → Connect with GitHub, then set the hPanel settings from `docs/HOSTINGER_DEPLOYMENT.md` Step 2 — application type `Other`, root directory `./`, build command `pnpm run build:standalone`, output directory empty, entry file `apps/web/hostinger-server.js`, Node 22.x, pnpm. Hostinger then runs install → build → start on every push to `main`.
+
 Optional standalone bundle (requires symlink support — on Windows enable Developer Mode first; the build fails fast with guidance otherwise):
 
 ```bash

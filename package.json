@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "description": "ThinkaBell deal alert and price tracking platform",
-  "packageManager": "pnpm@12.3.4",
+  "packageManager": "pnpm@10.34.6",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10"
+  },
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",

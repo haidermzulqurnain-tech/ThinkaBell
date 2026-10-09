@@ -8,6 +8,8 @@ This guide details how to deploy the **ThinkaBell** Next.js 14+ application to H
 
 Next.js can build in **standalone mode** (`output: "standalone"` in `next.config.js`, enabled by `pnpm build:standalone`). This builds a self-contained Node.js server containing only the production dependencies needed to run the website.
 
+`next build` with `output: "standalone"` emits only the server runtime — it does **not** copy the client assets (`.next/static`) or `public/` files. `pnpm build:standalone` therefore copies them into the standalone output (`scripts/lib/standalone-assets.js`, shared with `pnpm package:hostinger`), so both deploy layouts are complete: the repository layout (native Hostinger integration) and the packaged bundle (`dist/hostinger-deploy/`).
+
 ---
 
 ## Step-by-Step Deployment Walkthrough
@@ -31,15 +33,19 @@ This compiles the application and packages all standalone server files, `.next/s
 
 ### Step 2: Configure Hostinger hPanel
 
-1. Log into your **Hostinger Control Panel (hPanel)**.
-2. Navigate to **Websites** -> Select **thinkabell.click** -> Click **Manage**.
-3. Under the **Advanced** or **Server** section, locate **Node.js**.
-4. Configure the following settings:
-   - **Node.js Version**: Select **20.x** or **22.x** (LTS).
-   - **Application Root**: The directory where your files will reside:
-     - Example: `public_html` or a subfolder like `domains/thinkabell.click/public_html`
-   - **Application Startup File**: `hostinger-server.js`
-   - **Application Mode**: `Production`
+Hostinger auto-detects the framework as **Next.js** — **override it to `Other`**. Hostinger's Next.js mode applies `output: "standalone"` itself and then starts the bundled server from the standard single-app layout (`.next/standalone/server.js`). This monorepo emits the standalone server at `apps/web/.next/standalone/apps/web/server.js`, which that mode cannot locate. The deterministic configuration uses the **Other** application type with the repository's own entrypoint:
+
+| Setting | Value | Why |
+|---|---|---|
+| **Application type** | `Other` | Runs our entrypoint instead of Hostinger's Next.js-mode server start, which expects the standard (non-monorepo) standalone layout. |
+| **Node version** | `22.x` | Matches the `engines.node` field in `package.json` and the CI runners. |
+| **Root directory** | `./` | Must stay the repository root: the automatic `pnpm install` needs the workspace root (`pnpm-workspace.yaml`) to resolve the `workspace:*` dependencies. Hostinger's monorepo auto-detection would pick `apps/web` and build only that subdirectory, which breaks the workspace install. |
+| **Build command** | `pnpm run build:standalone` | Injects `OUTPUT=standalone` cross-platform and copies `.next/static` + `public/` into the standalone output. A plain `pnpm run build` (turbo) does **not** emit `.next/standalone`. |
+| **Package manager** | `pnpm` | Auto-detected from `pnpm-lock.yaml`. |
+| **Output directory** | *(leave empty)* | Ignored for `Other` when an entry file is set. |
+| **Entry file** | `apps/web/hostinger-server.js` | Relative to the root directory. Resolves the standalone server at `apps/web/.next/standalone/apps/web/server.js`, binds the `PORT` Hostinger assigns, and falls back to `next start` when no standalone build exists. |
+
+With these settings the native GitHub integration runs the full pipeline on Hostinger: `pnpm install` (automatic) → `pnpm run build:standalone` → `node apps/web/hostinger-server.js`. No manual upload is needed — push to `main` and Hostinger rebuilds.
 
 ---
 
@@ -139,11 +145,20 @@ In the Hostinger Node.js control panel (**Environment** section), add the variab
 
 ## Troubleshooting
 
-### "Linked the GitHub repo in hPanel" is not enough
+### "Linked the GitHub repo in hPanel" — two different integrations
 
-Hostinger's **native GitHub integration** (hPanel → GitHub → connect repo) only pulls the repository files — it does **not** run `pnpm install` or `pnpm build:standalone`. ThinkaBell is a Next.js App Router monorepo that must be compiled into a standalone server before it can run, so a raw repo checkout has no `node_modules` and no `.next/standalone` output, and `hostinger-server.js` cannot start. This is the most common cause of a failed Hostinger deploy.
+Hostinger has two GitHub integrations, and only one builds your app:
 
-**Use the GitHub Actions workflow instead** (`.github/workflows/deploy.yml`), which builds, packages, and uploads the standalone bundle to Hostinger over SCP. To enable it:
+- **Node.js web app → Import Git repository → Connect with GitHub** (the Hostinger GitHub App): runs the full pipeline — automatic `pnpm install` → build command → entry file. This is the integration that deploys ThinkaBell. Configure it with the Step 2 settings (application type `Other`, build command `pnpm run build:standalone`, entry file `apps/web/hostinger-server.js`).
+- **Websites → Git** (the generic Git deployment): only copies repository files into a directory — no install, no build. A raw checkout has no `node_modules` and no `.next/standalone` output, so the app cannot start. Do not use this integration for ThinkaBell.
+
+If the native integration fails, check in this order:
+
+1. **Build settings** — the deploy log's "Preparing build" section shows the effective settings. The application type must be `Other` with the Step 2 values; Hostinger's auto-detected `Next.js` type starts its own standalone server from the standard single-app layout, which a monorepo does not produce.
+2. **Corepack cache** — a `MODULE_NOT_FOUND` for `~/.cache/node/corepack/v1/pnpm/<version>/bin/pnpm.cjs` during install is a corrupted Corepack cache; see the Corepack troubleshooting below.
+3. **Runtime logs** — a build that succeeds but a process that crashes on startup is almost always a missing Environment variable (Step 4); check the Runtime Logs in the Node.js dashboard.
+
+**Alternative — the GitHub Actions workflow** (`.github/workflows/deploy.yml`) builds on a clean runner and uploads the standalone bundle to Hostinger over SCP. To enable it:
 
 1. In GitHub, go to **repo Settings → Secrets and variables → Actions** and add the five deploy secrets:
    - `HOSTINGER_HOST` — your Hostinger server IP/hostname (hPanel → Hosting → SSH/FTP details)
@@ -185,16 +200,14 @@ The server is up but a fail-closed integration is unconfigured. Set the **Core**
 
 ### Build fails on `pnpm install` (Corepack `MODULE_NOT_FOUND`)
 
-If you build **on Hostinger** (native GitHub integration with a build command) and it fails during `pnpm install` with a `MODULE_NOT_FOUND` for a path like `~/.cache/node/corepack/v1/pnpm/<version>/bin/pnpm.cjs`, that is a **corrupted Corepack cache** on the build environment — not an invalid pnpm version. (`pnpm@12.3.4` from the `packageManager` field is a valid, released version; the `12.x` line exists and the latest is `12.11.0`.)
+If you build **on Hostinger** (native GitHub integration) and it fails during `pnpm install` with a `MODULE_NOT_FOUND` for a path like `~/.cache/node/corepack/v1/pnpm/<version>/bin/pnpm.cjs`, that is a **corrupted Corepack cache** on the build environment — not an invalid pnpm version.
 
-Two ways forward:
+Hostinger runs `pnpm install` **automatically, before your build command** — so a build command that clears the cache cannot fix it (the failure happens first). The fix is in the repository: the `packageManager` field is pinned to **`pnpm@10.34.6`** (the latest pnpm 10.x, matching the lockfile's `lockfileVersion: '9.0'` format, which the pnpm 10 line writes natively). Corepack downloads that version fresh on the build environment — there is no cached entry for it to be corrupted — so the automatic install succeeds.
 
-1. **Recommended — don't build on Hostinger.** Build on the GitHub Actions runner (a clean environment with a fresh Corepack cache) and upload the pre-built bundle: run **Actions → Deploy to Hostinger → Run workflow**, download the **`hostinger-deploy`** artifact, and upload its contents to Hostinger via File Manager (Step 3, Option B). On Hostinger you then only need the **start command** (`node hostinger-server.js`) and the Environment variables — no build command.
-2. **If you must build on Hostinger**, clear the Corepack cache at the start of the build command so pnpm is re-downloaded fresh, and point the start command at the repo-layout entrypoint:
-   - Build command: `rm -rf ~/.cache/node/corepack && pnpm install && pnpm build:standalone`
-   - Start command: `node apps/web/hostinger-server.js`
+If you ever hit this again with a different version:
 
-Do **not** change `packageManager` to an older version to "fix" this — the version is valid, and a new version's cache can corrupt the same way. Clearing the cache (or building on the clean runner) is the actual fix.
+1. **Recommended — build on the GitHub Actions runner** (a clean environment with a fresh Corepack cache) and upload the pre-built bundle: run **Actions → Deploy to Hostinger → Run workflow**, download the **`hostinger-deploy`** artifact, and upload its contents to Hostinger via File Manager (Step 3, Option B).
+2. **Clear the Corepack cache once via SSH** (hPanel → Advanced → SSH Access; Premium Web or higher): `rm -rf ~/.cache/node/corepack` — the next automatic install re-downloads the pinned version fresh.
 
 ### GitHub Pages vs Hostinger
 

@@ -43,18 +43,24 @@ if (fs.existsSync(bundleServerPath)) {
   serverEntry = repoServerPath;
 } else if (fs.existsSync(localServerPath)) {
   serverEntry = localServerPath;
-} else {
-  // Fallback: run next start via node_modules
-  console.log("[Hostinger] Standalone server not found. Falling back to standard Next.js CLI runner.");
-  require("next/dist/bin/next");
 }
 
 if (serverEntry) {
   console.log(`[Hostinger] Loading server bundle from: ${serverEntry}`);
   require(serverEntry);
 } else {
-  console.error("[Hostinger] No server entry point found. Expected apps/web/server.js (deployed bundle) or .next/standalone/apps/web/server.js (repository build).");
-  process.exit(1);
+  // Fallback: no standalone build is present (a plain `next build`
+  // was run). Start the standard Next.js production server from the
+  // app directory so Next.js finds next.config.js and the .next
+  // build output. PORT is already set above from the environment.
+  console.log("[Hostinger] Standalone server not found. Falling back to `next start`.");
+  process.chdir(__dirname);
+  process.argv = [
+    process.argv[0],
+    path.join(__dirname, "node_modules", "next", "dist", "bin", "next"),
+    "start",
+  ];
+  require("next/dist/bin/next");
 }
 
 // Graceful shutdown handling

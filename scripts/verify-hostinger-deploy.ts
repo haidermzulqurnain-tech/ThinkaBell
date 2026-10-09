@@ -6,6 +6,7 @@
  * packaging) to catch a broken bundle before it ships:
  *
  *   1. Standalone build output exists (apps/web/.next/standalone/apps/web/server.js)
+ *   1b. Client assets are inside the standalone output (.next/static, public/)
  *   2. Hostinger entrypoint exists (apps/web/hostinger-server.js)
  *   3. Packaged bundle completeness (dist/hostinger-deploy/) when present
  *   4. Deploy workflow exists and references the required HOSTINGER_* secrets
@@ -61,6 +62,33 @@ if (existsSync(standaloneServer)) {
   fail(
     "Standalone server missing",
     "Run 'pnpm build:standalone' — a plain 'next build' does not emit .next/standalone.",
+  );
+}
+
+// 1b. Client assets inside the standalone output — `next build`
+// with output:standalone does not copy .next/static or public/
+// on its own; without them the server starts but pages 404 on
+// /_next/static/* (breaks the repository-layout deploy path).
+const standaloneStatic = join(
+  ROOT,
+  "apps",
+  "web",
+  ".next",
+  "standalone",
+  "apps",
+  "web",
+  ".next",
+  "static",
+);
+if (existsSync(standaloneStatic)) {
+  pass(
+    "Standalone client assets",
+    "apps/web/.next/standalone/apps/web/.next/static",
+  );
+} else {
+  fail(
+    "Standalone client assets missing",
+    "Re-run 'pnpm build:standalone' — it copies .next/static and public/ into the standalone output.",
   );
 }
 
