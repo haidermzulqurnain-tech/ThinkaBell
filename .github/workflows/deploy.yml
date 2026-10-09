@@ -20,12 +20,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Repository: ${{ github.repository }}"
-          echo "Repo metadata (confirms which repo this workflow runs on):"
-          curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+          META=$(curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}" \
-            | grep -oE '"(full_name|default_branch|fork|private)": *("[^"]*"|true|false)' || echo "(could not read repo metadata)"
-          echo "List the repository's secret names locally (values are never shown):"
+            "https://api.github.com/repos/${{ github.repository }}")
+          echo "Repo metadata (confirms which repo this workflow runs on):"
+          echo "$META" | jq -r '"full_name: \(.full_name)   default_branch: \(.default_branch)   fork: \(.fork)   private: \(.private)"' 2>/dev/null \
+            || echo "(could not read repo metadata)"
+          if echo "$META" | jq -e '.fork == true' >/dev/null 2>&1; then
+            PARENT=$(echo "$META" | jq -r '.parent.full_name // "(unknown)"')
+            echo "::warning::This repository is a FORK of ${PARENT}. GitHub does NOT share secrets from the upstream repository to a fork — add the five HOSTINGER_* secrets to THIS fork (${{ github.repository }}) under Settings -> Secrets and variables -> Actions -> Repository secrets, and enable GitHub Actions in the fork's Actions tab. Then re-run."
+          fi
+          echo "List this repository's secret names locally (values are never shown):"
           echo "  gh secret list --repo ${{ github.repository }}"
 
       - name: Verify Hostinger deploy secrets
