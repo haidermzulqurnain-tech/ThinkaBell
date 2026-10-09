@@ -67,6 +67,7 @@ cp .env.example apps/jobs/.env
 For the complete step-by-step setup, module-by-module configuration, and troubleshooting, see [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md).
 
 Required secrets:
+
 - `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`
 - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
 - `ALERTS_API_KEY` — bearer token for `/api/alerts`
@@ -74,7 +75,7 @@ Required secrets:
 - `RETAILER_LINKS_API_KEY` — bearer token for POST `/api/retailer-links` (fail-closed when unset)
 - `REVALIDATION_SECRET` — token for on-demand ISR purge at `/api/revalidate` (fail-closed when unset)
 - `ENCRYPTION_KEY` / `BLIND_INDEX_KEY` — 64-char hex (`openssl rand -hex 32`) for PII encryption & blind-index lookups
-- SaaS API credentials (optional, fail-closed when missing): `AMAZON_*`, `EBAY_*`, `WALMART_API_KEY`, `PARTNERSTACK_API_KEY`, `APPSUMO_API_KEY`, `IMPACT_API_KEY`, `ONESIGNAL_*`, `BREVO_API_KEY`
+- SaaS API credentials (optional, fail-closed when missing): `AMAZON_*`, `EBAY_*`, `WALMART_API_KEY`, `PARTNERSTACK_API_KEY`, `IMPACT_ACCOUNT_SID`, `IMPACT_AUTH_TOKEN`, `ONESIGNAL_*`, `BREVO_API_KEY` (AppSumo needs none — its source harvests public pages)
 
 ### 4. Database Setup (Supabase)
 
@@ -96,18 +97,18 @@ pnpm --filter @thinkabell/jobs dev
 
 ## 🛠 Monorepo Commands
 
-| Command | Action |
-|---|---|
-| `pnpm dev` | Run all applications in development mode |
-| `pnpm build` | Build all packages and applications via Turborepo |
-| `pnpm type-check` | Run TypeScript compilation checks across the monorepo |
-| `pnpm lint` | Run ESLint across all apps and packages |
-| `pnpm test` | Run full Vitest suite across all packages |
-| `pnpm simulate` | Run the full End-to-End price drop simulation test |
-| `pnpm build:standalone` | Production web build with `output: standalone` (cross-platform; injects `OUTPUT=standalone`) |
-| `pnpm prepare:hostinger` | Package the standalone build into `dist/hostinger-deploy/` |
-| `pnpm package:hostinger` | Build standalone + package the Hostinger bundle in one command |
-| `pnpm tsx scripts/compliance-check.ts` | Run FTC/sponsored/privacy/unsubscribe compliance scan |
+| Command                                | Action                                                                                       |
+| -------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `pnpm dev`                             | Run all applications in development mode                                                     |
+| `pnpm build`                           | Build all packages and applications via Turborepo                                            |
+| `pnpm type-check`                      | Run TypeScript compilation checks across the monorepo                                        |
+| `pnpm lint`                            | Run ESLint across all apps and packages                                                      |
+| `pnpm test`                            | Run full Vitest suite across all packages                                                    |
+| `pnpm simulate`                        | Run the full End-to-End price drop simulation test                                           |
+| `pnpm build:standalone`                | Production web build with `output: standalone` (cross-platform; injects `OUTPUT=standalone`) |
+| `pnpm prepare:hostinger`               | Package the standalone build into `dist/hostinger-deploy/`                                   |
+| `pnpm package:hostinger`               | Build standalone + package the Hostinger bundle in one command                               |
+| `pnpm tsx scripts/compliance-check.ts` | Run FTC/sponsored/privacy/unsubscribe compliance scan                                        |
 
 ---
 
@@ -115,14 +116,14 @@ pnpm --filter @thinkabell/jobs dev
 
 The project uses **Vitest** with a comprehensive test suite covering:
 
-| Package | Test Coverage | Status |
-|---|---|---|
-| `@thinkabell/config` | Environment validation, Zod schema parsing, env singleton | ✅ 14/14 passing |
-| `@thinkabell/database` | Supabase client (fail-closed), repositories (Product, Alert, Subscriber, PriceHistory, RetailerLink, Comparison) | ✅ 67/67 passing |
-| `@thinkabell/shared` | API clients (Amazon, eBay, Walmart, AffiliateNetwork, Notification, PartnerStack, AppSumo, Impact), utilities (Redis, Retry, CircuitBreaker, Logger, RateLimit, ProgramStability, CursorPagination, FieldEncryption, BlindIndex) | ✅ 236/236 passing |
-| `@thinkabell/web` | Retailer Links API, Click Tracking, Sponsored Retailer routes, Search API, Compare API, Deal components, Compare components, Cookie Consent, Subscribe Modal, Error Boundary, Skeleton loaders | ✅ 118/118 passing |
-| `@thinkabell/jobs` | fetchPricesRunner, sendAlertsRunner with circuit breakers, DND, dead-letter handling, job-run monitoring | ✅ 31/31 passing |
-| `@thinkabell/edge-worker` | Edge geo-routing, affiliate localization, origin proxy, anti-spoofing headers | ✅ 16/16 passing |
+| Package                   | Test Coverage                                                                                                                                                                                                                    | Status             |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| `@thinkabell/config`      | Environment validation, Zod schema parsing, env singleton                                                                                                                                                                        | ✅ 14/14 passing   |
+| `@thinkabell/database`    | Supabase client (fail-closed), repositories (Product, Alert, Subscriber, PriceHistory, RetailerLink, Comparison)                                                                                                                 | ✅ 67/67 passing   |
+| `@thinkabell/shared`      | API clients (Amazon, eBay, Walmart, AffiliateNetwork, Notification, PartnerStack, AppSumo, Impact), utilities (Redis, Retry, CircuitBreaker, Logger, RateLimit, ProgramStability, CursorPagination, FieldEncryption, BlindIndex) | ✅ 236/236 passing |
+| `@thinkabell/web`         | Retailer Links API, Click Tracking, Sponsored Retailer routes, Search API, Compare API, Deal components, Compare components, Cookie Consent, Subscribe Modal, Error Boundary, Skeleton loaders                                   | ✅ 118/118 passing |
+| `@thinkabell/jobs`        | fetchPricesRunner, sendAlertsRunner with circuit breakers, DND, dead-letter handling, job-run monitoring                                                                                                                         | ✅ 31/31 passing   |
+| `@thinkabell/edge-worker` | Edge geo-routing, affiliate localization, origin proxy, anti-spoofing headers                                                                                                                                                    | ✅ 16/16 passing   |
 
 **Total: 482 tests, all passing.**
 
@@ -145,73 +146,73 @@ pnpm --filter @thinkabell/jobs test
 
 ### ✅ Completed (Sprint 0 — Foundation)
 
-| Component | Status | Details |
-|---|---|---|
-| **Monorepo Scaffold** | ✅ Complete | pnpm workspaces, Turborepo, TypeScript strict, ESLint, Vitest |
-| **Email Migration** | ✅ Complete | MailerLite → Brevo; List-Unsubscribe header, unsubscribe flow |
-| **Job Scheduler** | ✅ Complete | Vercel Cron + Supabase `pg_cron`; no Trigger.dev dependency |
-| **Database Schema** | ✅ Complete | 10+ tables, RLS, full-text search TSVECTOR/GIN, indexes |
-| **Type Definitions** | ✅ Complete | Typed Supabase schema in `packages/database/src/types.ts` |
-| **Repositories** | ✅ Complete | Product, Alert, Subscriber, PriceHistory, RetailerLink with tests |
-| **Shared Utilities** | ✅ Complete | retry, circuitBreaker, rateLimit, redis, logger, programStability |
-| **External API Clients** | ✅ Complete | Amazon, eBay, Walmart, OneSignal, Brevo, PartnerStack, AppSumo, Impact — fail-closed when credentials missing |
-| **Jobs** | ✅ Complete | fetchPrices, sendAlerts, deadLetterRetry, monitorJobRunners; circuit breakers, DND, advisory locks |
-| **Cron Endpoints** | ✅ Complete | `/api/cron/*` with Bearer auth + rate limiting |
-| **Health Endpoint** | ✅ Complete | `/api/health` with DB + Redis connectivity checks |
-| **Retailer Link API** | ✅ Complete | Links, sponsored links, click tracking with RLS |
-| **Search API** | ✅ Complete | Full-text search via TSVECTOR, rate limiting, category/discount filters |
-| **Legal Pages** | ✅ Complete | Privacy policy, terms of service, unsubscribe confirmation |
-| **Security Headers** | ✅ Complete | CSP, X-Frame-Options, Referrer-Policy, HSTS, Permissions-Policy |
-| **Cookie Consent** | ✅ Complete | Consent banner with tracker-blocking event bus |
-| **Compliance CI Gates** | ✅ Complete | `rel="sponsored"`, FTC disclosure, privacy-policy link, Brevo unsubscribe header |
-| **CI/CD** | ✅ Complete | GitHub Actions CI with type-check, lint, test, post-deploy smoke test |
-| **Test Infrastructure** | ✅ Complete | 482 tests passing across config, database, shared, web, jobs, edge-worker |
-| **Seed Data** | ✅ Complete | 50 placeholder products (unverified ASINs/prices); affiliate links generated from env config, fail-closed to plain URLs |
-| **Deal Detail Page** | ✅ Complete | Dual-track SaaS/physical rendering; JSON-LD (Product, BreadcrumbList, SpeakableSpecification) |
-| **Product Comparison** | ✅ Complete | `/compare` side-by-side table (price, discount, brand, tags) with best-price highlight; localStorage picker (max 4) via `CompareProvider`/`CompareToggle`/`CompareBar`; floating compare bar; rate-limited `/api/compare` endpoint |
-| **Alert Quality Score** | ✅ Complete | 0–100 score UI with color-coded confidence levels |
-| **Subscribe Flow** | ✅ Complete | Two-step modal, deep-link `?product=slug`, rate limiting, preferences |
-| **Trust Metrics** | ✅ Complete | Price freshness badge, transparency banner, deal countdown, promo code copy |
-| **Homepage UX** | ✅ Complete | Deal of the Day hero, SaaS section, How It Works, Subscribe CTA |
-| **Business Documentation** | ✅ Complete | Business case addendum, 12-month P&L (3 scenarios), DPA review |
-| **Unsubscribe Flow** | ✅ Complete | `/api/unsubscribe` endpoint with token auth, confirmed page, `unsubscribed_at` column |
-| **Mobile Navigation** | ✅ Complete | Responsive hamburger menu with ARIA attributes |
-| **Accessibility (WCAG)** | ✅ Complete | Tap targets ≥44x44px, color contrast AA, ARIA labels, focus trap in modal |
-| **SEO Metadata** | ✅ Complete | `generateMetadata` on all pages, canonical URLs, hreflang, `noindex` on thin pages |
-| **Structured Data** | ✅ Complete | Product, BreadcrumbList, SpeakableSpecification, WebSite JSON-LD |
-| **Commission Routing** | ✅ Complete | `/api/route-link` routes to highest-commission retailer, click tracking |
-| **Circuit Breaker** | ✅ Complete | Redis-backed state persistence, auto-load on construction |
-| **Job Monitoring** | ✅ Complete | `job_runs` table, advisory locks, dead-letter retry, monitoring alerts |
-| **Data Retention** | ✅ Complete | Automated archival functions for `price_history` (2 years), `click_tracking` (1 year), `alert_queue` (90 days), `dead_letter_queue` (30 days), `job_runs` (30 days) |
-| **Product Discovery Automation** | ✅ Complete | Config-driven `DISCOVERY_SOURCES` env var, dynamic product fetching from eBay, Walmart, PartnerStack, AppSumo, Impact, and manually curated Amazon Lists with full details (images, descriptions, affiliate URLs) |
-| **Rich Media Support** | ✅ Complete | `images` TEXT[], `video_url`, and `metadata` JSONB columns for storing multi-media product data |
-| **Security Hardening** | ✅ Complete | IP anonymization, CSRF protection, PII field encryption (AES-256-GCM at rest, keyed HMAC-SHA256 blind index for lookups, fail-closed, tested), click attribution tokens, data erasure workflow |
-| **Infrastructure** | ✅ Complete | Database backup script, Cloudflare _headers, Cache-Control headers, Supabase singleton TTL refresh |
+| Component                        | Status      | Details                                                                                                                                                                                                                            |
+| -------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Monorepo Scaffold**            | ✅ Complete | pnpm workspaces, Turborepo, TypeScript strict, ESLint, Vitest                                                                                                                                                                      |
+| **Email Migration**              | ✅ Complete | MailerLite → Brevo; List-Unsubscribe header, unsubscribe flow                                                                                                                                                                      |
+| **Job Scheduler**                | ✅ Complete | Vercel Cron + Supabase `pg_cron`; no Trigger.dev dependency                                                                                                                                                                        |
+| **Database Schema**              | ✅ Complete | 10+ tables, RLS, full-text search TSVECTOR/GIN, indexes                                                                                                                                                                            |
+| **Type Definitions**             | ✅ Complete | Typed Supabase schema in `packages/database/src/types.ts`                                                                                                                                                                          |
+| **Repositories**                 | ✅ Complete | Product, Alert, Subscriber, PriceHistory, RetailerLink with tests                                                                                                                                                                  |
+| **Shared Utilities**             | ✅ Complete | retry, circuitBreaker, rateLimit, redis, logger, programStability                                                                                                                                                                  |
+| **External API Clients**         | ✅ Complete | Amazon, eBay, Walmart, OneSignal, Brevo, PartnerStack, AppSumo, Impact — fail-closed when credentials missing                                                                                                                      |
+| **Jobs**                         | ✅ Complete | fetchPrices, sendAlerts, deadLetterRetry, monitorJobRunners; circuit breakers, DND, advisory locks                                                                                                                                 |
+| **Cron Endpoints**               | ✅ Complete | `/api/cron/*` with Bearer auth + rate limiting                                                                                                                                                                                     |
+| **Health Endpoint**              | ✅ Complete | `/api/health` with DB + Redis connectivity checks                                                                                                                                                                                  |
+| **Retailer Link API**            | ✅ Complete | Links, sponsored links, click tracking with RLS                                                                                                                                                                                    |
+| **Search API**                   | ✅ Complete | Full-text search via TSVECTOR, rate limiting, category/discount filters                                                                                                                                                            |
+| **Legal Pages**                  | ✅ Complete | Privacy policy, terms of service, unsubscribe confirmation                                                                                                                                                                         |
+| **Security Headers**             | ✅ Complete | CSP, X-Frame-Options, Referrer-Policy, HSTS, Permissions-Policy                                                                                                                                                                    |
+| **Cookie Consent**               | ✅ Complete | Consent banner with tracker-blocking event bus                                                                                                                                                                                     |
+| **Compliance CI Gates**          | ✅ Complete | `rel="sponsored"`, FTC disclosure, privacy-policy link, Brevo unsubscribe header                                                                                                                                                   |
+| **CI/CD**                        | ✅ Complete | GitHub Actions CI with type-check, lint, test, post-deploy smoke test                                                                                                                                                              |
+| **Test Infrastructure**          | ✅ Complete | 482 tests passing across config, database, shared, web, jobs, edge-worker                                                                                                                                                          |
+| **Seed Data**                    | ✅ Complete | 50 placeholder products (unverified ASINs/prices); affiliate links generated from env config, fail-closed to plain URLs                                                                                                            |
+| **Deal Detail Page**             | ✅ Complete | Dual-track SaaS/physical rendering; JSON-LD (Product, BreadcrumbList, SpeakableSpecification)                                                                                                                                      |
+| **Product Comparison**           | ✅ Complete | `/compare` side-by-side table (price, discount, brand, tags) with best-price highlight; localStorage picker (max 4) via `CompareProvider`/`CompareToggle`/`CompareBar`; floating compare bar; rate-limited `/api/compare` endpoint |
+| **Alert Quality Score**          | ✅ Complete | 0–100 score UI with color-coded confidence levels                                                                                                                                                                                  |
+| **Subscribe Flow**               | ✅ Complete | Two-step modal, deep-link `?product=slug`, rate limiting, preferences                                                                                                                                                              |
+| **Trust Metrics**                | ✅ Complete | Price freshness badge, transparency banner, deal countdown, promo code copy                                                                                                                                                        |
+| **Homepage UX**                  | ✅ Complete | Deal of the Day hero, SaaS section, How It Works, Subscribe CTA                                                                                                                                                                    |
+| **Business Documentation**       | ✅ Complete | Business case addendum, 12-month P&L (3 scenarios), DPA review                                                                                                                                                                     |
+| **Unsubscribe Flow**             | ✅ Complete | `/api/unsubscribe` endpoint with token auth, confirmed page, `unsubscribed_at` column                                                                                                                                              |
+| **Mobile Navigation**            | ✅ Complete | Responsive hamburger menu with ARIA attributes                                                                                                                                                                                     |
+| **Accessibility (WCAG)**         | ✅ Complete | Tap targets ≥44x44px, color contrast AA, ARIA labels, focus trap in modal                                                                                                                                                          |
+| **SEO Metadata**                 | ✅ Complete | `generateMetadata` on all pages, canonical URLs, hreflang, `noindex` on thin pages                                                                                                                                                 |
+| **Structured Data**              | ✅ Complete | Product, BreadcrumbList, SpeakableSpecification, WebSite JSON-LD                                                                                                                                                                   |
+| **Commission Routing**           | ✅ Complete | `/api/route-link` routes to highest-commission retailer, click tracking                                                                                                                                                            |
+| **Circuit Breaker**              | ✅ Complete | Redis-backed state persistence, auto-load on construction                                                                                                                                                                          |
+| **Job Monitoring**               | ✅ Complete | `job_runs` table, advisory locks, dead-letter retry, monitoring alerts                                                                                                                                                             |
+| **Data Retention**               | ✅ Complete | Automated archival functions for `price_history` (2 years), `click_tracking` (1 year), `alert_queue` (90 days), `dead_letter_queue` (30 days), `job_runs` (30 days)                                                                |
+| **Product Discovery Automation** | ✅ Complete | Config-driven `DISCOVERY_SOURCES` env var, dynamic product fetching from eBay, Walmart, PartnerStack, AppSumo, Impact, and manually curated Amazon Lists with full details (images, descriptions, affiliate URLs)                  |
+| **Rich Media Support**           | ✅ Complete | `images` TEXT[], `video_url`, and `metadata` JSONB columns for storing multi-media product data                                                                                                                                    |
+| **Security Hardening**           | ✅ Complete | IP anonymization, CSRF protection, PII field encryption (AES-256-GCM at rest, keyed HMAC-SHA256 blind index for lookups, fail-closed, tested), click attribution tokens, data erasure workflow                                     |
+| **Infrastructure**               | ✅ Complete | Database backup script, Cloudflare _headers, Cache-Control headers, Supabase singleton TTL refresh                                                                                                                                 |
 
 ### 🔄 Remaining Production Hardening (Sprint 0 Close-out)
 
-| Task | Priority | Status |
-|---|---|---|
-| **Error Boundaries** | 🟠 High | ✅ Complete — global `ErrorBoundary` + not-found page |
-| **Loading Skeletons** | 🟠 High | ✅ Complete — `DealCardSkeleton`, `SearchResultsSkeleton`, `HomepageSectionSkeleton` |
-| **Pagination Cursor** | 🟠 High | ✅ Complete — `encodeCursor`/`decodeCursor` utilities; search API paginated |
-| **Idempotency Keys** | 🟡 Medium | ✅ Complete — `/api/subscribe` supports `Idempotency-Key` header |
-| **Sentry/PostHog** | 🟡 Medium | ✅ Complete — SDK initialization gated behind consent |
-| **Design System** | 🟢 Low | Deferred to post-launch; using Tailwind utilities |
+| Task                  | Priority  | Status                                                                               |
+| --------------------- | --------- | ------------------------------------------------------------------------------------ |
+| **Error Boundaries**  | 🟠 High   | ✅ Complete — global `ErrorBoundary` + not-found page                                |
+| **Loading Skeletons** | 🟠 High   | ✅ Complete — `DealCardSkeleton`, `SearchResultsSkeleton`, `HomepageSectionSkeleton` |
+| **Pagination Cursor** | 🟠 High   | ✅ Complete — `encodeCursor`/`decodeCursor` utilities; search API paginated          |
+| **Idempotency Keys**  | 🟡 Medium | ✅ Complete — `/api/subscribe` supports `Idempotency-Key` header                     |
+| **Sentry/PostHog**    | 🟡 Medium | ✅ Complete — SDK initialization gated behind consent                                |
+| **Design System**     | 🟢 Low    | Deferred to post-launch; using Tailwind utilities                                    |
 
 ### 🚀 Post-Launch (Sprint 4+)
 
-| Feature | Reason Deferred |
-|---|---|
-| Design-system token namespaces | Tailwind utilities sufficient for MVP |
-| Visual QA pipeline (Playwright) | Post-launch quality hardening |
-| Sentiment infrastructure | Legal review required |
-| S2S postback/webhook ingestion | Commission validation via dashboard first |
-| Full comparison tables | "Also consider" algorithm sufficient for MVP |
-| `/alerts` dashboard | Simple thresholds in MVP; full dashboard post-launch |
-| Natural language search | Post-launch SEO enhancement |
-| Hostinger → Vercel/Cloudflare Pages migration | Planned within 3–6 months |
-| Watchlist feature | Deferred per Product/Business Strategist |
+| Feature                                       | Reason Deferred                                      |
+| --------------------------------------------- | ---------------------------------------------------- |
+| Design-system token namespaces                | Tailwind utilities sufficient for MVP                |
+| Visual QA pipeline (Playwright)               | Post-launch quality hardening                        |
+| Sentiment infrastructure                      | Legal review required                                |
+| S2S postback/webhook ingestion                | Commission validation via dashboard first            |
+| Full comparison tables                        | "Also consider" algorithm sufficient for MVP         |
+| `/alerts` dashboard                           | Simple thresholds in MVP; full dashboard post-launch |
+| Natural language search                       | Post-launch SEO enhancement                          |
+| Hostinger → Vercel/Cloudflare Pages migration | Planned within 3–6 months                            |
+| Watchlist feature                             | Deferred per Product/Business Strategist             |
 
 ---
 
@@ -238,14 +239,14 @@ ThinkaBell includes a fully dynamic product discovery system that automatically 
 
 ### Supported Sources
 
-| Source | Type | Details Fetched |
-|--------|------|-----------------|
-| **eBay Browse API** | Physical | Images, descriptions, seller info, shipping, condition, affiliate URLs |
-| **Walmart API** | Physical | Images, descriptions, brand, category, product URLs |
-| **PartnerStack** | Software | Logo URLs, descriptions, vendor info, commission rates |
-| **AppSumo** | Software | Descriptions, vendor info, commission rates, expiry dates |
-| **Impact** | Software | Logo URLs, descriptions, advertiser info, commission rates |
-| **Amazon Lists** | Physical | Manually curated public Amazon Lists — ASIN, title, price, image, affiliate links (no API, no login credentials) |
+| Source              | Type     | Details Fetched                                                                                                  |
+| ------------------- | -------- | ---------------------------------------------------------------------------------------------------------------- |
+| **eBay Browse API** | Physical | Images, descriptions, seller info, shipping, condition, affiliate URLs                                           |
+| **Walmart API**     | Physical | Images, descriptions, brand, category, product URLs                                                              |
+| **PartnerStack**    | Software | Logo URLs, descriptions, vendor info, commission rates                                                           |
+| **AppSumo**         | Software | Descriptions, vendor info, commission rates, expiry dates                                                        |
+| **Impact**          | Software | Logo URLs, descriptions, advertiser info, commission rates                                                       |
+| **Amazon Lists**    | Physical | Manually curated public Amazon Lists — ASIN, title, price, image, affiliate links (no API, no login credentials) |
 
 ### Configuration
 
@@ -307,20 +308,20 @@ link.
 
 ## 📊 Current Metrics
 
-| Metric | Value |
-|---|---|
-| **Packages** | 6 (@thinkabell/config, database, shared, edge-worker, @thinkabell/web, @thinkabell/jobs) |
-| **Test Coverage** | 482 tests, all passing |
-| **TypeScript** | Strict mode, all packages passing `tsc --noEmit` |
-| **Lint** | All packages clean |
-| **Database Tables** | 10+ tables with RLS, indexes, and seed data |
-| **API Routes** | 10+ endpoints (retailer-links, sponsored, click tracking, health, subscribe, search, compare, cron, route-link, alerts, contact) |
-| **Background Jobs** | 5 runners (fetchPrices, sendAlerts, deadLetterRetry, monitorJobRuns, productDiscovery) with circuit breakers, DND, advisory locks |
-| **UI Components** | 15+ components (DealCard, CompareTable, CompareToggle, CompareBar, CompareProvider, PriceHistoryChart, TransparencyBanner, DealCountdown, PromoCodeCopy, PriceFreshnessBadge, AlertQualityScore, CookieConsent, SubscribeModal, SubscribeCTA, TrueCostCalculator, Navbar, Footer, ErrorBoundary, Skeletons) with production-grade error handling and loading states |
-| **Pages** | Homepage, Deal Detail, Product Comparison, True Cost Calculator, Subscribe, Search, Legal (Privacy, Terms), Unsubscribe Confirmed, Not Found |
-| **SaaS Integrations** | PartnerStack, AppSumo, Impact clients with fail-closed behavior |
-| **Structured Data** | Product, BreadcrumbList, SpeakableSpecification, WebSite JSON-LD |
-| **Compliance** | FTC disclosure, rel="sponsored" coverage (98 passed), privacy policy, unsubscribe headers |
+| Metric                | Value                                                                                                                                                                                                                                                                                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Packages**          | 6 (@thinkabell/config, database, shared, edge-worker, @thinkabell/web, @thinkabell/jobs)                                                                                                                                                                                                                                                                            |
+| **Test Coverage**     | 482 tests, all passing                                                                                                                                                                                                                                                                                                                                              |
+| **TypeScript**        | Strict mode, all packages passing `tsc --noEmit`                                                                                                                                                                                                                                                                                                                    |
+| **Lint**              | All packages clean                                                                                                                                                                                                                                                                                                                                                  |
+| **Database Tables**   | 10+ tables with RLS, indexes, and seed data                                                                                                                                                                                                                                                                                                                         |
+| **API Routes**        | 10+ endpoints (retailer-links, sponsored, click tracking, health, subscribe, search, compare, cron, route-link, alerts, contact)                                                                                                                                                                                                                                    |
+| **Background Jobs**   | 5 runners (fetchPrices, sendAlerts, deadLetterRetry, monitorJobRuns, productDiscovery) with circuit breakers, DND, advisory locks                                                                                                                                                                                                                                   |
+| **UI Components**     | 15+ components (DealCard, CompareTable, CompareToggle, CompareBar, CompareProvider, PriceHistoryChart, TransparencyBanner, DealCountdown, PromoCodeCopy, PriceFreshnessBadge, AlertQualityScore, CookieConsent, SubscribeModal, SubscribeCTA, TrueCostCalculator, Navbar, Footer, ErrorBoundary, Skeletons) with production-grade error handling and loading states |
+| **Pages**             | Homepage, Deal Detail, Product Comparison, True Cost Calculator, Subscribe, Search, Legal (Privacy, Terms), Unsubscribe Confirmed, Not Found                                                                                                                                                                                                                        |
+| **SaaS Integrations** | PartnerStack, AppSumo, Impact clients with fail-closed behavior                                                                                                                                                                                                                                                                                                     |
+| **Structured Data**   | Product, BreadcrumbList, SpeakableSpecification, WebSite JSON-LD                                                                                                                                                                                                                                                                                                    |
+| **Compliance**        | FTC disclosure, rel="sponsored" coverage (98 passed), privacy policy, unsubscribe headers                                                                                                                                                                                                                                                                           |
 
 ---
 

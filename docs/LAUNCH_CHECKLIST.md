@@ -32,7 +32,7 @@ This operational playbook details the pre-launch checklist, content marketing te
   - [ ] Brevo API key configured for email alert delivery.
 - [x] **Product Discovery Configured**:
   - [ ] Set `DISCOVERY_SOURCES` environment variable in `apps/jobs/.env` with desired sources and queries.
-  - [ ] Configure API credentials for enabled sources (`EBAY_*`, `WALMART_API_KEY`, `PARTNERSTACK_API_KEY`, `APPSUMO_API_KEY`, `IMPACT_API_KEY`).
+  - [ ] Configure API credentials for enabled sources (`EBAY_*`, `WALMART_API_KEY`, `PARTNERSTACK_API_KEY`, `IMPACT_ACCOUNT_SID`, `IMPACT_AUTH_TOKEN`). The `appsumo` source needs no credentials — it harvests AppSumo's public browse and product pages.
   - [ ] For the `amazon-list` source: set `AMAZON_LIST_URLS` to a JSON array of `{ url, marketplace }` entries pointing at public Amazon List URLs you curate, and set the matching regional partner tags (`AMAZON_PARTNER_TAG`, `AMAZON_PARTNER_TAG_UK`, `AMAZON_PARTNER_TAG_DE`, `AMAZON_PARTNER_TAG_CA`). No Amazon login credentials are used or stored — see `docs/AMAZON_LIST_CURATION.md`.
   - [ ] Verify `productDiscoveryRunner` completes successfully and populates `products` table with discovered items.
   - [ ] Confirm `source`, `source_id`, `images`, `video_url`, and `affiliate_links` are populated correctly.
@@ -44,6 +44,7 @@ This operational playbook details the pre-launch checklist, content marketing te
 When a new subscriber signs up via `https://thinkabell.click/subscribe`, automate the following 2-part welcome email sequence via Brevo:
 
 ### Email 1: Welcome & Deal Confirmation (Immediate)
+
 - **Subject**: Welcome to ThinkaBell! Your deal alerts are now live 🔔
 - **Preview Text**: We scan hardware and software prices 24/7 so you never overpay.
 - **Body**:
@@ -54,13 +55,15 @@ When a new subscriber signs up via `https://thinkabell.click/subscribe`, automat
   > Whenever a monitored AI gadget, developer laptop, or SaaS tool drops in price by at least 10%, our spiders flag it and ping your inbox with a verified discount link.
   >
   > **What to do next:**
+  >
   > 1. Whitelist our email address so alerts never land in spam.
   > 2. [Browse today's top price drops on ThinkaBell](https://thinkabell.click)
   >
   > Happy saving!  
-  > *The ThinkaBell Team*
+  > _The ThinkaBell Team_
 
 ### Email 2: Set Preferences & Community (Day 3)
+
 - **Subject**: Quick question: Are you looking for hardware or software deals?
 - **Body**:
   > Did you know you can customize your alert preferences?
@@ -75,6 +78,7 @@ When a new subscriber signs up via `https://thinkabell.click/subscribe`, automat
 Automate or manually syndicate verified price drops to social channels:
 
 ### X (Twitter) Deal Post Format
+
 ```text
 🔥 PRICE DROP ALERT: [Product Name]
 
@@ -89,6 +93,7 @@ Lowest tracked price in 30 days.
 ```
 
 ### Reddit (r/deals, r/buildapcsales, r/macapps)
+
 Format posts with price in brackets, clean non-promotional tone, and link to the price history comparison page on ThinkaBell.
 
 ---
@@ -129,17 +134,27 @@ Format posts with price in brackets, clean non-promotional tone, and link to the
    - Set `DISCOVERY_SOURCES` environment variable in `apps/jobs/.env`:
      ```json
      [
-       {"name": "ebay", "type": "physical", "queries": ["AI gadgets", "smart home"], "enabled": true},
-        {"name": "partnerstack", "type": "software", "queries": ["productivity", "developer tools"], "enabled": true}
-      ]
-      ```
-      The `amazon-list` source requires no API credentials — curate public
-      Amazon List URLs, set `AMAZON_LIST_URLS` and the regional partner
-      tags (`AMAZON_PARTNER_TAG`, `AMAZON_PARTNER_TAG_UK`, `AMAZON_PARTNER_TAG_DE`,
-      `AMAZON_PARTNER_TAG_CA`), then add
-      `{"name": "amazon-list", "type": "physical", "queries": [], "enabled": true}`.
-      Affiliate links fail closed (are skipped) until a partner tag is
-      configured. See `docs/AMAZON_LIST_CURATION.md`.
+       {
+         "name": "ebay",
+         "type": "physical",
+         "queries": ["AI gadgets", "smart home"],
+         "enabled": true
+       },
+       {
+         "name": "partnerstack",
+         "type": "software",
+         "queries": ["productivity", "developer tools"],
+         "enabled": true
+       }
+     ]
+     ```
+     The `amazon-list` source requires no API credentials — curate public
+     Amazon List URLs, set `AMAZON_LIST_URLS` and the regional partner
+     tags (`AMAZON_PARTNER_TAG`, `AMAZON_PARTNER_TAG_UK`, `AMAZON_PARTNER_TAG_DE`,
+     `AMAZON_PARTNER_TAG_CA`), then add
+     `{"name": "amazon-list", "type": "physical", "queries": [], "enabled": true}`.
+     Affiliate links fail closed (are skipped) until a partner tag is
+     configured. See `docs/AMAZON_LIST_CURATION.md`.
 2. **Verify Discovery Job**:
    - Trigger discovery via `POST /api/cron/product-discovery` (Vercel Cron, every 6 hours — see `vercel.json`) with the `CRON_SECRET` bearer token, or call `runProductDiscovery()` from `@thinkabell/jobs` directly.
    - Check `job_runs` table for successful completion.
@@ -154,6 +169,7 @@ Format posts with price in brackets, clean non-promotional tone, and link to the
 ## 6. Environment Setup Commands
 
 ### Initial Setup
+
 ```bash
 # 1. Clone repository
 git clone <repository-url> && cd thinkabellclick
@@ -184,6 +200,7 @@ pnpm --filter @thinkabell/jobs dev
 ```
 
 ### Verification Pipeline
+
 ```bash
 # Run all checks
 pnpm run type-check    # TypeScript compilation (6/6 packages)
@@ -193,6 +210,7 @@ pnpm run compliance-check  # FTC/sponsored/privacy/unsubscribe scan
 ```
 
 ### Production Deployment
+
 ```bash
 # Build all packages
 pnpm run build
@@ -243,4 +261,4 @@ git push origin main
 
 ---
 
-*This document is maintained by the ThinkaBell engineering team.*
+_This document is maintained by the ThinkaBell engineering team._

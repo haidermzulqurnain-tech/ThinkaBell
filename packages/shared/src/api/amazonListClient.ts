@@ -1,6 +1,6 @@
 import { env } from "@thinkabell/config";
 import { logger } from "../utils/logger";
-import { retryWithBackoff } from "../utils/retry";
+import { fetchPublicPage } from "../utils/publicPageFetch";
 import {
   AmazonAffiliateLinkError,
   buildAmazonProductUrl,
@@ -108,9 +108,9 @@ export function parseAmazonListHtml(html: string): AmazonListItem[] {
 
     const dynamicImage = chunk.match(DYNAMIC_IMAGE_PATTERN)?.[1] ?? "";
     const imageUrl =
-      (dynamicImage.match(IMAGE_URL_IN_DYNAMIC_PATTERN)?.[0] ??
-        chunk.match(STATIC_IMAGE_PATTERN)?.[1] ??
-        null);
+      dynamicImage.match(IMAGE_URL_IN_DYNAMIC_PATTERN)?.[0] ??
+      chunk.match(STATIC_IMAGE_PATTERN)?.[1] ??
+      null;
 
     seen.add(asin);
     items.push({
@@ -165,30 +165,6 @@ export function getAmazonListConfigs(): AmazonListConfig[] {
     }));
 }
 
-const FETCH_TIMEOUT_MS = 15000;
-const USER_AGENT =
-  "Mozilla/5.0 (compatible; ThinkaBellDealResearch/1.0; +https://thinkabell.click)";
-
-async function fetchWithTimeout(url: string): Promise<string> {
-  const response = await retryWithBackoff(
-    () =>
-      fetch(url, {
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-        headers: { "User-Agent": USER_AGENT, Accept: "text/html" },
-      }).then(async (res) => {
-        if (!res.ok) {
-          const error = new Error(`HTTP ${res.status}`) as Error & { status: number };
-          error.status = res.status;
-          throw error;
-        }
-        return res.text();
-      }),
-    { maxAttempts: 3, retryableStatuses: [429, 500, 502, 503, 504] },
-  );
-
-  return response;
-}
-
 export class AmazonListClient {
   /**
    * Harvests a single public Amazon List and maps every item to a
@@ -196,7 +172,7 @@ export class AmazonListClient {
    * modular link generator.
    */
   async fetchListItems(config: AmazonListConfig): Promise<DiscoveredProduct[]> {
-    const html = await fetchWithTimeout(config.url);
+    const html = await fetchPublicPage(config.url);
     const maxItems = env.AMAZON_LIST_MAX_ITEMS;
     const rawItems = parseAmazonListHtml(html).slice(0, Math.max(0, maxItems));
     const currency = currencyForMarketplace(config.marketplace);

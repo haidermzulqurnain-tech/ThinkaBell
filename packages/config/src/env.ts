@@ -106,11 +106,19 @@ export const envSchema = z.object({
   REVALIDATION_SECRET: z.string().default(""),
   RETAILER_LINKS_API_KEY: z.string().default(""),
 
-  // SaaS Affiliate Networks
-  APPSUMO_API_KEY: z.string().default(""),
-  IMPACT_API_KEY: z.string().default(""),
-  IMPACT_ACCOUNT_ID: z.string().default(""),
+  // SaaS Affiliate Networks.
+  // PartnerStack Partner API key (Bearer auth,
+  // GET /api/v2/marketplace/programs).
   PARTNERSTACK_API_KEY: z.string().default(""),
+  // Impact REST API credentials — HTTP Basic
+  // auth: Account SID as the username, Auth
+  // Token as the password
+  // (GET /Mediapartners/{AccountSID}/Campaigns).
+  IMPACT_ACCOUNT_SID: z.string().default(""),
+  IMPACT_AUTH_TOKEN: z.string().default(""),
+  // AppSumo needs no credentials: it publishes no
+  // public deals API, so its client harvests the
+  // server-rendered browse and product pages.
 });
 
 export type Env = z.infer<typeof envSchema>;

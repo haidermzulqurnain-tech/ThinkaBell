@@ -10,25 +10,25 @@ A dynamic, modular, step-by-step guide to setting up the ThinkaBell monorepo fro
 
 ## Module map
 
-| Module | Package | Configured via | Verify alone |
-| --- | --- | --- | --- |
-| Web app (Next.js 14) | `apps/web` (`@thinkabell/web`) | `apps/web/.env.local` | `pnpm --filter @thinkabell/web dev` |
-| Scheduled jobs | `apps/jobs` (`@thinkabell/jobs`) | `apps/jobs/.env` | `pnpm --filter @thinkabell/jobs test` |
-| Shared config/env schema | `packages/config` (`@thinkabell/config`) | `.env` (root, for scripts) | `pnpm --filter @thinkabell/config test` |
-| Database client & repos | `packages/database` | `SUPABASE_*` | `pnpm --filter @thinkabell/database test` |
-| Edge worker (geo routing) | `packages/edge-worker` | `wrangler.toml` + worker secrets | `pnpm --filter @thinkabell/edge-worker test` |
-| Shared libs (affiliate, rates, geo) | `packages/shared` | env at call sites | `pnpm --filter @thinkabell/shared test` |
+| Module                              | Package                                  | Configured via                   | Verify alone                                 |
+| ----------------------------------- | ---------------------------------------- | -------------------------------- | -------------------------------------------- |
+| Web app (Next.js 14)                | `apps/web` (`@thinkabell/web`)           | `apps/web/.env.local`            | `pnpm --filter @thinkabell/web dev`          |
+| Scheduled jobs                      | `apps/jobs` (`@thinkabell/jobs`)         | `apps/jobs/.env`                 | `pnpm --filter @thinkabell/jobs test`        |
+| Shared config/env schema            | `packages/config` (`@thinkabell/config`) | `.env` (root, for scripts)       | `pnpm --filter @thinkabell/config test`      |
+| Database client & repos             | `packages/database`                      | `SUPABASE_*`                     | `pnpm --filter @thinkabell/database test`    |
+| Edge worker (geo routing)           | `packages/edge-worker`                   | `wrangler.toml` + worker secrets | `pnpm --filter @thinkabell/edge-worker test` |
+| Shared libs (affiliate, rates, geo) | `packages/shared`                        | env at call sites                | `pnpm --filter @thinkabell/shared test`      |
 
 ---
 
 ## Phase 0 — Prerequisites
 
-| Requirement | Version | Notes |
-| --- | --- | --- |
-| Node.js | 20 LTS or newer | Check: `node --version` |
-| pnpm | 9+ (repo pins `pnpm@12.3.4` via `packageManager`) | Enable with `corepack enable` |
-| Supabase project | any | Free tier works; SQL editor needed for Phase 4 |
-| Git | any | |
+| Requirement      | Version                                           | Notes                                          |
+| ---------------- | ------------------------------------------------- | ---------------------------------------------- |
+| Node.js          | 20 LTS or newer                                   | Check: `node --version`                        |
+| pnpm             | 9+ (repo pins `pnpm@12.3.4` via `packageManager`) | Enable with `corepack enable`                  |
+| Supabase project | any                                               | Free tier works; SQL editor needed for Phase 4 |
+| Git              | any                                               |                                                |
 
 Optional (each module works without it — see Appendix A):
 
@@ -76,11 +76,11 @@ Run each command separately and record the four **distinct** outputs somewhere s
 
 `@thinkabell/config` loads `.env` from the **process working directory** (non-production only, via `dotenv`). Because turbo runs each package task inside its package directory:
 
-| How you run it | Working directory | Env file read |
-| --- | --- | --- |
-| `pnpm dev` (turbo → web) | `apps/web/` | `apps/web/.env` — Next.js also auto-loads `apps/web/.env.local` (recommended) |
-| `pnpm test` (turbo → jobs) | `apps/jobs/` | `apps/jobs/.env` |
-| `pnpm tsx scripts/...` (seed, simulate, compliance) | repo root | `.env` |
+| How you run it                                      | Working directory | Env file read                                                                 |
+| --------------------------------------------------- | ----------------- | ----------------------------------------------------------------------------- |
+| `pnpm dev` (turbo → web)                            | `apps/web/`       | `apps/web/.env` — Next.js also auto-loads `apps/web/.env.local` (recommended) |
+| `pnpm test` (turbo → jobs)                          | `apps/jobs/`      | `apps/jobs/.env`                                                              |
+| `pnpm tsx scripts/...` (seed, simulate, compliance) | repo root         | `.env`                                                                        |
 
 Keep the copies in sync. All `.env*` variants are gitignored — verify with `git status` after creating them (only `.env.example` is tracked).
 
@@ -107,26 +107,27 @@ Next.js only inlines variables prefixed `NEXT_PUBLIC_` into client bundles. Ever
 
 Fill in additional variables per module as you enable it (details in [Phase 7](#phase-7--optional-module-configuration)):
 
-| Variable(s) | Module | Required? |
-| --- | --- | --- |
-| `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Database | Yes (app is empty without them) |
-| `ENCRYPTION_KEY`, `BLIND_INDEX_KEY` | PII protection | Production yes; dev fallback warns |
-| `AMAZON_ACCESS_KEY`, `AMAZON_SECRET_KEY`, `AMAZON_PARTNER_TAG`, `AMAZON_REGION` | Amazon PA-API | Optional |
-| `AMAZON_PARTNER_TAG_UK`, `AMAZON_PARTNER_TAG_DE`, `AMAZON_PARTNER_TAG_CA` | Regional affiliate links | Optional (fail-closed per marketplace) |
-| `AMAZON_LIST_URLS`, `AMAZON_LIST_MARKETPLACE`, `AMAZON_LIST_MAX_ITEMS`, `AMAZON_LIST_FETCH_DELAY_MS` | Amazon list hunting | Optional |
-| `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, `EBAY_AFFILIATE_CAMPAIGN_ID` | eBay Browse API | Optional |
-| `WALMART_API_KEY`, `WALMART_AFFILIATE_ID`, `WALMART_AFFILIATE_TRACK_ID` | Walmart | Optional |
-| `APPSUMO_API_KEY`, `IMPACT_API_KEY`, `IMPACT_ACCOUNT_ID`, `PARTNERSTACK_API_KEY` | SaaS affiliate networks | Optional |
-| `ONESIGNAL_APP_ID`, `ONESIGNAL_REST_API_KEY`, `NEXT_PUBLIC_ONESIGNAL_APP_ID` | Push notifications | Optional |
-| `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME` | Email alerts | Optional |
-| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Rate limiting / circuit breaker | Optional (in-memory fallback) |
-| `EXCHANGE_RATE_API_URL` | Price currency normalization | Optional (default: frankfurter.app; static fallback rates when unreachable) |
-| `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`, `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` | Analytics & monitoring | Optional |
-| `DISCOVERY_SOURCES` | Discovery job | Optional (empty = nothing discovered) |
-| `CRON_SECRET` | `/api/cron/*` authorization | Production yes |
-| `ALERTS_API_KEY` | `/api/alerts` authorization | Production yes |
-| `CONTACT_EMAIL` | Contact form recipient | Optional (falls back to `BREVO_SENDER_EMAIL`, then `hello@thinkabell.click`) |
-| `EDGE_PROXY_TRUSTED` | Geo routing behind Cloudflare worker | Optional, default `"false"` |
+| Variable(s)                                                                                                                                        | Module                               | Required?                                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------- |
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`                                                                                   | Database                             | Yes (app is empty without them)                                              |
+| `ENCRYPTION_KEY`, `BLIND_INDEX_KEY`                                                                                                                | PII protection                       | Production yes; dev fallback warns                                           |
+| `AMAZON_ACCESS_KEY`, `AMAZON_SECRET_KEY`, `AMAZON_PARTNER_TAG`, `AMAZON_REGION`                                                                    | Amazon PA-API                        | Optional                                                                     |
+| `AMAZON_PARTNER_TAG_UK`, `AMAZON_PARTNER_TAG_DE`, `AMAZON_PARTNER_TAG_CA`                                                                          | Regional affiliate links             | Optional (fail-closed per marketplace)                                       |
+| `AMAZON_LIST_URLS`, `AMAZON_LIST_MARKETPLACE`, `AMAZON_LIST_MAX_ITEMS`, `AMAZON_LIST_FETCH_DELAY_MS`                                               | Amazon list hunting                  | Optional                                                                     |
+| `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, `EBAY_AFFILIATE_CAMPAIGN_ID`                                                                               | eBay Browse API                      | Optional                                                                     |
+| `WALMART_API_KEY`, `WALMART_AFFILIATE_ID`, `WALMART_AFFILIATE_TRACK_ID`                                                                            | Walmart                              | Optional                                                                     |
+| `PARTNERSTACK_API_KEY`                                                                                                                             | PartnerStack Partner API             | Optional                                                                     |
+| `IMPACT_ACCOUNT_SID`, `IMPACT_AUTH_TOKEN`                                                                                                          | Impact REST API (HTTP Basic)         | Optional                                                                     |
+| `ONESIGNAL_APP_ID`, `ONESIGNAL_REST_API_KEY`, `NEXT_PUBLIC_ONESIGNAL_APP_ID`                                                                       | Push notifications                   | Optional                                                                     |
+| `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`                                                                                         | Email alerts                         | Optional                                                                     |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`                                                                                               | Rate limiting / circuit breaker      | Optional (in-memory fallback)                                                |
+| `EXCHANGE_RATE_API_URL`                                                                                                                            | Price currency normalization         | Optional (default: frankfurter.app; static fallback rates when unreachable)  |
+| `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`, `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` | Analytics & monitoring               | Optional                                                                     |
+| `DISCOVERY_SOURCES`                                                                                                                                | Discovery job                        | Optional (empty = nothing discovered)                                        |
+| `CRON_SECRET`                                                                                                                                      | `/api/cron/*` authorization          | Production yes                                                               |
+| `ALERTS_API_KEY`                                                                                                                                   | `/api/alerts` authorization          | Production yes                                                               |
+| `CONTACT_EMAIL`                                                                                                                                    | Contact form recipient               | Optional (falls back to `BREVO_SENDER_EMAIL`, then `hello@thinkabell.click`) |
+| `EDGE_PROXY_TRUSTED`                                                                                                                               | Geo routing behind Cloudflare worker | Optional, default `"false"`                                                  |
 
 Invalid values print `⚠️ [Config] Environment validation warnings:` at startup and fall back to schema defaults — the app still boots.
 
@@ -159,20 +160,21 @@ pnpm simulate                          # E2E simulation: price drop -> alert que
 ```
 
 **Seeding notes:**
+
 - Requires `SUPABASE_SERVICE_ROLE_KEY`: the `products` table is RLS anon read-only, so the seeder writes through the service-role client and fails closed without the key.
 - Seed data is **synthetic placeholder content** (randomized ASINs/ePIDs, static prices) so the pipeline can be exercised end-to-end locally. Replace it with real curated products per `docs/AMAZON_LIST_CURATION.md` before any public launch.
 - Seeded retailer URLs are plain (no affiliate tags). Tagged links are generated dynamically per request via `/go/amazon/:asin` and the shared link generator, which fail closed (400/503) when partner tags are not configured.
 
 Smoke-test table (run the web app first — Phase 6):
 
-| Check | Expected result |
-| --- | --- |
-| `GET /api/health` | `200` with `status: "healthy"` when the database and cache checks pass; `503` with `status: "unhealthy"` and per-check details when either fails |
-| `GET /` | `200`, renders seeded deals |
-| `POST /api/cron/<job>` without `Authorization` header | `401` — **expected** (fail-closed cron auth; the cron endpoints accept POST only — a GET returns `405`) |
-| `GET /api/alerts` without `Authorization` header | `401` — **expected** (bearer token, or `?api_key=` as an alternative) |
-| `GET /api/unsubscribe` without `email`/`token` params | `400` — **expected** (token-based, no bearer auth) |
-| `GET /go/amazon/B0CM5N4G3T` before partner tags are configured | `503` — **expected** fail-closed geo route (the Cloudflare worker returns `500` for the same condition) |
+| Check                                                          | Expected result                                                                                                                                  |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /api/health`                                              | `200` with `status: "healthy"` when the database and cache checks pass; `503` with `status: "unhealthy"` and per-check details when either fails |
+| `GET /`                                                        | `200`, renders seeded deals                                                                                                                      |
+| `POST /api/cron/<job>` without `Authorization` header          | `401` — **expected** (fail-closed cron auth; the cron endpoints accept POST only — a GET returns `405`)                                          |
+| `GET /api/alerts` without `Authorization` header               | `401` — **expected** (bearer token, or `?api_key=` as an alternative)                                                                            |
+| `GET /api/unsubscribe` without `email`/`token` params          | `400` — **expected** (token-based, no bearer auth)                                                                                               |
+| `GET /go/amazon/B0CM5N4G3T` before partner tags are configured | `503` — **expected** fail-closed geo route (the Cloudflare worker returns `500` for the same condition)                                          |
 
 ---
 
@@ -229,7 +231,9 @@ Variables: `WALMART_API_KEY`, `WALMART_AFFILIATE_ID`, `WALMART_AFFILIATE_TRACK_I
 
 ### 7.5 SaaS affiliate networks
 
-Variables: `APPSUMO_API_KEY`, `IMPACT_API_KEY` + `IMPACT_ACCOUNT_ID`, `PARTNERSTACK_API_KEY`. Without them: those software-discovery sources are skipped.
+- **PartnerStack:** `PARTNERSTACK_API_KEY` (Bearer auth; the Partner API lists marketplace programs at `GET /api/v2/marketplace/programs`). Without it: the PartnerStack source is skipped.
+- **Impact:** `IMPACT_ACCOUNT_SID` + `IMPACT_AUTH_TOKEN` (HTTP Basic auth; `GET /Mediapartners/{AccountSID}/Campaigns`). Without them: the Impact source is skipped.
+- **AppSumo:** no credentials — AppSumo publishes no public deals API, so the source harvests the server-rendered browse (`/browse/?query=…`) and product pages. Always available.
 
 ### 7.6 Notifications
 
@@ -345,11 +349,11 @@ Before deploying for production, set the secrets (`wrangler secret put <NAME>`):
 
 `vercel.json` defines **three** cron jobs (Vercel dashboard → Cron Jobs mirrors these; all are POST endpoints requiring header `Authorization: Bearer <CRON_SECRET>`, with a per-IP fail-closed rate limit of 10 requests / 60 s):
 
-| Job | Endpoint | Schedule (from `vercel.json`) |
-| --- | --- | --- |
+| Job               | Endpoint                      | Schedule (from `vercel.json`) |
+| ----------------- | ----------------------------- | ----------------------------- |
 | Product discovery | `/api/cron/product-discovery` | `0 */6 * * *` (every 6 hours) |
-| Price fetch | `/api/cron/fetch-prices` | `0 */6 * * *` (every 6 hours) |
-| Send alerts | `/api/cron/send-alerts` | `0 */6 * * *` (every 6 hours) |
+| Price fetch       | `/api/cron/fetch-prices`      | `0 */6 * * *` (every 6 hours) |
+| Send alerts       | `/api/cron/send-alerts`       | `0 */6 * * *` (every 6 hours) |
 
 Vercel cron jobs send `POST` by default, which matches the route handlers. A `401` response means the header's `CRON_SECRET` does not match the server's — fix the mismatch (see [10.4](#104-authentication--authorization)); a `429` means the endpoint is being called too frequently. The discovery endpoint invokes `runProductDiscovery()` from `@thinkabell/jobs`, which acquires advisory lock `1004` — overlapping invocations exit immediately instead of running concurrently.
 
@@ -366,70 +370,70 @@ Vercel cron jobs send `POST` by default, which matches the route handlers. A `40
 
 ### 10.2 Configuration & startup
 
-| Symptom | Cause | Fix |
-| --- | --- | --- |
-| `⚠️ [Config] Environment validation warnings:` at startup | An env value fails the Zod schema (e.g. `EDGE_PROXY_TRUSTED` set to something other than `"true"`/`"false"`, malformed URL, non-numeric `PORT`) | Set the named variable to a valid value; the app continues with safe defaults meanwhile |
-| `AmazonListConfigError: AMAZON_LIST_URLS must be a JSON array of { url, marketplace } entries` (parse failure) or `... must be a JSON array` (parses but not an array) | Malformed `AMAZON_LIST_URLS` | Validate the JSON (quote escaping is the usual culprit in `.env` files); the `amazon-list` source fails for that run and the error is recorded in the job run's errors — other sources continue |
-| Debug log: `[Redis] Using in-memory cache client (Upstash credentials not provided)` | `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` unset | Harmless in dev; set both for production |
-| Warning: `[BlindIndex] BLIND_INDEX_KEY is not set. Using lower-case fallback (dev mode only).` | PII stored plaintext with lower-case lookup indexes | Generate and set `ENCRYPTION_KEY` + `BLIND_INDEX_KEY` for production |
-| `[productDiscovery] Failed to parse DISCOVERY_SOURCES env var` | Malformed JSON in `DISCOVERY_SOURCES` | Fix the JSON; the run treats it as "no sources configured" (zero products) |
-| `pnpm: command not found` | pnpm not installed/activated | `corepack enable`, or install pnpm 9+ |
-| `pnpm install` peer-dependency errors | Store or lockfile drift | `pnpm install --force`, then re-run `pnpm install` |
+| Symptom                                                                                                                                                                | Cause                                                                                                                                           | Fix                                                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `⚠️ [Config] Environment validation warnings:` at startup                                                                                                              | An env value fails the Zod schema (e.g. `EDGE_PROXY_TRUSTED` set to something other than `"true"`/`"false"`, malformed URL, non-numeric `PORT`) | Set the named variable to a valid value; the app continues with safe defaults meanwhile                                                                                                         |
+| `AmazonListConfigError: AMAZON_LIST_URLS must be a JSON array of { url, marketplace } entries` (parse failure) or `... must be a JSON array` (parses but not an array) | Malformed `AMAZON_LIST_URLS`                                                                                                                    | Validate the JSON (quote escaping is the usual culprit in `.env` files); the `amazon-list` source fails for that run and the error is recorded in the job run's errors — other sources continue |
+| Debug log: `[Redis] Using in-memory cache client (Upstash credentials not provided)`                                                                                   | `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` unset                                                                                       | Harmless in dev; set both for production                                                                                                                                                        |
+| Warning: `[BlindIndex] BLIND_INDEX_KEY is not set. Using lower-case fallback (dev mode only).`                                                                         | PII stored plaintext with lower-case lookup indexes                                                                                             | Generate and set `ENCRYPTION_KEY` + `BLIND_INDEX_KEY` for production                                                                                                                            |
+| `[productDiscovery] Failed to parse DISCOVERY_SOURCES env var`                                                                                                         | Malformed JSON in `DISCOVERY_SOURCES`                                                                                                           | Fix the JSON; the run treats it as "no sources configured" (zero products)                                                                                                                      |
+| `pnpm: command not found`                                                                                                                                              | pnpm not installed/activated                                                                                                                    | `corepack enable`, or install pnpm 9+                                                                                                                                                           |
+| `pnpm install` peer-dependency errors                                                                                                                                  | Store or lockfile drift                                                                                                                         | `pnpm install --force`, then re-run `pnpm install`                                                                                                                                              |
 
 ### 10.3 Expected fail-closed responses (not bugs)
 
-| Response | Where | Meaning |
-| --- | --- | --- |
-| `401` | `/api/cron/*` (POST), `/api/alerts` | Missing/invalid bearer token — auth is fail-closed |
-| `400` | `/api/unsubscribe` | Missing `email`, or missing/invalid unsubscribe token (token-based, no bearer auth) |
-| `403` | `/api/contact` | CSRF token invalid/expired — reload the form; ensure cookies are not blocked |
-| `429` | `/api/contact` (5 requests / 5 min per IP), `/api/alerts` (30 / min), cron endpoints (10 / min) | Rate limit engaged; these routes fail closed to 429 when the store errors |
-| `405` | `/api/cron/*` | GET request — cron endpoints accept POST only |
-| `503` | `/go/amazon/<asin>` (origin route) | Regional partner tag not configured for the visitor's marketplace |
-| `500` | `/go/amazon/<asin>` (Cloudflare worker) | Regional affiliate tag not set in worker secrets |
-| `400` | `/go/amazon/<asin>` | Malformed ASIN in the URL |
-| `503` | edge worker (all other paths) | `ORIGIN_URL` secret not set |
-| `503` | `/api/health` | A dependency check (database or cache) failed — the body lists per-check details |
-| Empty deal page fallback URL | deal page | Affiliate link generation failed closed — stored URL used instead |
+| Response                     | Where                                                                                           | Meaning                                                                             |
+| ---------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `401`                        | `/api/cron/*` (POST), `/api/alerts`                                                             | Missing/invalid bearer token — auth is fail-closed                                  |
+| `400`                        | `/api/unsubscribe`                                                                              | Missing `email`, or missing/invalid unsubscribe token (token-based, no bearer auth) |
+| `403`                        | `/api/contact`                                                                                  | CSRF token invalid/expired — reload the form; ensure cookies are not blocked        |
+| `429`                        | `/api/contact` (5 requests / 5 min per IP), `/api/alerts` (30 / min), cron endpoints (10 / min) | Rate limit engaged; these routes fail closed to 429 when the store errors           |
+| `405`                        | `/api/cron/*`                                                                                   | GET request — cron endpoints accept POST only                                       |
+| `503`                        | `/go/amazon/<asin>` (origin route)                                                              | Regional partner tag not configured for the visitor's marketplace                   |
+| `500`                        | `/go/amazon/<asin>` (Cloudflare worker)                                                         | Regional affiliate tag not set in worker secrets                                    |
+| `400`                        | `/go/amazon/<asin>`                                                                             | Malformed ASIN in the URL                                                           |
+| `503`                        | edge worker (all other paths)                                                                   | `ORIGIN_URL` secret not set                                                         |
+| `503`                        | `/api/health`                                                                                   | A dependency check (database or cache) failed — the body lists per-check details    |
+| Empty deal page fallback URL | deal page                                                                                       | Affiliate link generation failed closed — stored URL used instead                   |
 
 ### 10.4 Authentication & authorization
 
-| Symptom | Cause | Fix |
-| --- | --- | --- |
-| `401` from `/api/cron/<job>` | `CRON_SECRET` missing on the server or mismatched with the cron job's `Authorization` header (and the request must be POST) | Set identical values in both places |
-| `401` from `/api/alerts` | `ALERTS_API_KEY` missing/mismatched (accepts `Authorization: Bearer <key>` or `?api_key=<key>`) | Set identical values in both places |
-| `403` from `/api/contact` on every submit | CSRF cookie blocked or token expired | Check cookie settings; reload the page |
-| `new row violates row-level security policy` on subscriber insert | Row inserted without `email`/`email_hash` (insert policy requires both) | The app computes the blind index server-side; if seeding manually, supply both columns |
+| Symptom                                                           | Cause                                                                                                                       | Fix                                                                                    |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `401` from `/api/cron/<job>`                                      | `CRON_SECRET` missing on the server or mismatched with the cron job's `Authorization` header (and the request must be POST) | Set identical values in both places                                                    |
+| `401` from `/api/alerts`                                          | `ALERTS_API_KEY` missing/mismatched (accepts `Authorization: Bearer <key>` or `?api_key=<key>`)                             | Set identical values in both places                                                    |
+| `403` from `/api/contact` on every submit                         | CSRF cookie blocked or token expired                                                                                        | Check cookie settings; reload the page                                                 |
+| `new row violates row-level security policy` on subscriber insert | Row inserted without `email`/`email_hash` (insert policy requires both)                                                     | The app computes the blind index server-side; if seeding manually, supply both columns |
 
 ### 10.5 Database
 
-| Symptom | Cause | Fix |
-| --- | --- | --- |
-| Empty homepage / health reports degraded | `SUPABASE_URL` empty (client fails closed) or Phase 4 not run | Complete [Phase 4](#phase-4--database-setup) |
-| Missing `idx_subscribers_email_hash` on an existing DB | Schema predates the blind-index migration | Re-run `packages/database/schema.sql` |
-| No price history for amazon-list products on an old database | Older rows predate the `amazon_asin` propagation fix | Re-harvest the list (re-run discovery) so rows carry `amazon_asin` |
-| Duplicate alerts | Two job runners executing concurrently | Runners guard with PostgreSQL advisory locks (`try_acquire_job_lock`; discovery uses lock id `1004`) — a second instance exits immediately. Ensure only one scheduler triggers each job |
+| Symptom                                                      | Cause                                                         | Fix                                                                                                                                                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty homepage / health reports degraded                     | `SUPABASE_URL` empty (client fails closed) or Phase 4 not run | Complete [Phase 4](#phase-4--database-setup)                                                                                                                                            |
+| Missing `idx_subscribers_email_hash` on an existing DB       | Schema predates the blind-index migration                     | Re-run `packages/database/schema.sql`                                                                                                                                                   |
+| No price history for amazon-list products on an old database | Older rows predate the `amazon_asin` propagation fix          | Re-harvest the list (re-run discovery) so rows carry `amazon_asin`                                                                                                                      |
+| Duplicate alerts                                             | Two job runners executing concurrently                        | Runners guard with PostgreSQL advisory locks (`try_acquire_job_lock`; discovery uses lock id `1004`) — a second instance exits immediately. Ensure only one scheduler triggers each job |
 
 ### 10.6 Discovery & affiliate links
 
-| Symptom | Cause | Fix |
-| --- | --- | --- |
-| Discovery completes with 0 products | `DISCOVERY_SOURCES` unset/empty, or every source `enabled: false` | Set `DISCOVERY_SOURCES` per [7.9](#79-discovery-sources) |
-| `AssociateNotEligible` / HTTP 403 from PA-API | New Associates account not yet eligible | Use [7.2](#72-amazon-list-hunting) until eligible |
-| Products harvested without affiliate links | Regional partner tag missing for that marketplace | Set `AMAZON_PARTNER_TAG` (+ `_UK`/`_DE`/`_CA` as needed) |
-| `AmazonListConfigError` in job run errors | Malformed `AMAZON_LIST_URLS` — the `amazon-list` source failed for that run; other sources continued | Fix the JSON; re-run discovery |
-| `/go/amazon/<asin>` returns `503` | Origin-side partner tag unconfigured | Configure tags on the origin (and worker secrets if geo routing is active) |
-| Geo always falls back to one marketplace | `EDGE_PROXY_TRUSTED` is `"false"` (default) while behind the worker | Set `EDGE_PROXY_TRUSTED=true` **only** if the origin is reachable solely via the worker |
+| Symptom                                       | Cause                                                                                                | Fix                                                                                     |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Discovery completes with 0 products           | `DISCOVERY_SOURCES` unset/empty, or every source `enabled: false`                                    | Set `DISCOVERY_SOURCES` per [7.9](#79-discovery-sources)                                |
+| `AssociateNotEligible` / HTTP 403 from PA-API | New Associates account not yet eligible                                                              | Use [7.2](#72-amazon-list-hunting) until eligible                                       |
+| Products harvested without affiliate links    | Regional partner tag missing for that marketplace                                                    | Set `AMAZON_PARTNER_TAG` (+ `_UK`/`_DE`/`_CA` as needed)                                |
+| `AmazonListConfigError` in job run errors     | Malformed `AMAZON_LIST_URLS` — the `amazon-list` source failed for that run; other sources continued | Fix the JSON; re-run discovery                                                          |
+| `/go/amazon/<asin>` returns `503`             | Origin-side partner tag unconfigured                                                                 | Configure tags on the origin (and worker secrets if geo routing is active)              |
+| Geo always falls back to one marketplace      | `EDGE_PROXY_TRUSTED` is `"false"` (default) while behind the worker                                  | Set `EDGE_PROXY_TRUSTED=true` **only** if the origin is reachable solely via the worker |
 
 ### 10.7 Build & tooling
 
-| Symptom | Cause | Fix |
-| --- | --- | --- |
+| Symptom                                    | Cause                                         | Fix                                                                                        |
+| ------------------------------------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | Build fails with symlink errors on Windows | `output: standalone` requires symlink support | Enable Windows Developer Mode, or deploy the full project instead of the standalone bundle |
-| Test command killed after ~120 s | Shell time limit, not a test failure | Run tests per package ([Phase 8](#phase-8--verification-pipeline)) |
-| Very slow first `pnpm test` | One-time Vitest transform | Subsequent runs are faster |
-| `pnpm compliance-check` fails | Not a defined script | Correct command: `pnpm tsx scripts/compliance-check.ts` |
-| `pnpm run seed` fails | Not a defined script | Correct command: `pnpm tsx scripts/seed-50-products.ts` |
+| Test command killed after ~120 s           | Shell time limit, not a test failure          | Run tests per package ([Phase 8](#phase-8--verification-pipeline))                         |
+| Very slow first `pnpm test`                | One-time Vitest transform                     | Subsequent runs are faster                                                                 |
+| `pnpm compliance-check` fails              | Not a defined script                          | Correct command: `pnpm tsx scripts/compliance-check.ts`                                    |
+| `pnpm run seed` fails                      | Not a defined script                          | Correct command: `pnpm tsx scripts/seed-50-products.ts`                                    |
 
 ### 10.8 Platform notes
 
@@ -441,20 +445,20 @@ Vercel cron jobs send `POST` by default, which matches the route handlers. A `40
 
 ## Appendix A — Fail-closed reference
 
-| Module | When unconfigured | Behavior |
-| --- | --- | --- |
-| Database client (`SUPABASE_URL` empty) | Always required for data | Client fails closed; health endpoint reports degraded |
-| Amazon PA-API credentials | Discovery | Source skipped entirely |
-| Amazon partner tag (any region) | Affiliate links | `AmazonAffiliateLinkError` — deal page falls back to stored URL; origin `/go/amazon/<asin>` → `503`; worker `/go/amazon/:asin` → `500`; worker proxy → `503` only when `ORIGIN_URL` is unset |
-| `AMAZON_LIST_URLS` malformed | List hunting | `AmazonListConfigError` — the `amazon-list` source fails for that run (recorded in job run errors); other sources continue |
-| List partner tag missing | List hunting | Affiliate link skipped with warning; product harvested with plain URL |
-| eBay / Walmart / SaaS credentials | Discovery | Source skipped |
-| OneSignal / Brevo | Notifications | Alerts queued, delivery skipped |
-| Upstash Redis | Rate limiting / circuit breaker | In-memory fallback; breaker state not persisted; sensitive routes fail closed on store errors |
-| `ENCRYPTION_KEY` / `BLIND_INDEX_KEY` | PII | Plaintext with lower-case lookup indexes (dev fallback; warning logged) |
-| `CRON_SECRET` / `ALERTS_API_KEY` | Job & alerts APIs | Endpoints return `401` |
-| `EDGE_PROXY_TRUSTED=false` (default) | Geo routing | `x-thinkabell-country` ignored; marketplace falls back to `AMAZON_LIST_MARKETPLACE` default |
-| `DISCOVERY_SOURCES` empty or malformed | Discovery job | Zero products discovered (parse failures are logged and treated as empty — not an error) |
+| Module                                 | When unconfigured               | Behavior                                                                                                                                                                                     |
+| -------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Database client (`SUPABASE_URL` empty) | Always required for data        | Client fails closed; health endpoint reports degraded                                                                                                                                        |
+| Amazon PA-API credentials              | Discovery                       | Source skipped entirely                                                                                                                                                                      |
+| Amazon partner tag (any region)        | Affiliate links                 | `AmazonAffiliateLinkError` — deal page falls back to stored URL; origin `/go/amazon/<asin>` → `503`; worker `/go/amazon/:asin` → `500`; worker proxy → `503` only when `ORIGIN_URL` is unset |
+| `AMAZON_LIST_URLS` malformed           | List hunting                    | `AmazonListConfigError` — the `amazon-list` source fails for that run (recorded in job run errors); other sources continue                                                                   |
+| List partner tag missing               | List hunting                    | Affiliate link skipped with warning; product harvested with plain URL                                                                                                                        |
+| eBay / Walmart / SaaS credentials      | Discovery                       | Source skipped                                                                                                                                                                               |
+| OneSignal / Brevo                      | Notifications                   | Alerts queued, delivery skipped                                                                                                                                                              |
+| Upstash Redis                          | Rate limiting / circuit breaker | In-memory fallback; breaker state not persisted; sensitive routes fail closed on store errors                                                                                                |
+| `ENCRYPTION_KEY` / `BLIND_INDEX_KEY`   | PII                             | Plaintext with lower-case lookup indexes (dev fallback; warning logged)                                                                                                                      |
+| `CRON_SECRET` / `ALERTS_API_KEY`       | Job & alerts APIs               | Endpoints return `401`                                                                                                                                                                       |
+| `EDGE_PROXY_TRUSTED=false` (default)   | Geo routing                     | `x-thinkabell-country` ignored; marketplace falls back to `AMAZON_LIST_MARKETPLACE` default                                                                                                  |
+| `DISCOVERY_SOURCES` empty or malformed | Discovery job                   | Zero products discovered (parse failures are logged and treated as empty — not an error)                                                                                                     |
 
 ## Appendix B — Environment variable reference
 

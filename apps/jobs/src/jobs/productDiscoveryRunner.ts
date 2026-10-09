@@ -1,6 +1,14 @@
 import { getSupabaseServiceClient } from "@thinkabell/database";
 import { ProductRepository } from "@thinkabell/database";
-import { ebayClient, walmartClient, partnerStackClient, appSumoClient, impactClient, logger, redis } from "@thinkabell/shared";
+import {
+  ebayClient,
+  walmartClient,
+  partnerStackClient,
+  appSumoClient,
+  impactClient,
+  logger,
+  redis,
+} from "@thinkabell/shared";
 import { CircuitBreaker } from "@thinkabell/shared";
 import { AmazonListSource } from "@thinkabell/shared";
 import type { DiscoveredProduct } from "@thinkabell/shared";
@@ -43,7 +51,11 @@ function getDiscoverySources(): DiscoverySourceConfig[] {
   }
 }
 
-export async function runProductDiscovery(): Promise<{ discovered: number; sources: string[]; errors: string[] }> {
+export async function runProductDiscovery(): Promise<{
+  discovered: number;
+  sources: string[];
+  errors: string[];
+}> {
   const supabase = getSupabaseServiceClient();
   logger.info("[productDiscovery] Starting discovery run");
 
@@ -84,33 +96,35 @@ export async function runProductDiscovery(): Promise<{ discovered: number; sourc
     for (const sourceConfig of sources) {
       const circuit = sourceCircuits[sourceConfig.name];
       if (!circuit || circuit.getState() === "open") {
-        logger.warn(`[productDiscovery] Skipping source ${sourceConfig.name} - circuit breaker open`);
+        logger.warn(
+          `[productDiscovery] Skipping source ${sourceConfig.name} - circuit breaker open`,
+        );
         continue;
       }
 
-        try {
-          const sourceProducts: DiscoveredProduct[] = [];
+      try {
+        const sourceProducts: DiscoveredProduct[] = [];
 
-          // amazon-list sources without explicit queries harvest
-          // once with an empty title filter.
-          const queries =
-            sourceConfig.name === "amazon-list" && sourceConfig.queries.length === 0
-              ? [""]
-              : sourceConfig.queries;
+        // amazon-list sources without explicit queries harvest
+        // once with an empty title filter.
+        const queries =
+          sourceConfig.name === "amazon-list" && sourceConfig.queries.length === 0
+            ? [""]
+            : sourceConfig.queries;
 
-          for (const query of queries) {
-            try {
-              let products: DiscoveredProduct[] = [];
+        for (const query of queries) {
+          try {
+            let products: DiscoveredProduct[] = [];
 
-              switch (sourceConfig.name) {
-                case "amazon-list":
-                  products = await circuit.execute(async () => {
-                    const source = new AmazonListSource();
-                    return source.search(query);
-                  });
-                  break;
+            switch (sourceConfig.name) {
+              case "amazon-list":
+                products = await circuit.execute(async () => {
+                  const source = new AmazonListSource();
+                  return source.search(query);
+                });
+                break;
 
-                case "ebay":
+              case "ebay":
                 products = await circuit.execute(async () => {
                   const results = await ebayClient.searchItems(query, 20);
                   const enriched = await Promise.all(
@@ -130,7 +144,12 @@ export async function runProductDiscovery(): Promise<{ discovered: number; sourc
                             category: details.category,
                             url: details.url,
                             affiliateUrl: details.url,
-                            metadata: { seller: details.seller, condition: details.condition, shipping: details.shipping, query },
+                            metadata: {
+                              seller: details.seller,
+                              condition: details.condition,
+                              shipping: details.shipping,
+                              query,
+                            },
                           };
                         }
                         return {
@@ -234,7 +253,11 @@ export async function runProductDiscovery(): Promise<{ discovered: number; sourc
                     category: r.category,
                     url: r.url,
                     affiliateUrl: r.url,
-                    metadata: { vendor: r.vendor, commission_rate: r.commission_rate, images: r.images ? [r.logo_url].filter(Boolean) : undefined },
+                    metadata: {
+                      vendor: r.vendor,
+                      commission_rate: r.commission_rate,
+                      images: r.images ? [r.logo_url].filter(Boolean) : undefined,
+                    },
                   }));
                 });
                 break;
@@ -249,12 +272,18 @@ export async function runProductDiscovery(): Promise<{ discovered: number; sourc
                     description: r.description,
                     price: r.price,
                     currency: r.currency,
+                    imageUrl: r.imageUrl,
                     category: r.category,
                     url: r.url,
+                    // AppSumo's affiliate program runs
+                    // through Impact; without an affiliate
+                    // account the direct product URL is
+                    // the fail-closed link.
                     affiliateUrl: r.url,
                     metadata: {
                       vendor: r.vendor,
                       commission_rate: r.commission_rate,
+                      originalPrice: r.originalPrice,
                       expiresAt: r.expiresAt,
                       images: r.images,
                     },
@@ -272,13 +301,21 @@ export async function runProductDiscovery(): Promise<{ discovered: number; sourc
                     description: r.description,
                     price: r.price,
                     currency: r.currency,
+                    imageUrl: r.logo_url,
                     category: r.category,
                     url: r.url,
-                    affiliateUrl: r.url,
+                    // Prefer the Impact-tracked link
+                    // when the API exposes one; fall
+                    // back to the plain campaign URL.
+                    affiliateUrl: r.trackingLink || r.url,
                     metadata: {
                       advertiser: r.advertiser,
                       commission_rate: r.commission_rate,
-                      images: r.images ? [r.logo_url, ...r.images].filter(Boolean) : r.logo_url ? [r.logo_url] : undefined,
+                      images: r.images
+                        ? [r.logo_url, ...r.images].filter(Boolean)
+                        : r.logo_url
+                          ? [r.logo_url]
+                          : undefined,
                     },
                   }));
                 });
@@ -291,8 +328,12 @@ export async function runProductDiscovery(): Promise<{ discovered: number; sourc
 
             sourceProducts.push(...products);
           } catch (queryError) {
-            const errorMessage = queryError instanceof Error ? queryError.message : String(queryError);
-            logger.error(`[productDiscovery] Query failed for ${sourceConfig.name} - "${query}":`, queryError);
+            const errorMessage =
+              queryError instanceof Error ? queryError.message : String(queryError);
+            logger.error(
+              `[productDiscovery] Query failed for ${sourceConfig.name} - "${query}":`,
+              queryError,
+            );
             errors.push(`${sourceConfig.name}:${query}:${errorMessage}`);
           }
         }
@@ -320,21 +361,33 @@ export async function runProductDiscovery(): Promise<{ discovered: number; sourc
 
             totalDiscovered += inserted + updated;
             discoveredBySource[sourceConfig.name] = inserted + updated;
-            logger.info(`[productDiscovery] Source ${sourceConfig.name}: discovered ${inserted + updated} products`);
+            logger.info(
+              `[productDiscovery] Source ${sourceConfig.name}: discovered ${inserted + updated} products`,
+            );
           } catch (upsertError) {
-            const errorMessage = upsertError instanceof Error ? upsertError.message : String(upsertError);
-            logger.error(`[productDiscovery] Failed to upsert products for ${sourceConfig.name}:`, upsertError);
+            const errorMessage =
+              upsertError instanceof Error ? upsertError.message : String(upsertError);
+            logger.error(
+              `[productDiscovery] Failed to upsert products for ${sourceConfig.name}:`,
+              upsertError,
+            );
             errors.push(`${sourceConfig.name}:upsert:${errorMessage}`);
           }
         }
       } catch (sourceError) {
-        const errorMessage = sourceError instanceof Error ? sourceError.message : String(sourceError);
+        const errorMessage =
+          sourceError instanceof Error ? sourceError.message : String(sourceError);
         logger.error(`[productDiscovery] Source ${sourceConfig.name} failed:`, sourceError);
         errors.push(`${sourceConfig.name}:${errorMessage}`);
       }
     }
 
-    const status = errors.length > 0 && totalDiscovered === 0 ? "failed" : errors.length > 0 ? "partial" : "success";
+    const status =
+      errors.length > 0 && totalDiscovered === 0
+        ? "failed"
+        : errors.length > 0
+          ? "partial"
+          : "success";
     if (runId) {
       await supabase.rpc("update_job_run", {
         p_run_id: runId,
@@ -346,7 +399,9 @@ export async function runProductDiscovery(): Promise<{ discovered: number; sourc
       });
     }
 
-    logger.info(`[productDiscovery] Completed. Total discovered: ${totalDiscovered}, Errors: ${errors.length}`);
+    logger.info(
+      `[productDiscovery] Completed. Total discovered: ${totalDiscovered}, Errors: ${errors.length}`,
+    );
     return { discovered: totalDiscovered, sources: Object.keys(discoveredBySource), errors };
   } catch (error) {
     logger.error("[productDiscovery] Run failed:", error);
