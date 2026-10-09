@@ -148,12 +148,17 @@ The workflow fails fast if any secret is missing, then builds the standalone bun
 
 ### Workflow says the secrets are empty even though I added them
 
-The most common cause is a **stale run**: a workflow run that started before you saved the secrets will not see them — GitHub does not inject secrets into a run retroactively. After adding the secrets, re-run the workflow (**Actions → Deploy to Hostinger → Run workflow**). If it still reports them empty, check:
+Per the [GitHub Actions secrets docs](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions), repository and organization secrets are **read when a workflow run is queued** — a run queued before you saved the secrets will not see them (GitHub does not inject secrets into a run retroactively). **Re-run the workflow** (**Actions → Deploy to Hostinger → Run workflow**) after saving the secrets. If it still reports them empty, check in this order:
 
-- **Exact names** — secret names are case-sensitive: `HOSTINGER_HOST`, `HOSTINGER_USERNAME`, `HOSTINGER_PASSWORD`, `HOSTINGER_PORT`, `HOSTINGER_DEPLOY_PATH`.
-- **Repository scope** — add them under **Settings → Secrets and variables → Actions → Repository secrets**. Secrets added to an *Environment* or *Organization* are not visible to this workflow (the job does not reference an environment).
-- **Same repository** — the secrets must be in the repository that runs the workflow (the one linked to Hostinger), not a fork or a different repo.
-- **Default branch** — the deploy workflow triggers on push to `main` (or manual **Run workflow**). If your default branch is not `main`, run it manually via **Actions → Deploy to Hostinger → Run workflow**.
+1. **Fork** — "secrets are not passed to the runner when a workflow is triggered from a forked repository." If the repo running the workflow is a fork, the secrets must be added to **that fork** (the repo that actually runs the workflow), not the upstream original.
+2. **Environment-secret precedence** — an *Environment* secret with the same name takes precedence over a *Repository* secret, and environment secrets are only available to jobs that reference that environment (this job does not). If you accidentally created the secrets under an **Environment**, delete them and re-add them as **Repository secrets** (Settings → Secrets and variables → Actions → **Repository secrets** tab → New repository secret).
+3. **Organization-secret access** — an *Organization* secret is empty unless explicitly granted access to this repository (Organization Settings → Secrets → the secret → Repository access). Prefer repository-level secrets.
+4. **Names** — secret names may only contain alphanumeric characters and underscores, and are stored uppercase (case-insensitive when referenced). Confirm the five names: `HOSTINGER_HOST`, `HOSTINGER_USERNAME`, `HOSTINGER_PASSWORD`, `HOSTINGER_PORT`, `HOSTINGER_DEPLOY_PATH`.
+5. **Same repository** — the secrets must be in the repository that runs the workflow (the one linked to Hostinger), not a different repo.
+
+> Verify what GitHub actually sees: run `gh secret list --repo <owner>/<repo>` (names only — values are never shown) to confirm the five secrets exist at the repository level.
+
+**Hostinger SSH prerequisites** (the SCP/SSH steps run after the secret check): SSH is available on **Premium Web and higher** plans (not Single Web); enable it in hPanel → **Advanced → SSH Access**. The connection uses port **65002** (not 22), the server **IP** shown on the SSH Access page, and the username `uXXXXXX` (your Hostinger system user — **not** your hPanel login email). `HOSTINGER_DEPLOY_PATH` is the absolute web root, e.g. `/home/uXXXXXX/domains/thinkabell.click/public_html`.
 
 ### Preflight check
 
