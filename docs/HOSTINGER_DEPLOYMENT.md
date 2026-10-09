@@ -162,6 +162,17 @@ It reports `[PASS]`/`[WARN]`/`[FAIL]` for the standalone build, the client asset
 
 The server is up but a fail-closed integration is unconfigured. Set the **Core**, **Security**, **Notifications**, and **Affiliate** variables in Step 4 on the Hostinger Node.js panel (**Environment** section), then **Restart Application**. The most common gaps are `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY` (database) and `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` (cache).
 
+If `/api/health` reports `database: degraded: Could not find the table 'public.products' in the schema cache` (and `/api/deals` or `/api/search` return `500`), the Supabase **connection is fine but the schema was never applied** to the project. Supabase credentials alone do not create tables. Apply the schema once (it is idempotent, safe to re-run):
+
+```bash
+# Scripted (recommended) — SUPABASE_DB_URL is the direct Postgres
+# connection string from Supabase Dashboard → Project Settings →
+# Database → Connection string. Local .env only, never on the app host.
+SUPABASE_DB_URL="postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres" pnpm db:apply
+```
+
+Or paste `packages/database/schema.sql` into the Supabase SQL editor and run it. PostgREST reloads its schema cache automatically on DDL, so no further restart is needed.
+
 ### Build fails on `pnpm install` (Corepack `MODULE_NOT_FOUND`)
 
 If you build **on Hostinger** (native GitHub integration) and it fails during `pnpm install` with a `MODULE_NOT_FOUND` for a path like `~/.cache/node/corepack/v1/pnpm/<version>/bin/pnpm.cjs`, that is a **corrupted Corepack cache** on the build environment — not an invalid pnpm version.

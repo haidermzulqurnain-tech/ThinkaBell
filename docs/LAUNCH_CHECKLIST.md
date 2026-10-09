@@ -7,7 +7,7 @@ This operational playbook details the pre-launch checklist, content marketing te
 ## 1. Pre-Launch Verification Checklist
 
 - [x] **Supabase Database Initialized**:
-  - [x] Run `packages/database/schema.sql` in Supabase SQL editor.
+  - [x] Apply `packages/database/schema.sql` — scripted: `SUPABASE_DB_URL="postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres" pnpm db:apply` (idempotent, safe to re-run), or paste it into the Supabase SQL editor.
   - [x] Verify tables: `products`, `price_history`, `subscribers`, `alert_queue`, `retailer_links`, `click_tracking`, `alert_dead_letter`, `job_runs`.
   - [x] Confirm Row Level Security (RLS) is active on all tables.
   - [x] Confirm `subscribers.email_hash` exists with unique index `idx_subscribers_email_hash` (blind index for PII lookups; re-run `schema.sql` on existing databases to add it).
