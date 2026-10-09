@@ -183,6 +183,19 @@ It reports `[PASS]`/`[WARN]`/`[FAIL]` for the standalone build, entrypoint, pack
 
 The server is up but a fail-closed integration is unconfigured. Set the **Core**, **Security**, **Notifications**, and **Affiliate** variables in Step 4 on the Hostinger Node.js panel (**Environment** section), then **Restart Application**. The most common gaps are `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY` (database) and `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` (cache).
 
+### Build fails on `pnpm install` (Corepack `MODULE_NOT_FOUND`)
+
+If you build **on Hostinger** (native GitHub integration with a build command) and it fails during `pnpm install` with a `MODULE_NOT_FOUND` for a path like `~/.cache/node/corepack/v1/pnpm/<version>/bin/pnpm.cjs`, that is a **corrupted Corepack cache** on the build environment — not an invalid pnpm version. (`pnpm@12.3.4` from the `packageManager` field is a valid, released version; the `12.x` line exists and the latest is `12.11.0`.)
+
+Two ways forward:
+
+1. **Recommended — don't build on Hostinger.** Build on the GitHub Actions runner (a clean environment with a fresh Corepack cache) and upload the pre-built bundle: run **Actions → Deploy to Hostinger → Run workflow**, download the **`hostinger-deploy`** artifact, and upload its contents to Hostinger via File Manager (Step 3, Option B). On Hostinger you then only need the **start command** (`node hostinger-server.js`) and the Environment variables — no build command.
+2. **If you must build on Hostinger**, clear the Corepack cache at the start of the build command so pnpm is re-downloaded fresh, and point the start command at the repo-layout entrypoint:
+   - Build command: `rm -rf ~/.cache/node/corepack && pnpm install && pnpm build:standalone`
+   - Start command: `node apps/web/hostinger-server.js`
+
+Do **not** change `packageManager` to an older version to "fix" this — the version is valid, and a new version's cache can corrupt the same way. Clearing the cache (or building on the clean runner) is the actual fix.
+
 ### GitHub Pages vs Hostinger
 
 GitHub Pages (`https://<user>.github.io/ThinkaBell/`) only serves static files. ThinkaBell needs a Node.js runtime (API routes, middleware, server components, ISR), so GitHub Pages cannot run the full app — it is a static preview at best. Hostinger Node.js hosting is the production target.
