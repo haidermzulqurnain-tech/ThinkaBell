@@ -20,8 +20,8 @@ This operational playbook details the pre-launch checklist, content marketing te
   - [ ] Page Rule enabled for caching HTML (Cache Everything, 5 min TTL).
   - [ ] Brotli and Always Online toggled ON.
 - [x] **Hostinger Deployment Tested**:
-  - [ ] Application running on Node 20 or 22.
-  - [ ] Startup file set to `hostinger-server.js`.
+  - [ ] Application running on Node 22.
+  - [ ] Application type `Other`; build command `pnpm run build:standalone`; entry file `apps/web/hostinger-server.js`; root directory `./`; output directory empty.
   - [ ] Health check responds `200 OK` at `https://thinkabell.click/api/health`.
 - [x] **Vercel Cron / pg_cron Jobs Active**:
   - [x] `vercel.json` configured with cron schedules for `/api/cron/product-discovery`, `/api/cron/fetch-prices`, and `/api/cron/send-alerts` (all every 6 hours).
@@ -200,7 +200,8 @@ pnpm run build
 # Run tests before deploying
 pnpm run test
 
-# Deploy via CI/CD (GitHub Actions)
+# Deploy: push to main — Hostinger's native GitHub integration
+# installs, builds (pnpm run build:standalone), and restarts the app
 git push origin main
 ```
 

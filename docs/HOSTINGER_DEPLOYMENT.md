@@ -49,25 +49,15 @@ With these settings the native GitHub integration runs the full pipeline on Host
 
 ---
 
-### Step 3: Upload Files to Hostinger
+### Step 3: Manual upload (fallback)
 
-The deployable files are the **built standalone bundle** in `dist/hostinger-deploy/` — **not** the raw repository files. The raw repo (source code, `package.json`, `apps/`, `packages/`, `scripts/`) cannot run on Hostinger: it has no `node_modules` and no `.next/standalone` build output, so `hostinger-server.js` cannot start. If your Hostinger Application Root currently contains the raw repo files, replace them with the built bundle using one of the options below.
+The native GitHub integration (Step 2) builds on Hostinger directly, so no upload is needed. Use this fallback only if the native integration is unavailable (e.g. the GitHub App cannot access the repo):
 
-#### Option A: Via GitHub Actions (Recommended)
-Pushing to the `main` branch (or **Actions → Deploy to Hostinger → Run workflow**) builds the standalone bundle on a Linux runner and uploads it to Hostinger via SCP using `.github/workflows/deploy.yml`. This requires the five `HOSTINGER_*` repository secrets (see Troubleshooting).
-
-#### Option B: Via the workflow artifact (no SSH secrets needed)
-The workflow always attaches the built bundle as a **`hostinger-deploy` artifact** — even when the `HOSTINGER_*` secrets are missing (the automatic SCP deploy is skipped, but the artifact is still produced on GitHub's Linux runner, so no local build or symlink support is required):
-1. Run **Actions → Deploy to Hostinger → Run workflow**.
-2. Open the run → **Artifacts** → download **`hostinger-deploy`**.
-3. Extract the zip. Its contents (`hostinger-server.js`, `apps/`, `.next/`, `node_modules/`, `package.json`) are the deployable files.
-4. In Hostinger **File Manager**, upload them to your **Application Root** (`public_html`), replacing the raw repository files.
-5. Verify that `hostinger-server.js`, `apps/`, and `.next/` exist in `public_html`.
-
-#### Option C: Build locally, then upload
-1. Run `pnpm package:hostinger` (requires symlink support — on Windows, enable Developer Mode, or use Option B instead).
+1. Run `pnpm package:hostinger` (requires symlink support — on Windows, enable Developer Mode).
 2. Compress the contents of `dist/hostinger-deploy/` into a `.zip` file.
 3. In Hostinger **File Manager**, upload the zip to your **Application Root** (`public_html`) and extract it.
+
+The deployable files are the **built standalone bundle** in `dist/hostinger-deploy/` — **not** the raw repository files. The raw repo (source code, `package.json`, `apps/`, `packages/`, `scripts/`) cannot run on Hostinger: it has no `node_modules` and no `.next/standalone` build output, so `hostinger-server.js` cannot start.
 
 ---
 
@@ -131,7 +121,7 @@ In the Hostinger Node.js control panel (**Environment** section), add the variab
 | `EXCHANGE_RATE_API_URL` | — | Defaults to `https://api.frankfurter.app/latest` |
 | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | Sentry console | Error tracking (consent-gated) |
 
-**GitHub Actions secrets** (repo Settings → Secrets and variables → Actions) are separate from the above and only needed for the automated deploy: `HOSTINGER_HOST`, `HOSTINGER_USERNAME`, `HOSTINGER_PASSWORD`, `HOSTINGER_PORT`, `HOSTINGER_DEPLOY_PATH`, plus `CRON_SECRET` (same value as above, used by the CI smoke test).
+**GitHub Actions secrets** (repo Settings → Secrets and variables → Actions) are separate from the above: only `CRON_SECRET` (same value as above) is used by the CI smoke test. The five `HOSTINGER_*` deploy secrets are **no longer needed** — the SCP deploy workflow was removed; deploys run through Hostinger's native GitHub integration (Step 2). Delete any `HOSTINGER_*` secrets you added earlier.
 
 ---
 
@@ -158,32 +148,6 @@ If the native integration fails, check in this order:
 2. **Corepack cache** — a `MODULE_NOT_FOUND` for `~/.cache/node/corepack/v1/pnpm/<version>/bin/pnpm.cjs` during install is a corrupted Corepack cache; see the Corepack troubleshooting below.
 3. **Runtime logs** — a build that succeeds but a process that crashes on startup is almost always a missing Environment variable (Step 4); check the Runtime Logs in the Node.js dashboard.
 
-**Alternative — the GitHub Actions workflow** (`.github/workflows/deploy.yml`) builds on a clean runner and uploads the standalone bundle to Hostinger over SCP. To enable it:
-
-1. In GitHub, go to **repo Settings → Secrets and variables → Actions** and add the five deploy secrets:
-   - `HOSTINGER_HOST` — your Hostinger server IP/hostname (hPanel → Hosting → SSH/FTP details)
-   - `HOSTINGER_USERNAME` — SSH username
-   - `HOSTINGER_PASSWORD` — SSH password
-   - `HOSTINGER_PORT` — SSH port (usually `65002` on Hostinger)
-   - `HOSTINGER_DEPLOY_PATH` — absolute path to the app directory on the server (e.g. `/home/u123456789/domains/thinkabell.click/public_html`)
-2. Push to `main` (or run **Actions → Deploy to Hostinger → Run workflow**).
-
-The workflow fails fast if any secret is missing, then builds the standalone bundle, packages `dist/hostinger-deploy/`, verifies it, uploads it via SCP, and touches `hostinger-server.js` to trigger a restart.
-
-### Workflow says the secrets are empty even though I added them
-
-Per the [GitHub Actions secrets docs](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions), repository and organization secrets are **read when a workflow run is queued** — a run queued before you saved the secrets will not see them (GitHub does not inject secrets into a run retroactively). **Re-run the workflow** (**Actions → Deploy to Hostinger → Run workflow**) after saving the secrets. If it still reports them empty, check in this order:
-
-1. **Fork** — "secrets are not passed to the runner when a workflow is triggered from a forked repository." If the repo running the workflow is a fork, the secrets must be added to **that fork** (the repo that actually runs the workflow), not the upstream original.
-2. **Environment-secret precedence** — an *Environment* secret with the same name takes precedence over a *Repository* secret, and environment secrets are only available to jobs that reference that environment (this job does not). If you accidentally created the secrets under an **Environment**, delete them and re-add them as **Repository secrets** (Settings → Secrets and variables → Actions → **Repository secrets** tab → New repository secret).
-3. **Organization-secret access** — an *Organization* secret is empty unless explicitly granted access to this repository (Organization Settings → Secrets → the secret → Repository access). Prefer repository-level secrets.
-4. **Names** — secret names may only contain alphanumeric characters and underscores, and are stored uppercase (case-insensitive when referenced). Confirm the five names: `HOSTINGER_HOST`, `HOSTINGER_USERNAME`, `HOSTINGER_PASSWORD`, `HOSTINGER_PORT`, `HOSTINGER_DEPLOY_PATH`.
-5. **Same repository** — the secrets must be in the repository that runs the workflow (the one linked to Hostinger), not a different repo.
-
-> Verify what GitHub actually sees: run `gh secret list --repo <owner>/<repo>` (names only — values are never shown) to confirm the five secrets exist at the repository level.
-
-**Hostinger SSH prerequisites** (the SCP/SSH steps run after the secret check): SSH is available on **Premium Web and higher** plans (not Single Web); enable it in hPanel → **Advanced → SSH Access**. The connection uses port **65002** (not 22), the server **IP** shown on the SSH Access page, and the username `uXXXXXX` (your Hostinger system user — **not** your hPanel login email). `HOSTINGER_DEPLOY_PATH` is the absolute web root, e.g. `/home/uXXXXXX/domains/thinkabell.click/public_html`.
-
 ### Preflight check
 
 Run the fail-closed preflight checker locally to see exactly what is missing before you deploy:
@@ -192,7 +156,7 @@ Run the fail-closed preflight checker locally to see exactly what is missing bef
 pnpm verify:hostinger
 ```
 
-It reports `[PASS]`/`[WARN]`/`[FAIL]` for the standalone build, entrypoint, packaged bundle, runtime environment variables, and deploy-workflow secrets, and exits non-zero if the bundle would ship broken.
+It reports `[PASS]`/`[WARN]`/`[FAIL]` for the standalone build, the client assets inside it, the entrypoint, the packaged bundle (when present), and the runtime environment variables, and exits non-zero if the deployment would ship a broken app.
 
 ### App starts but `/api/health` is unhealthy
 
@@ -204,10 +168,7 @@ If you build **on Hostinger** (native GitHub integration) and it fails during `p
 
 Hostinger runs `pnpm install` **automatically, before your build command** — so a build command that clears the cache cannot fix it (the failure happens first). The fix is in the repository: the `packageManager` field is pinned to **`pnpm@10.34.6`** (the latest pnpm 10.x, matching the lockfile's `lockfileVersion: '9.0'` format, which the pnpm 10 line writes natively). Corepack downloads that version fresh on the build environment — there is no cached entry for it to be corrupted — so the automatic install succeeds.
 
-If you ever hit this again with a different version:
-
-1. **Recommended — build on the GitHub Actions runner** (a clean environment with a fresh Corepack cache) and upload the pre-built bundle: run **Actions → Deploy to Hostinger → Run workflow**, download the **`hostinger-deploy`** artifact, and upload its contents to Hostinger via File Manager (Step 3, Option B).
-2. **Clear the Corepack cache once via SSH** (hPanel → Advanced → SSH Access; Premium Web or higher): `rm -rf ~/.cache/node/corepack` — the next automatic install re-downloads the pinned version fresh.
+If you ever hit this again with a different version, clear the Corepack cache once via SSH (hPanel → Advanced → SSH Access; Premium Web or higher): `rm -rf ~/.cache/node/corepack` — the next automatic install re-downloads the pinned version fresh.
 
 ### GitHub Pages vs Hostinger
 

@@ -329,9 +329,9 @@ This is **arithmetically wrong**:
 | I-2 | **Jobs app not in Hostinger bundle** — `apps/jobs` not packaged for deployment | 🔴 Critical | `scripts/prepare-hostinger.js` |
 | I-3 | **Redis in-memory fallback** — causes duplicate alerts and broken rate limiting in production | 🟠 High | `packages/shared/src/utils/redis.ts` |
 | I-4 | **Sentry not wired into build** — `sentryNextGenPlugin()` not imported in `next.config.js` | 🟠 High | `apps/web/next.config.js` |
-| I-5 | **CI/CD skips tests** — `deploy.yml` does not run `pnpm test`, `pnpm type-check`, `pnpm lint` | 🟠 High | `.github/workflows/deploy.yml` |
+| I-5 | **CI/CD skips tests** — `deploy.yml` does not run `pnpm test`, `pnpm type-check`, `pnpm lint` | 🟠 High | `.github/workflows/deploy.yml` — **resolved**: deploy.yml removed; deploys run via Hostinger's native GitHub integration, and `ci.yml` runs type-check, lint, test, and compliance on every push |
 | I-6 | **Supabase singleton clients** — can hold stale connections in serverless | 🟠 High | `packages/database/src/client.ts` |
-| I-7 | **No post-deploy smoke test** — no curl to `/api/health` after deploy | 🟠 High | `.github/workflows/deploy.yml` |
+| I-7 | **No post-deploy smoke test** — no curl to `/api/health` after deploy | 🟠 High | `.github/workflows/deploy.yml` — **resolved**: `ci.yml` smoke-test job curls `/api/health` and the cron endpoints post-deploy |
 
 ### Caching Strategy
 - Cloudflare configuration documented but not automated — no Terraform, no CI integration

@@ -32,8 +32,7 @@ thinkabell/
 │   ├── LAUNCH_CHECKLIST.md     # Email sequences, social syndication, SEO checklist
 │   └── PRE_LAUNCH_AUDIT.md     # Security, business, UX, backend, SEO audit findings
 ├── .github/workflows/
-│   ├── ci.yml              # CI pipeline: type-check, lint, test
-│   ├── deploy.yml          # Hostinger deployment
+│   ├── ci.yml              # CI pipeline: type-check, lint, test, compliance, smoke test
 │   └── legal-gate.yml      # Compliance gates (sponsored/FTC/privacy/unsubscribe)
 ├── turbo.json              # Turborepo task pipeline & caching
 ├── agent.md                # Master implementation plan, board directives, sprint roadmap

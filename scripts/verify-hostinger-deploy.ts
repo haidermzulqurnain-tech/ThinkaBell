@@ -9,7 +9,6 @@
  *   1b. Client assets are inside the standalone output (.next/static, public/)
  *   2. Hostinger entrypoint exists (apps/web/hostinger-server.js)
  *   3. Packaged bundle completeness (dist/hostinger-deploy/) when present
- *   4. Deploy workflow exists and references the required HOSTINGER_* secrets
  *
  * Environment variables (Supabase, API keys, encryption keys) are reported
  * as warnings: they are configured on the Hostinger Node.js panel, not in
@@ -19,7 +18,7 @@
  * broken app); warnings exit zero.
  */
 
-import { existsSync, readFileSync } from "fs";
+import { existsSync } from "fs";
 import { join } from "path";
 
 const ROOT = process.cwd();
@@ -126,7 +125,7 @@ if (existsSync(bundleDir)) {
 } else {
   warn(
     "Deploy bundle not packaged",
-    "dist/hostinger-deploy/ not found — run 'pnpm package:hostinger' before a manual upload, or let the Deploy workflow build it.",
+    "dist/hostinger-deploy/ not found — run 'pnpm package:hostinger' before a manual upload (the native Hostinger integration builds on Hostinger directly).",
   );
 }
 
@@ -150,38 +149,6 @@ if (missingEnv.length === 0) {
     "Runtime environment",
     "configure on the Hostinger Node.js panel (Environment): " +
       missingEnv.join(", "),
-  );
-}
-
-// 5. Deploy workflow — must exist and reference the required secrets.
-const deployYml = join(ROOT, ".github", "workflows", "deploy.yml");
-const REQUIRED_SECRETS = [
-  "HOSTINGER_HOST",
-  "HOSTINGER_USERNAME",
-  "HOSTINGER_PASSWORD",
-  "HOSTINGER_PORT",
-  "HOSTINGER_DEPLOY_PATH",
-];
-if (existsSync(deployYml)) {
-  const content = readFileSync(deployYml, "utf-8");
-  const missingSecrets = REQUIRED_SECRETS.filter(
-    (name) => !content.includes("secrets." + name),
-  );
-  if (missingSecrets.length === 0) {
-    pass(
-      "Deploy workflow",
-      "deploy.yml references all required HOSTINGER_* secrets",
-    );
-  } else {
-    warn(
-      "Deploy workflow secrets",
-      "deploy.yml does not reference: " + missingSecrets.join(", "),
-    );
-  }
-} else {
-  fail(
-    "Deploy workflow missing",
-    ".github/workflows/deploy.yml not found — the automated Hostinger deploy cannot run.",
   );
 }
 

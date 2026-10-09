@@ -378,7 +378,7 @@ Week 3:
 
 ### 6.2 Launch Day
 
-- [ ] Deploy to Hostinger via CI/CD
+- [ ] Deploy to Hostinger via the native GitHub integration
 - [ ] Verify `/api/health` returns 200
 - [ ] Verify UptimeRobot green
 - [ ] Send test alert to internal email
