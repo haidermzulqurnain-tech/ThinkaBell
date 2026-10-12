@@ -143,6 +143,7 @@ export class ProductRepository {
         image_url: product.imageUrl || null,
         description: product.description || null,
         tags: product.category ? [product.category] : [],
+        source: product.source,
         sources: [product.source],
         source_id: product.sourceId,
         discovery_source: product.source,

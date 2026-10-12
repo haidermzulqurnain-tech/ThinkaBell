@@ -29,12 +29,14 @@ CREATE TABLE IF NOT EXISTS products (
     search_vector TSVECTOR,
     deal_type TEXT,
     promo_code TEXT,
+    deal_start_date TIMESTAMPTZ,
     deal_end_date TIMESTAMPTZ,
     discount_percent NUMERIC(5, 2),
     original_price NUMERIC(10, 2),
     affiliate_network TEXT,
     affiliate_id TEXT,
     sources TEXT[] DEFAULT '{}'::TEXT[],
+    source TEXT,
     source_id TEXT,
     discovery_source TEXT,
     last_discovered_at TIMESTAMPTZ,
@@ -42,6 +44,13 @@ CREATE TABLE IF NOT EXISTS products (
     video_url TEXT,
     metadata JSONB
 );
+
+-- Migration: add the discovery source column for databases
+-- created before it existed. The unique index on
+-- (source, source_id) and the discovery upsert conflict
+-- key both require it.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS source TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS deal_start_date TIMESTAMPTZ;
 
 -- Auto-update search_vector for full-text search
 CREATE OR REPLACE FUNCTION products_search_vector_update() RETURNS TRIGGER AS $$
@@ -184,7 +193,13 @@ CREATE INDEX IF NOT EXISTS idx_subscribers_user_id ON subscribers(user_id);
 CREATE INDEX IF NOT EXISTS idx_subscribers_digest ON subscribers(digest_frequency);
 CREATE INDEX IF NOT EXISTS idx_products_deal_type ON products(deal_type);
 CREATE INDEX IF NOT EXISTS idx_products_sources ON products USING GIN(sources);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_products_source_source_id ON products(source, source_id) WHERE source IS NOT NULL AND source_id IS NOT NULL;
+-- Full (non-partial) unique index on the discovery
+-- conflict key. Supabase's upsert generates
+-- ON CONFLICT (source, source_id), which cannot infer
+-- a partial index — and Postgres unique indexes already
+-- treat NULLs as distinct, so rows without a source
+-- never conflict.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_products_source_source_id ON products(source, source_id);
 CREATE INDEX IF NOT EXISTS idx_products_last_discovered_at ON products(last_discovered_at DESC);
 CREATE INDEX IF NOT EXISTS idx_alert_queue_subscriber_product ON alert_queue(subscriber_id, product_id) WHERE sent = FALSE AND is_dead_letter = FALSE;
 CREATE INDEX IF NOT EXISTS idx_click_tracking_link ON click_tracking(retailer_link_id);
@@ -439,7 +454,7 @@ $$ LANGUAGE plpgsql;
 -- Job Runs Table (execution logging)
 CREATE TABLE IF NOT EXISTS job_runs (
     id SERIAL PRIMARY KEY,
-    job_name TEXT NOT NULL CHECK (job_name IN ('fetch-prices', 'send-alerts')),
+    job_name TEXT NOT NULL CHECK (job_name IN ('fetch-prices', 'send-alerts', 'product-discovery')),
     status TEXT CHECK (status IN ('running', 'success', 'failed', 'partial')) NOT NULL,
     started_at TIMESTAMPTZ DEFAULT NOW(),
     finished_at TIMESTAMPTZ,
@@ -455,6 +470,12 @@ CREATE TABLE IF NOT EXISTS job_runs (
 CREATE INDEX IF NOT EXISTS idx_job_runs_job_name ON job_runs(job_name);
 CREATE INDEX IF NOT EXISTS idx_job_runs_started_at ON job_runs(started_at DESC);
 CREATE INDEX IF NOT EXISTS idx_job_runs_status ON job_runs(status);
+
+-- Normalize the job_name constraint for databases created
+-- before the discovery runner was added (the inline
+-- CHECK above only applies to fresh creates).
+ALTER TABLE job_runs DROP CONSTRAINT IF EXISTS job_runs_job_name_check;
+ALTER TABLE job_runs ADD CONSTRAINT job_runs_job_name_check CHECK (job_name IN ('fetch-prices', 'send-alerts', 'product-discovery'));
 
 ALTER TABLE job_runs ENABLE ROW LEVEL SECURITY;
 
