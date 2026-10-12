@@ -7,19 +7,20 @@ import type { Metadata } from "next";
 import type { Product } from "@thinkabell/shared";
 
 interface ComparePageProps {
-  searchParams?: {
+  searchParams?: Promise<{
     slugs?: string;
     category?: string;
-  };
+  }>;
 }
 
 async function fetchCompareProducts(
   searchParams: ComparePageProps["searchParams"],
 ): Promise<Product[]> {
   try {
+    const sp = await searchParams;
     return await getCompareProducts({
-      slugs: searchParams?.slugs,
-      category: searchParams?.category,
+      slugs: sp?.slugs,
+      category: sp?.category,
     });
   } catch {
     return [];

@@ -18,9 +18,9 @@ import { PriceFreshnessBadge } from "../../../components/PriceFreshnessBadge";
 import { SubscribeModalClient } from "../../../components/SubscribeModalClient";
 
 interface DealPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 async function getDeal(slug: string): Promise<{ product: Product; history: PriceHistory[]; related: Product[] } | null> {
@@ -61,7 +61,8 @@ async function getDeal(slug: string): Promise<{ product: Product; history: Price
 }
 
 export async function generateMetadata({ params }: DealPageProps): Promise<Metadata> {
-  const data = await getDeal(params.slug);
+  const { slug } = await params;
+  const data = await getDeal(slug);
   if (!data) return { title: "Deal Not Found | ThinkaBell" };
 
   const { product } = data;
@@ -80,7 +81,8 @@ export async function generateMetadata({ params }: DealPageProps): Promise<Metad
 
 export default async function DealPage({ params }: DealPageProps) {
   const nonce = await getNonce();
-  const data = await getDeal(params.slug);
+  const { slug } = await params;
+  const data = await getDeal(slug);
 
   if (!data) {
     notFound();

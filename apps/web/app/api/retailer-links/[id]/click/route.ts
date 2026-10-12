@@ -5,10 +5,11 @@ export const dynamic = "force-dynamic";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const linkId = Number(params.id);
+    const { id } = await params;
+    const linkId = Number(id);
     const supabase = getSupabaseServiceClient();
 
     const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || null;

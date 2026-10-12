@@ -8,9 +8,7 @@ const mockSupabase = {
 vi.mock("@thinkabell/database", () => ({
   getSupabaseServiceClient: vi.fn(() => mockSupabase),
   ProductRepository: {
-    upsertDiscoveredProducts: vi
-      .fn()
-      .mockResolvedValue({ inserted: 1, updated: 0 }),
+    upsertDiscoveredProducts: vi.fn().mockResolvedValue({ inserted: 1, updated: 0 }),
   },
 }));
 
@@ -34,8 +32,22 @@ const mockAmazonListSource = {
 vi.mock("@thinkabell/shared", () => ({
   logger: mockLogger,
   redis: { get: vi.fn(), set: vi.fn() },
-  CircuitBreaker: vi.fn(() => mockCircuitBreaker),
-  AmazonListSource: vi.fn(() => mockAmazonListSource),
+  // These are instantiated with `new` by the runner, so their mock
+  // implementations must be constructible: vi.mock does not accept an arrow
+  // function for `new`. The class delegates to the shared mock objects above,
+  // which the assertions keep referencing.
+  CircuitBreaker: vi.fn(
+    class {
+      loadState = mockCircuitBreaker.loadState;
+      execute = mockCircuitBreaker.execute;
+      getState = mockCircuitBreaker.getState;
+    },
+  ),
+  AmazonListSource: vi.fn(
+    class {
+      search = mockAmazonListSource.search;
+    },
+  ),
   ebayClient: {},
   walmartClient: {},
   partnerStackClient: {},
@@ -88,22 +100,19 @@ describe("productDiscoveryRunner (amazon-list)", () => {
     const result = await runProductDiscovery();
 
     expect(mockAmazonListSource.search).toHaveBeenCalledWith("");
-    expect(ProductRepository.upsertDiscoveredProducts).toHaveBeenCalledWith(
-      [
-        expect.objectContaining({
-          sourceId: "B08N5WRWNW",
-          source: "amazon-list",
-          amazonAsin: "B08N5WRWNW",
-          name: "Wireless Headphones",
-          price: 49.99,
-          currency: "USD",
-          url: "https://amazon.com/dp/B08N5WRWNW",
-          affiliateUrl:
-            "https://amazon.com/dp/B08N5WRWNW?tag=thinkabell-20",
-          type: "physical",
-        }),
-      ],
-    );
+    expect(ProductRepository.upsertDiscoveredProducts).toHaveBeenCalledWith([
+      expect.objectContaining({
+        sourceId: "B08N5WRWNW",
+        source: "amazon-list",
+        amazonAsin: "B08N5WRWNW",
+        name: "Wireless Headphones",
+        price: 49.99,
+        currency: "USD",
+        url: "https://amazon.com/dp/B08N5WRWNW",
+        affiliateUrl: "https://amazon.com/dp/B08N5WRWNW?tag=thinkabell-20",
+        type: "physical",
+      }),
+    ]);
     expect(result.discovered).toBe(1);
     expect(result.sources).toContain("amazon-list");
     expect(result.errors).toEqual([]);

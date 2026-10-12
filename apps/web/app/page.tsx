@@ -6,7 +6,7 @@ import { DealCard } from "../components/DealCard";
 import { SubscribeCTA } from "../components/SubscribeCTA";
 import Link from "next/link";
 import Image from "next/image";
-import { Bell, Flame, ShieldCheck, Sparkles, Zap, Crown, Tag, TrendingDown, Search, BellRing, CheckCircle2 } from "lucide-react";
+import { Bell, Flame, ShieldCheck, Sparkles, Zap, Crown, TrendingDown, Search, BellRing, CheckCircle2 } from "lucide-react";
 import type { Metadata } from "next";
 
 export const revalidate = 60; // ISR cache for 60 seconds
@@ -48,14 +48,15 @@ async function getDeals(): Promise<Product[]> {
 }
 
 interface HomePageProps {
-  searchParams?: {
+  searchParams?: Promise<{
     category?: string;
-  };
+  }>;
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
+  const sp = await searchParams;
   const deals = await getDeals();
-  const selectedCategory = searchParams?.category;
+  const selectedCategory = sp?.category;
 
   const filteredDeals = selectedCategory
     ? deals.filter((d) => d.category.toLowerCase() === selectedCategory.toLowerCase())
@@ -133,67 +134,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             Lifetime discounts, promo codes, and subscription bundles — updated in real-time.
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {softwareDeals.slice(0, 3).map((product) => {
-              const currentPrice = product.current_price ?? 0;
-              const previousPrice = product.previous_price ?? currentPrice;
-              const discountPercent = previousPrice > currentPrice && currentPrice > 0
-                ? Math.round(((previousPrice - currentPrice) / previousPrice) * 100)
-                : 0;
-
-              return (
-                <Link
-                  key={product.id}
-                  href={`/deal/${product.slug}`}
-                  className="group relative flex flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-all"
-                >
-                  {discountPercent >= 5 && (
-                    <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
-                      <Tag className="h-3.5 w-3.5" />
-                      <span>{discountPercent}% OFF</span>
-                    </div>
-                  )}
-                  <div className="flex items-start gap-4">
-                    <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
-                       <Image
-                          src={product.image_url || fallbackImageUrl(product.category, 200)}
-                         alt={product.name}
-                         fill
-                         sizes="64px"
-                         className="object-cover"
-                       />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {product.brand && (
-                        <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-1">
-                          {product.brand}
-                        </p>
-                      )}
-                      <h3 className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                        {product.name}
-                      </h3>
-                      <p className="mt-1 text-xs text-gray-500 line-clamp-2">
-                        {product.description || "Track real-time price updates and historic discounts."}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex items-end justify-between border-t border-gray-100 pt-3">
-                    <div>
-                      {discountPercent >= 5 && (
-                        <p className="text-xs text-gray-500 line-through">
-                          ${previousPrice.toFixed(2)}
-                        </p>
-                      )}
-                      <p className="text-lg font-extrabold text-gray-900">
-                        ${currentPrice.toFixed(2)}
-                      </p>
-                    </div>
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-4 py-2.5 text-xs font-semibold text-blue-700 group-hover:bg-blue-600 group-hover:text-white transition-colors min-h-[44px]">
-                      <span>View Deal</span>
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
+            {softwareDeals.slice(0, 3).map((product) => (
+              <DealCard key={product.id} product={product} />
+            ))}
           </div>
         </section>
       )}

@@ -28,11 +28,12 @@ import {
 export const dynamic = "force-dynamic";
 
 interface RouteContext {
-  params: { asin: string };
+  params: Promise<{ asin: string }>;
 }
 
 export async function GET(request: NextRequest, { params }: RouteContext) {
-  const asin = (params.asin ?? "").toUpperCase();
+  const { asin: rawAsin } = await params;
+  const asin = (rawAsin ?? "").toUpperCase();
 
   if (!isValidAsin(asin)) {
     return NextResponse.json({ error: "Invalid Amazon ASIN" }, { status: 400 });

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function UnsubscribeConfirmedPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -11,9 +13,9 @@ export default function UnsubscribeConfirmedPage() {
         <p className="text-gray-600 mb-6">
           You have been removed from ThinkaBell deal alerts. You will no longer receive price drop notifications.
         </p>
-        <a href="/" className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">
+        <Link href="/" className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">
           Return to ThinkaBell
-        </a>
+        </Link>
       </div>
     </div>
   );

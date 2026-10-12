@@ -42,7 +42,7 @@ describe("GET /go/amazon/[asin]", () => {
 
   it("redirects to the tagged affiliate URL by default", async () => {
     const { GET } = await import("./route");
-    const response = await GET(requestWith(), { params: { asin: "B08N5WRWNW" } });
+    const response = await GET(requestWith(), { params: Promise.resolve({ asin: "B08N5WRWNW" }) });
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
@@ -57,7 +57,7 @@ describe("GET /go/amazon/[asin]", () => {
     );
     const { GET } = await import("./route");
     const response = await GET(requestWith({ "x-vercel-ip-country": "GB" }), {
-      params: { asin: "B08N5WRWNW" },
+      params: Promise.resolve({ asin: "B08N5WRWNW" }),
     });
 
     expect(response.status).toBe(302);
@@ -68,7 +68,7 @@ describe("GET /go/amazon/[asin]", () => {
 
   it("normalizes lowercase ASINs", async () => {
     const { GET } = await import("./route");
-    const response = await GET(requestWith(), { params: { asin: "b08n5wrwnw" } });
+    const response = await GET(requestWith(), { params: Promise.resolve({ asin: "b08n5wrwnw" }) });
 
     expect(response.status).toBe(302);
     expect(mockGenerateAmazonAffiliateLink).toHaveBeenCalledWith(
@@ -79,7 +79,7 @@ describe("GET /go/amazon/[asin]", () => {
 
   it("returns 400 for malformed ASINs", async () => {
     const { GET } = await import("./route");
-    const response = await GET(requestWith(), { params: { asin: "not-an-asin" } });
+    const response = await GET(requestWith(), { params: Promise.resolve({ asin: "not-an-asin" }) });
 
     expect(response.status).toBe(400);
     expect(mockGenerateAmazonAffiliateLink).not.toHaveBeenCalled();
@@ -95,7 +95,7 @@ describe("GET /go/amazon/[asin]", () => {
     mockResolveVisitorCountry.mockReturnValueOnce("DE");
 
     const response = await GET(requestWith({ "x-vercel-ip-country": "DE" }), {
-      params: { asin: "B08N5WRWNW" },
+      params: Promise.resolve({ asin: "B08N5WRWNW" }),
     });
 
     expect(response.status).toBe(503);
@@ -107,7 +107,7 @@ describe("GET /go/amazon/[asin]", () => {
       throw new Error("boom");
     });
 
-    const response = await GET(requestWith(), { params: { asin: "B08N5WRWNW" } });
+    const response = await GET(requestWith(), { params: Promise.resolve({ asin: "B08N5WRWNW" }) });
 
     expect(response.status).toBe(500);
   });

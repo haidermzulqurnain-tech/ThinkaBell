@@ -7,15 +7,16 @@ import { DealCard } from "@/components/DealCard";
 import { searchProducts, normalizeCategory } from "@/lib/catalog";
 
 interface SearchPageProps {
-  searchParams?: {
+  searchParams?: Promise<{
     q?: string;
     category?: string;
     cursor?: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
-  const query = searchParams?.q;
+  const sp = await searchParams;
+  const query = sp?.q;
   const title = query ? `Search results for "${query}" | ThinkaBell` : "Search Deals | ThinkaBell";
   const description = query
     ? `Find the best deals on "${query}". Track prices and get alerts.`
@@ -123,9 +124,10 @@ function SearchSkeleton() {
   );
 }
 
-export default function SearchPage({ searchParams }: SearchPageProps) {
-  const query = searchParams?.q || "";
-  const category = searchParams?.category;
+export default async function SearchPage({ searchParams }: SearchPageProps) {
+  const sp = await searchParams;
+  const query = sp?.q || "";
+  const category = sp?.category;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -137,7 +139,7 @@ export default function SearchPage({ searchParams }: SearchPageProps) {
       </div>
 
       <Suspense fallback={<SearchSkeleton />}>
-        <SearchResults query={query} category={category} cursor={searchParams?.cursor} />
+        <SearchResults query={query} category={category} cursor={sp?.cursor} />
       </Suspense>
 
       <div className="mt-8">

@@ -41,7 +41,7 @@ function makeFrom(subscriber: Record<string, unknown> | null, alerts: unknown[])
   return { from, subscriberChain, alertChain };
 }
 
-let mockFrom: ReturnType<typeof vi.fn>;
+let mockFrom: ReturnType<typeof makeFrom>["from"];
 let subscriberChain: Chain;
 let alertChain: Chain;
 

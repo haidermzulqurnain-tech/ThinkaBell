@@ -35,7 +35,7 @@ describe("Click Tracking API", () => {
           "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         },
       });
-      const response = await POST(request, { params: { id: "1" } });
+      const response = await POST(request, { params: Promise.resolve({ id: "1" }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -58,7 +58,7 @@ describe("Click Tracking API", () => {
           "user-agent": "Mozilla/5.0",
         },
       });
-      const response = await POST(request, { params: { id: "1" } });
+      const response = await POST(request, { params: Promise.resolve({ id: "1" }) });
       const data = await response.json();
 
       expect(response.status).toBe(500);

@@ -12,7 +12,7 @@ A dynamic, modular, step-by-step guide to setting up the ThinkaBell monorepo fro
 
 | Module                              | Package                                  | Configured via                   | Verify alone                                 |
 | ----------------------------------- | ---------------------------------------- | -------------------------------- | -------------------------------------------- |
-| Web app (Next.js 14)                | `apps/web` (`@thinkabell/web`)           | `apps/web/.env.local`            | `pnpm --filter @thinkabell/web dev`          |
+| Web app (Next.js 15)                | `apps/web` (`@thinkabell/web`)           | `apps/web/.env.local`            | `pnpm --filter @thinkabell/web dev`          |
 | Scheduled jobs                      | `apps/jobs` (`@thinkabell/jobs`)         | `apps/jobs/.env`                 | `pnpm --filter @thinkabell/jobs test`        |
 | Shared config/env schema            | `packages/config` (`@thinkabell/config`) | `.env` (root, for scripts)       | `pnpm --filter @thinkabell/config test`      |
 | Database client & repos             | `packages/database`                      | `SUPABASE_*`                     | `pnpm --filter @thinkabell/database test`    |
@@ -25,8 +25,8 @@ A dynamic, modular, step-by-step guide to setting up the ThinkaBell monorepo fro
 
 | Requirement      | Version                                           | Notes                                          |
 | ---------------- | ------------------------------------------------- | ---------------------------------------------- |
-| Node.js          | 20 LTS or newer                                   | Check: `node --version`                        |
-| pnpm             | 9+ (repo pins `pnpm@12.3.4` via `packageManager`) | Enable with `corepack enable`                  |
+| Node.js          | 22 or newer (repo `engines` floor)        | Check: `node --version`                        |
+| pnpm             | 10+ (repo pins `pnpm@10.34.6` via `packageManager`) | Enable with `corepack enable`                  |
 | Supabase project | any                                               | Free tier works; SQL editor needed for Phase 4 |
 | Git              | any                                               |                                                |
 
@@ -51,7 +51,7 @@ corepack enable      # activates the pinned pnpm version
 pnpm install
 ```
 
-Verify: `pnpm --version` reports 9+ (ideally 12.3.4).
+Verify: `pnpm --version` matches the `packageManager` pin in `package.json` (currently `10.34.6`; `corepack enable` activates it).
 
 ---
 

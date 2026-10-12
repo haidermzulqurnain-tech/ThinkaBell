@@ -19,10 +19,15 @@ export function initPostHog(): void {
   }
 }
 
+/**
+ * Captures an analytics event. A no-op when PostHog is not
+ * configured (no NEXT_PUBLIC_POSTHOG_KEY) — events are
+ * dropped, never faked or sent to a stub endpoint.
+ */
 export function trackEvent(name: string, properties?: Record<string, unknown>): void {
   if (typeof window !== "undefined" && posthogInitialized) {
     posthog.capture(name, properties);
   } else if (process.env.NODE_ENV !== "production") {
-    console.debug(`[PostHog:Mock] Captured event "${name}":`, properties);
+    console.debug(`[Analytics] PostHog not configured; dropped event "${name}"`);
   }
 }

@@ -24,6 +24,12 @@ const { copyStandaloneAssets } = require("./lib/standalone-assets");
 const ROOT_DIR = path.resolve(__dirname, "..");
 const WEB_DIR = path.join(ROOT_DIR, "apps", "web");
 const STANDALONE_DIR = path.join(WEB_DIR, ".next", "standalone");
+// The web package's build script is `next build`. Invoke the Next.js CLI
+// directly instead of spawning a nested `pnpm --filter ... run build`, so the
+// standalone build does not depend on a second package-manager resolution
+// (which can trip Corepack's packageManager version check when the active
+// pnpm differs from the pinned one).
+const NEXT_CLI = path.join(WEB_DIR, "node_modules", "next", "dist", "bin", "next");
 
 function checkSymlinkSupport() {
   if (process.platform !== "win32") return true;
@@ -57,15 +63,20 @@ if (!checkSymlinkSupport()) {
   process.exit(1);
 }
 
+if (!fs.existsSync(NEXT_CLI)) {
+  console.error("❌ Next.js CLI not found — run pnpm install at the repository root.");
+  console.error(`   Expected: ${NEXT_CLI}`);
+  process.exit(1);
+}
+
 console.log("==========================================");
 console.log("  Building @thinkabell/web (standalone)  ");
 console.log("==========================================");
 
-const child = spawn("pnpm", ["--filter", "@thinkabell/web", "run", "build"], {
-  cwd: ROOT_DIR,
+const child = spawn(process.execPath, [NEXT_CLI, "build"], {
+  cwd: WEB_DIR,
   env: { ...process.env, OUTPUT: "standalone" },
   stdio: "inherit",
-  shell: true,
 });
 
 child.on("error", (error) => {

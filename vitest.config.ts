@@ -31,11 +31,6 @@ export default defineConfig({
     },
     isolate: true,
     pool: "forks",
-    poolOptions: {
-      forks: {
-        singleFork: false,
-      },
-    },
   },
   resolve: {
     alias: {

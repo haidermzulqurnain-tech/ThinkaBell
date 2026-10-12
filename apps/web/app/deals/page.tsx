@@ -10,26 +10,27 @@ import { Search } from "lucide-react";
 import type { Metadata } from "next";
 
 interface DealsPageProps {
-  searchParams?: {
+  searchParams?: Promise<{
     category?: string;
     deal_type?: string;
     min_discount?: string;
     sort?: string;
     cursor?: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({ searchParams }: DealsPageProps): Promise<Metadata> {
+  const sp = await searchParams;
   const params = {
-    category: searchParams?.category,
-    deal_type: searchParams?.deal_type,
-    min_discount: searchParams?.min_discount,
-    sort: searchParams?.sort,
-    cursor: searchParams?.cursor,
+    category: sp?.category,
+    deal_type: sp?.deal_type,
+    min_discount: sp?.min_discount,
+    sort: sp?.sort,
+    cursor: sp?.cursor,
   };
 
   const data = await fetchDeals(params);
-  const category = searchParams?.category;
+  const category = sp?.category;
   const title = category ? `${category.charAt(0).toUpperCase() + category.slice(1)} Deals | ThinkaBell` : "All Deals | ThinkaBell";
   const description = category
     ? `Browse the best ${category} deals and discounts. Track prices and get alerts on ${category} products.`
@@ -108,12 +109,13 @@ function DealsSkeleton() {
 
 export default async function DealsPage({ searchParams }: DealsPageProps) {
   const nonce = await getNonce();
+  const sp = await searchParams;
   const params = {
-    category: searchParams?.category,
-    deal_type: searchParams?.deal_type,
-    min_discount: searchParams?.min_discount,
-    sort: searchParams?.sort,
-    cursor: searchParams?.cursor,
+    category: sp?.category,
+    deal_type: sp?.deal_type,
+    min_discount: sp?.min_discount,
+    sort: sp?.sort,
+    cursor: sp?.cursor,
   };
 
   const data = await fetchDeals(params);

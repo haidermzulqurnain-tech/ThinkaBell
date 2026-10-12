@@ -9,9 +9,9 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 interface TrueCostPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 async function getDeal(slug: string): Promise<Product | null> {
@@ -33,7 +33,8 @@ async function getDeal(slug: string): Promise<Product | null> {
 }
 
 export async function generateMetadata({ params }: TrueCostPageProps): Promise<Metadata> {
-  const product = await getDeal(params.slug);
+  const { slug } = await params;
+  const product = await getDeal(slug);
   if (!product) return { title: "Deal Not Found | ThinkaBell" };
 
   return {
@@ -43,7 +44,8 @@ export async function generateMetadata({ params }: TrueCostPageProps): Promise<M
 }
 
 export default async function TrueCostPage({ params }: TrueCostPageProps) {
-  const product = await getDeal(params.slug);
+  const { slug } = await params;
+  const product = await getDeal(slug);
 
   if (!product) {
     notFound();

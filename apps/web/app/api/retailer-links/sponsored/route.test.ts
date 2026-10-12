@@ -1,20 +1,33 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const mockSupabase = {
-  from: vi.fn(() => ({
+interface SponsoredRetailer {
+  retailer: string;
+  affiliate_url: string;
+}
+
+function makeSponsoredChain(result: SponsoredRetailer[] | null) {
+  return {
     select: vi.fn(() => ({
       eq: vi.fn(() => ({
         eq: vi.fn(() => ({
           limit: vi.fn(() => ({
-            then: vi.fn((onFulfilled) =>
-              Promise.resolve({ data: [{ retailer: "amazon", affiliate_url: "https://amazon.com/dp/test" }], error: null }).then(onFulfilled),
+            then: vi.fn((onFulfilled: (value: unknown) => unknown) =>
+              Promise.resolve({ data: result, error: null }).then(onFulfilled),
             ),
           })),
         })),
       })),
-      then: vi.fn((onFulfilled) => Promise.resolve({ data: null, error: null }).then(onFulfilled)),
+      then: vi.fn((onFulfilled: (value: unknown) => unknown) =>
+        Promise.resolve({ data: null, error: null }).then(onFulfilled),
+      ),
     })),
-  })),
+  };
+}
+
+const mockSupabase = {
+  from: vi.fn(() =>
+    makeSponsoredChain([{ retailer: "amazon", affiliate_url: "https://amazon.com/dp/test" }]),
+  ),
   rpc: vi.fn(),
 };
 
@@ -29,19 +42,9 @@ describe("Sponsored Retailer API", () => {
 
   describe("GET /api/retailer-links/sponsored", () => {
     it("should return sponsored retailer for a product", async () => {
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              limit: vi.fn(() => ({
-                then: vi.fn((onFulfilled) =>
-                  Promise.resolve({ data: [{ retailer: "amazon", affiliate_url: "https://amazon.com/dp/test" }], error: null }).then(onFulfilled),
-                ),
-              })),
-            })),
-          })),
-        })),
-      });
+      mockSupabase.from.mockReturnValue(
+        makeSponsoredChain([{ retailer: "amazon", affiliate_url: "https://amazon.com/dp/test" }]),
+      );
 
       const { GET } = await import("./route");
       const request = new Request("http://localhost:3000/api/retailer-links/sponsored?productId=1");
@@ -53,19 +56,7 @@ describe("Sponsored Retailer API", () => {
     });
 
     it("should return null when no sponsored retailer found", async () => {
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              limit: vi.fn(() => ({
-                then: vi.fn((onFulfilled) =>
-                  Promise.resolve({ data: null, error: null }).then(onFulfilled),
-                ),
-              })),
-            })),
-          })),
-        })),
-      });
+      mockSupabase.from.mockReturnValue(makeSponsoredChain(null));
 
       const { GET } = await import("./route");
       const request = new Request("http://localhost:3000/api/retailer-links/sponsored?productId=1");

@@ -1,11 +1,47 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# Security remediation overrides. pnpm 11 no longer reads the pnpm
+# field of package.json, so these overrides must live here to stay
+# effective on pnpm 11 (pnpm 10.5+ also reads them from this file).
+overrides:
+  # tinypool floor. Affected range <= 2.1.0 (prototype-pollution gadget in
+  # worker options -> RCE). ^2.1.1 closed CVE-2026-104848 / GHSA-5gmw-xhrv-c9v3;
+  # ^2.1.2 also closes the compounding follow-up CVE-2026-104849 /
+  # GHSA-85c8-ppgw-ccpr (run() options gadget, options now read from own
+  # properties with a null-prototype ThreadPool.options). 2.2.0 is the latest
+  # unaffected release if we later choose to track the newest 2.x line.
+  tinypool: "^2.1.2"
+  dompurify: "^3.4.16"
+  postcss: "^8.5.29"
+  "rollup@3.29.5": "^3.30.0"
+  uuid: "^11.1.1"
+  fast-uri: "^3.1.8"
+  "source-map-js": "^1.2.2"
+  "brace-expansion@1.1.18": "^1.1.21"
+  "brace-expansion@2.1.4": "^2.1.7"
+  "brace-expansion@5.0.9": "^5.0.12"
+
+# Approve dependency lifecycle scripts. `allowBuilds` (added in pnpm 10.26,
+# required by pnpm 11, which removed onlyBuiltDependencies) is the single
+# source of truth; the pinned pnpm 10.34.6 reads it too, so the legacy
+# package.json `pnpm` field and .npmrc `only-built-dependencies` were removed
+# to avoid the pnpm-11 "ignored field" warning and config drift.
 allowBuilds:
-  '@sentry/cli': true
+  "@sentry/cli": true
   core-js: true
   esbuild: true
   protobufjs: true
   sharp: true
   unrs-resolver: true
   workerd: true
+
+# What to do when the running pnpm differs from the `packageManager` pin in
+# package.json (pnpm@10.34.6). `download` (the default) downloads and runs the
+# declared version, so install, Turbo tasks, and nested scripts all use the
+# same pnpm. This is the setting that fixes the failing build: a pnpm 11.24.0
+# Corepack shim previously hit the version gate mid-build and left node_modules
+# in a mixed 10/11 layout. Added in pnpm 11, so it only engages on a pnpm 11+
+# host; the pinned 10.34.6 matches the pin and never triggers it.
+pmOnFail: download
