@@ -62,7 +62,9 @@ function createRedisClient(): ICacheClient {
       logger.info("[Redis] Initialized Upstash Redis client");
       return upstash as unknown as ICacheClient;
     } catch (err) {
-      logger.warn("[Redis] Failed to initialize Upstash Redis, falling back to memory cache", { err });
+      logger.warn("[Redis] Failed to initialize Upstash Redis, falling back to memory cache", {
+        err,
+      });
     }
   }
 

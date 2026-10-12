@@ -49,7 +49,9 @@ describe("AmazonClient", () => {
     it("should throw error when credentials are missing", async () => {
       vi.resetModules();
       const { amazonClient } = await import("./amazonClient");
-      await expect(amazonClient.getPrice("B0CM5N4G3T")).rejects.toThrow("Amazon PA-API credentials are not configured");
+      await expect(amazonClient.getPrice("B0CM5N4G3T")).rejects.toThrow(
+        "Amazon PA-API credentials are not configured",
+      );
     });
   });
 

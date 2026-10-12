@@ -9,9 +9,7 @@ const createChainableMock = () => {
       chain[method] = (onFulfilled: any) =>
         Promise.resolve({ data: [], error: null }).then(onFulfilled);
     } else if (method === "single" || method === "maybeSingle") {
-      chain[method] = vi.fn(() =>
-        Promise.resolve({ data: { id: 1 }, error: null }),
-      );
+      chain[method] = vi.fn(() => Promise.resolve({ data: { id: 1 }, error: null }));
     } else {
       chain[method] = vi.fn(() => chain);
     }
@@ -24,9 +22,7 @@ const mockSupabase = {
     select: vi.fn(() => createChainableMock()),
     upsert: vi.fn(() => ({
       select: vi.fn(() => ({
-        single: vi.fn(() =>
-          Promise.resolve({ data: { id: 1 }, error: null }),
-        ),
+        single: vi.fn(() => Promise.resolve({ data: { id: 1 }, error: null })),
       })),
     })),
   })),
@@ -66,7 +62,9 @@ describe("Retailer Links API", () => {
 
     it("should filter by retailer when provided", async () => {
       const { GET } = await import("./route");
-      const request = new NextRequest("http://localhost:3000/api/retailer-links?productId=1&retailer=amazon");
+      const request = new NextRequest(
+        "http://localhost:3000/api/retailer-links?productId=1&retailer=amazon",
+      );
       const response = await GET(request);
 
       expect(response.status).toBe(200);
@@ -200,4 +198,3 @@ describe("Retailer Links API", () => {
     });
   });
 });
-

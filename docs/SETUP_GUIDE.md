@@ -23,12 +23,12 @@ A dynamic, modular, step-by-step guide to setting up the ThinkaBell monorepo fro
 
 ## Phase 0 — Prerequisites
 
-| Requirement      | Version                                           | Notes                                          |
-| ---------------- | ------------------------------------------------- | ---------------------------------------------- |
-| Node.js          | 22 or newer (repo `engines` floor)        | Check: `node --version`                        |
+| Requirement      | Version                                             | Notes                                          |
+| ---------------- | --------------------------------------------------- | ---------------------------------------------- |
+| Node.js          | 22 or newer (repo `engines` floor)                  | Check: `node --version`                        |
 | pnpm             | 10+ (repo pins `pnpm@10.34.6` via `packageManager`) | Enable with `corepack enable`                  |
-| Supabase project | any                                               | Free tier works; SQL editor needed for Phase 4 |
-| Git              | any                                               |                                                |
+| Supabase project | any                                                 | Free tier works; SQL editor needed for Phase 4 |
+| Git              | any                                                 |                                                |
 
 Optional (each module works without it — see Appendix A):
 

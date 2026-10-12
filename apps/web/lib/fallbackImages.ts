@@ -5,10 +5,7 @@ const FALLBACK_IMAGE_BASE_URLS: Record<ProductCategory, string> = {
   software: "https://images.unsplash.com/photo-1555066931-4365d14bab8c",
 };
 
-export function fallbackImageUrl(
-  category: ProductCategory,
-  width = 800,
-): string {
+export function fallbackImageUrl(category: ProductCategory, width = 800): string {
   const baseUrl = FALLBACK_IMAGE_BASE_URLS[category];
   return `${baseUrl}?auto=format&fit=crop&w=${width}&q=80`;
 }

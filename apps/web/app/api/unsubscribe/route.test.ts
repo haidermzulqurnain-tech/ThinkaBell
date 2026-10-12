@@ -126,7 +126,9 @@ describe("GET /api/unsubscribe", () => {
     expect(response.status).toBe(400);
     expect(body.error).toMatch(/Unsubscribe token required/);
     // A new token must have been generated for the blind-indexed row.
-    expect(eraseChain.update).toHaveBeenCalledWith(expect.objectContaining({ unsubscribe_token: expect.any(String) }));
+    expect(eraseChain.update).toHaveBeenCalledWith(
+      expect.objectContaining({ unsubscribe_token: expect.any(String) }),
+    );
     expect(eraseChain.eq).toHaveBeenCalledWith("email_hash", "hash:user@example.com");
     expect(clickChain.update).not.toHaveBeenCalled();
   });

@@ -12,12 +12,12 @@
 
 Every revenue path is blocked today. This is the real assessment of the codebase:
 
-| Revenue stream | Blocker |
-|---|---|
-| Amazon affiliate (physical goods) | Catalog is synthetic placeholder data (`scripts/seed-50-products.ts` generates randomized ASINs); real curation not yet performed (`docs/AMAZON_LIST_CURATION.md`). New Associates accounts also receive `AssociateNotEligible` (HTTP 403) from the PA-API until ~10 qualifying sales land in 30 days, so live price fetching is gated at launch. |
-| SaaS affiliate (NordVPN, MacPaw, Raycast, etc.) | PartnerStack / AppSumo / Impact credentials not obtained. The clients are implemented but fail closed (return no data) until configured. |
-| Sponsored placements | No infrastructure exists. |
-| Premium subscriptions | No billing, no payment processor, no feature gate. |
+| Revenue stream                                  | Blocker                                                                                                                                                                                                                                                                                                                                           |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Amazon affiliate (physical goods)               | Catalog is synthetic placeholder data (`scripts/seed-50-products.ts` generates randomized ASINs); real curation not yet performed (`docs/AMAZON_LIST_CURATION.md`). New Associates accounts also receive `AssociateNotEligible` (HTTP 403) from the PA-API until ~10 qualifying sales land in 30 days, so live price fetching is gated at launch. |
+| SaaS affiliate (NordVPN, MacPaw, Raycast, etc.) | PartnerStack / AppSumo / Impact credentials not obtained. The clients are implemented but fail closed (return no data) until configured.                                                                                                                                                                                                          |
+| Sponsored placements                            | No infrastructure exists.                                                                                                                                                                                                                                                                                                                         |
+| Premium subscriptions                           | No billing, no payment processor, no feature gate.                                                                                                                                                                                                                                                                                                |
 
 **Realized revenue to date: $0.**
 
@@ -35,13 +35,13 @@ Every revenue path is blocked today. This is the real assessment of the codebase
 
 ## Realistic Unit Economics
 
-| Component | Original assumption | Realistic contribution |
-|---|---|---|
-| Affiliate (physical, 2% commission) | $0.50/MAU/year | $0.10-$0.30/MAU/year |
-| Affiliate (SaaS, 30% commission) | $2.00/MAU/year | $0 (all SaaS data is simulated until credentials exist) |
-| Sponsored placements | $0.30/MAU/year | $0 (no infrastructure exists) |
-| Premium subscriptions | $0.20/MAU/year | $0 (no billing, no payment processing) |
-| **Total** | **$3.00/MAU/year** | **$0.10-$0.30/MAU/year** |
+| Component                           | Original assumption | Realistic contribution                                  |
+| ----------------------------------- | ------------------- | ------------------------------------------------------- |
+| Affiliate (physical, 2% commission) | $0.50/MAU/year      | $0.10-$0.30/MAU/year                                    |
+| Affiliate (SaaS, 30% commission)    | $2.00/MAU/year      | $0 (all SaaS data is simulated until credentials exist) |
+| Sponsored placements                | $0.30/MAU/year      | $0 (no infrastructure exists)                           |
+| Premium subscriptions               | $0.20/MAU/year      | $0 (no billing, no payment processing)                  |
+| **Total**                           | **$3.00/MAU/year**  | **$0.10-$0.30/MAU/year**                                |
 
 - Realistic blended ARPU: **$0.10-$0.30/MAU/year** (affiliate physical only).
 - Realistic CAC: **$15-$40** (even at zero paid spend, founder time + content creation is $10-$30/user).
@@ -54,12 +54,12 @@ Every revenue path is blocked today. This is the real assessment of the codebase
 Trajectory (audit-corrected): 50 beta users M1-3, 100 MAU M4-6, 200 MAU M7-12.
 Revenue is affiliate-only, computed from the realistic ARPU range (ARPU / 12 per month).
 
-| Month | Conservative MAU | Base MAU | Aggressive MAU | Conservative ($0.10) | Base ($0.20) | Aggressive ($0.30) |
-|---|---|---|---|---|---|---|
-| 1-3 | 50 | 50 | 50 | $0.42/mo | $0.83/mo | $1.25/mo |
-| 4-6 | 100 | 100 | 100 | $0.83/mo | $1.67/mo | $2.50/mo |
-| 7-12 | 200 | 200 | 200 | $1.67/mo | $3.33/mo | $5.00/mo |
-| **Year 1 total** | | | | **$13.75** | **$27.50** | **$41.25** |
+| Month            | Conservative MAU | Base MAU | Aggressive MAU | Conservative ($0.10) | Base ($0.20) | Aggressive ($0.30) |
+| ---------------- | ---------------- | -------- | -------------- | -------------------- | ------------ | ------------------ |
+| 1-3              | 50               | 50       | 50             | $0.42/mo             | $0.83/mo     | $1.25/mo           |
+| 4-6              | 100              | 100      | 100            | $0.83/mo             | $1.67/mo     | $2.50/mo           |
+| 7-12             | 200              | 200      | 200            | $1.67/mo             | $3.33/mo     | $5.00/mo           |
+| **Year 1 total** |                  |          |                | **$13.75**           | **$27.50**   | **$41.25**         |
 
 **Year 1 affiliate-only total: ~$14-$41.**
 
@@ -69,26 +69,26 @@ The audit's corrected headline of **$2,400-$6,000 gross Year 1** is reachable on
 
 ## Operating Expenses
 
-| Category | Monthly Cost | Annual Cost | Notes |
-|---|---|---|---|
-| Hostinger VPS | $0-$12 | $0-$144 | Free tier or shared plan |
-| Cloudflare Pro | $0-$20 | $0-$240 | Free tier sufficient for Month 1-3 |
-| Supabase | $0-$25 | $0-$300 | Free tier until 50K MAU |
-| Redis Cloud | $0-$5 | $0-$60 | Free tier |
-| Brevo | $0-$25 | $0-$300 | Free tier 9,000 emails/mo |
-| OneSignal | $0 | $0 | Free tier 10,000 subscribers |
-| Domain (thinkabell.click) | $1.50 | $18 | Annual renewal |
-| **Total (Conservative/Base)** | **$1.50-$87** | **$18-$1,062** | |
-| **Total (Aggressive)** | **$1.50-$142** | **$18-$1,704** | Cloudflare Pro + paid tiers |
+| Category                      | Monthly Cost   | Annual Cost    | Notes                              |
+| ----------------------------- | -------------- | -------------- | ---------------------------------- |
+| Hostinger VPS                 | $0-$12         | $0-$144        | Free tier or shared plan           |
+| Cloudflare Pro                | $0-$20         | $0-$240        | Free tier sufficient for Month 1-3 |
+| Supabase                      | $0-$25         | $0-$300        | Free tier until 50K MAU            |
+| Redis Cloud                   | $0-$5          | $0-$60         | Free tier                          |
+| Brevo                         | $0-$25         | $0-$300        | Free tier 9,000 emails/mo          |
+| OneSignal                     | $0             | $0             | Free tier 10,000 subscribers       |
+| Domain (thinkabell.click)     | $1.50          | $18            | Annual renewal                     |
+| **Total (Conservative/Base)** | **$1.50-$87**  | **$18-$1,062** |                                    |
+| **Total (Aggressive)**        | **$1.50-$142** | **$18-$1,704** | Cloudflare Pro + paid tiers        |
 
 ---
 
 ## Profit & Loss Summary
 
-| Scenario | Year 1 Gross | Year 1 Expenses | Year 1 Net (cash only) | Year 1 Net (incl. founder time) |
-|---|---|---|---|---|
-| Realistic (affiliate-only) | $14-$41 | $18-$1,062 | **-$1,048 to +$23** | **-$5,000 to -$10,000** |
-| Contingent upper bound (streams unlocked mid-year) | $2,400-$6,000 | $18-$1,062 | **+$1,338 to +$4,982** | **-$5,000 to -$10,000** |
+| Scenario                                           | Year 1 Gross  | Year 1 Expenses | Year 1 Net (cash only) | Year 1 Net (incl. founder time) |
+| -------------------------------------------------- | ------------- | --------------- | ---------------------- | ------------------------------- |
+| Realistic (affiliate-only)                         | $14-$41       | $18-$1,062      | **-$1,048 to +$23**    | **-$5,000 to -$10,000**         |
+| Contingent upper bound (streams unlocked mid-year) | $2,400-$6,000 | $18-$1,062      | **+$1,338 to +$4,982** | **-$5,000 to -$10,000**         |
 
 ---
 
@@ -103,12 +103,12 @@ The audit's corrected headline of **$2,400-$6,000 gross Year 1** is reachable on
 
 ## MRR Gates
 
-| MRR | Action |
-|---|---|
-| < $500 | $0 paid spend; all free tiers |
-| $500-$1,500 | Upgrade Brevo if email volume > 9K/mo |
-| $1,500-$5,000 | Add Sentry + PostHog paid tiers |
-| > $5,000 | Evaluate Vercel Pro or Cloudflare Pages |
+| MRR           | Action                                  |
+| ------------- | --------------------------------------- |
+| < $500        | $0 paid spend; all free tiers           |
+| $500-$1,500   | Upgrade Brevo if email volume > 9K/mo   |
+| $1,500-$5,000 | Add Sentry + PostHog paid tiers         |
+| > $5,000      | Evaluate Vercel Pro or Cloudflare Pages |
 
 ---
 

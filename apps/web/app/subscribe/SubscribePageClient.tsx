@@ -32,9 +32,7 @@ export default function SubscribePage() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const toggleCategory = (cat: string) => {
-    setCategories((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
-    );
+    setCategories((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
   };
 
   const handleEnablePush = () => {
@@ -54,7 +52,9 @@ export default function SubscribePage() {
         }
       });
     } else {
-      setErrorMessage("Push notifications are not available. Please ensure you have granted consent.");
+      setErrorMessage(
+        "Push notifications are not available. Please ensure you have granted consent.",
+      );
     }
   };
 
@@ -103,7 +103,8 @@ export default function SubscribePage() {
           Get Instant Deal Alerts
         </h1>
         <p className="mt-3 text-sm sm:text-base text-gray-600 max-w-md mx-auto">
-          Choose the gadgets and software tools you want to monitor, and we will ping you the moment prices drop.
+          Choose the gadgets and software tools you want to monitor, and we will ping you the moment
+          prices drop.
         </p>
       </div>
 
@@ -114,7 +115,8 @@ export default function SubscribePage() {
           </div>
           <h2 className="text-xl font-bold text-gray-900">You are on the alert list!</h2>
           <p className="mt-2 text-sm text-gray-600">
-            We have activated deal monitoring for <strong>{email}</strong>. We will notify you whenever prices drop by at least {minDiscount}%.
+            We have activated deal monitoring for <strong>{email}</strong>. We will notify you
+            whenever prices drop by at least {minDiscount}%.
           </p>
           <button
             onClick={() => setStatus("idle")}
@@ -136,7 +138,10 @@ export default function SubscribePage() {
 
           {/* Email input */}
           <div>
-            <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
+            <label
+              htmlFor="email"
+              className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5"
+            >
               Email Address <span className="text-red-500">*</span>
             </label>
             <input
@@ -165,7 +170,9 @@ export default function SubscribePage() {
                     : "border-gray-200 hover:bg-gray-50 text-gray-600"
                 }`}
               >
-                <div className={`p-2 rounded-lg ${categories.includes("physical") ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}>
+                <div
+                  className={`p-2 rounded-lg ${categories.includes("physical") ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}
+                >
                   <Laptop className="h-4 w-4" />
                 </div>
                 <div>
@@ -183,7 +190,9 @@ export default function SubscribePage() {
                     : "border-gray-200 hover:bg-gray-50 text-gray-600"
                 }`}
               >
-                <div className={`p-2 rounded-lg ${categories.includes("software") ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}>
+                <div
+                  className={`p-2 rounded-lg ${categories.includes("software") ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}
+                >
                   <Zap className="h-4 w-4" />
                 </div>
                 <div>
@@ -228,7 +237,9 @@ export default function SubscribePage() {
               </div>
               <div>
                 <p className="text-xs font-bold text-gray-900">Browser Push Notifications</p>
-                <p className="text-[11px] text-gray-500">Get alerted instantly even if email is closed</p>
+                <p className="text-[11px] text-gray-500">
+                  Get alerted instantly even if email is closed
+                </p>
               </div>
             </div>
 

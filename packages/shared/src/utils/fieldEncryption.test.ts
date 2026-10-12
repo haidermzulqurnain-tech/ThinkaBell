@@ -60,7 +60,9 @@ describe("encryptField", () => {
   });
 
   it("should reject a malformed key instead of encrypting", async () => {
-    await expect(encryptField("user@example.com", "short-key")).rejects.toThrow(FieldEncryptionError);
+    await expect(encryptField("user@example.com", "short-key")).rejects.toThrow(
+      FieldEncryptionError,
+    );
   });
 
   it("should encrypt and produce different ciphertexts for the same plaintext (random IV)", async () => {
@@ -105,7 +107,9 @@ describe("decryptField", () => {
 
   it("should throw when decrypting with the wrong key", async () => {
     const encrypted = await encryptField("user@example.com", TEST_KEY);
-    await expect(decryptField(encrypted as string, WRONG_KEY)).rejects.toThrow(FieldEncryptionError);
+    await expect(decryptField(encrypted as string, WRONG_KEY)).rejects.toThrow(
+      FieldEncryptionError,
+    );
   });
 
   it("should throw on malformed base64 input", async () => {

@@ -6,7 +6,18 @@ import { DealCard } from "../components/DealCard";
 import { SubscribeCTA } from "../components/SubscribeCTA";
 import Link from "next/link";
 import Image from "next/image";
-import { Bell, Flame, ShieldCheck, Sparkles, Zap, Crown, TrendingDown, Search, BellRing, CheckCircle2 } from "lucide-react";
+import {
+  Bell,
+  Flame,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+  Crown,
+  TrendingDown,
+  Search,
+  BellRing,
+  CheckCircle2,
+} from "lucide-react";
 import type { Metadata } from "next";
 
 export const revalidate = 60; // ISR cache for 60 seconds
@@ -14,7 +25,8 @@ export const revalidate = 60; // ISR cache for 60 seconds
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "ThinkaBell | Real-Time Deal Alerts & Price Tracking",
-    description: "Track price drops on AI hardware, smart gadgets, and software tools. Get instant alerts before deals expire.",
+    description:
+      "Track price drops on AI hardware, smart gadgets, and software tools. Get instant alerts before deals expire.",
     alternates: { canonical: "/" },
   };
 }
@@ -64,11 +76,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   const softwareDeals = deals.filter((d) => d.category === "software");
   const physicalDeals = deals.filter((d) => d.category === "physical");
-  const dealOfTheDay = deals.find((d) => {
-    const current = d.current_price ?? 0;
-    const previous = d.previous_price ?? current;
-    return previous > current && current > 0;
-  }) ?? deals[0];
+  const dealOfTheDay =
+    deals.find((d) => {
+      const current = d.current_price ?? 0;
+      const previous = d.previous_price ?? current;
+      return previous > current && current > 0;
+    }) ?? deals[0];
 
   return (
     <div className="space-y-16 pb-16">
@@ -85,7 +98,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </h1>
 
           <p className="mx-auto mt-5 max-w-2xl text-lg text-gray-600">
-            We scan prices 24/7. When AI gadgets, developer hardware, or software subscriptions drop in price, you get an instant push or email alert.
+            We scan prices 24/7. When AI gadgets, developer hardware, or software subscriptions drop
+            in price, you get an instant push or email alert.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -150,46 +164,52 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </div>
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-100 p-6 sm:p-8">
             <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-               <div className="relative h-48 sm:h-56 w-full lg:w-80 flex-shrink-0 overflow-hidden rounded-2xl bg-white shadow-sm">
-                 <Image
-                    src={dealOfTheDay.image_url || fallbackImageUrl(dealOfTheDay.category, 800)}
-                   alt={dealOfTheDay.name}
-                   fill
-                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 320px"
-                   className="object-cover"
-                 />
-               </div>
+              <div className="relative h-48 sm:h-56 w-full lg:w-80 flex-shrink-0 overflow-hidden rounded-2xl bg-white shadow-sm">
+                <Image
+                  src={dealOfTheDay.image_url || fallbackImageUrl(dealOfTheDay.category, 800)}
+                  alt={dealOfTheDay.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 320px"
+                  className="object-cover"
+                />
+              </div>
               <div className="flex-1">
                 {dealOfTheDay.brand && (
                   <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-1">
                     {dealOfTheDay.brand}
                   </p>
                 )}
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  {dealOfTheDay.name}
-                </h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{dealOfTheDay.name}</h3>
                 <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                  {dealOfTheDay.description || "Track real-time price updates and historic discounts."}
+                  {dealOfTheDay.description ||
+                    "Track real-time price updates and historic discounts."}
                 </p>
                 <div className="flex items-end gap-4 mb-6">
                   <div>
-                  {dealOfTheDay.previous_price && dealOfTheDay.previous_price > (dealOfTheDay.current_price ?? 0) && (
-                    <p className="text-sm text-gray-500 line-through">
-                      ${dealOfTheDay.previous_price.toFixed(2)}
-                    </p>
-                  )}
+                    {dealOfTheDay.previous_price &&
+                      dealOfTheDay.previous_price > (dealOfTheDay.current_price ?? 0) && (
+                        <p className="text-sm text-gray-500 line-through">
+                          ${dealOfTheDay.previous_price.toFixed(2)}
+                        </p>
+                      )}
                     <p className="text-3xl font-extrabold text-gray-900">
                       ${(dealOfTheDay.current_price ?? 0).toFixed(2)}
                     </p>
                   </div>
-                  {dealOfTheDay.previous_price && dealOfTheDay.previous_price > (dealOfTheDay.current_price ?? 0) && (
-                    <div className="flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1 text-sm font-bold text-white">
-                      <TrendingDown className="h-4 w-4" />
-                      <span>
-                        {Math.round(((dealOfTheDay.previous_price - (dealOfTheDay.current_price ?? 0)) / dealOfTheDay.previous_price) * 100)}% OFF
-                      </span>
-                    </div>
-                  )}
+                  {dealOfTheDay.previous_price &&
+                    dealOfTheDay.previous_price > (dealOfTheDay.current_price ?? 0) && (
+                      <div className="flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1 text-sm font-bold text-white">
+                        <TrendingDown className="h-4 w-4" />
+                        <span>
+                          {Math.round(
+                            ((dealOfTheDay.previous_price - (dealOfTheDay.current_price ?? 0)) /
+                              dealOfTheDay.previous_price) *
+                              100,
+                          )}
+                          % OFF
+                        </span>
+                      </div>
+                    )}
                 </div>
                 <Link
                   href={`/deal/${dealOfTheDay.slug}`}
@@ -261,7 +281,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold text-gray-900">How It Works</h2>
-          <p className="text-sm text-gray-500 mt-1">Three simple steps to never miss a price drop</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Three simple steps to never miss a price drop
+          </p>
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm text-center">
@@ -269,21 +291,27 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               <Search className="h-6 w-6" />
             </div>
             <h3 className="text-base font-bold text-gray-900">1. Browse Deals</h3>
-            <p className="mt-2 text-sm text-gray-600">Explore curated price drops across physical gadgets and software tools.</p>
+            <p className="mt-2 text-sm text-gray-600">
+              Explore curated price drops across physical gadgets and software tools.
+            </p>
           </div>
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 mb-4">
               <BellRing className="h-6 w-6" />
             </div>
             <h3 className="text-base font-bold text-gray-900">2. Set Alerts</h3>
-            <p className="mt-2 text-sm text-gray-600">Pick categories and minimum discount thresholds. We handle the rest.</p>
+            <p className="mt-2 text-sm text-gray-600">
+              Pick categories and minimum discount thresholds. We handle the rest.
+            </p>
           </div>
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 mb-4">
               <CheckCircle2 className="h-6 w-6" />
             </div>
             <h3 className="text-base font-bold text-gray-900">3. Act Fast</h3>
-            <p className="mt-2 text-sm text-gray-600">Get instant email or push notifications when prices hit your target.</p>
+            <p className="mt-2 text-sm text-gray-600">
+              Get instant email or push notifications when prices hit your target.
+            </p>
           </div>
         </div>
       </section>

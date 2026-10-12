@@ -49,8 +49,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0CM5N4G3T",
     current_price: 1749.0,
     previous_price: 1999.0,
-    image_url: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80",
-    description: "Premium Apple MacBook Pro 14 with M3 Pro chip, tracked for genuine price discounts and verified deals.",
+    image_url:
+      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Premium Apple MacBook Pro 14 with M3 Pro chip, tracked for genuine price discounts and verified deals.",
     tags: ["laptop", "apple", "hardware"],
   },
   {
@@ -61,8 +63,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0BSHVQ2HW",
     current_price: 1099.0,
     previous_price: 1299.0,
-    image_url: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=800&q=80",
-    description: "Thin and light Apple MacBook Air 15 with M3 chip, perfect for productivity on the go.",
+    image_url:
+      "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Thin and light Apple MacBook Air 15 with M3 chip, perfect for productivity on the go.",
     tags: ["laptop", "apple", "ultrabook"],
   },
   {
@@ -73,7 +77,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0D3F4G5H6",
     current_price: 899.0,
     previous_price: 999.0,
-    image_url: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=800&q=80",
     description: "Powerful Apple iPad Pro 11 with M4 chip and stunning OLED display.",
     tags: ["tablet", "apple", "oled"],
   },
@@ -85,8 +90,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B09XS7JWHH",
     current_price: 328.0,
     previous_price: 399.99,
-    image_url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
-    description: "Industry-leading noise canceling wireless headphones from Sony with premium sound quality.",
+    image_url:
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Industry-leading noise canceling wireless headphones from Sony with premium sound quality.",
     tags: ["audio", "headphones", "anc"],
   },
   {
@@ -97,8 +104,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0C1D2E3F4",
     current_price: 248.0,
     previous_price: 299.99,
-    image_url: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80",
-    description: "Compact true wireless earbuds with industry-leading noise cancellation from Sony.",
+    image_url:
+      "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Compact true wireless earbuds with industry-leading noise cancellation from Sony.",
     tags: ["audio", "earbuds", "anc"],
   },
   {
@@ -109,8 +118,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0BNH2J3K4",
     current_price: 89.99,
     previous_price: 99.99,
-    image_url: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=800&q=80",
-    description: "Premium wireless mouse with ultra-fast scrolling and ergonomic design from Logitech.",
+    image_url:
+      "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Premium wireless mouse with ultra-fast scrolling and ergonomic design from Logitech.",
     tags: ["mouse", "logitech", "ergonomic"],
   },
   {
@@ -121,8 +132,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0B5C6D7E8",
     current_price: 99.99,
     previous_price: 119.99,
-    image_url: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80",
-    description: "Advanced wireless keyboard with smart illumination and ergonomic design from Logitech.",
+    image_url:
+      "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Advanced wireless keyboard with smart illumination and ergonomic design from Logitech.",
     tags: ["keyboard", "logitech", "productivity"],
   },
   {
@@ -133,7 +146,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0F8G9H0J1",
     current_price: 169.0,
     previous_price: 199.0,
-    image_url: "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=800&q=80",
     description: "Premium wireless mechanical keyboard with QMK/VIA support and aluminum frame.",
     tags: ["keyboard", "mechanical", "custom"],
   },
@@ -145,8 +159,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0A2B3C4D5",
     current_price: 99.99,
     previous_price: 129.99,
-    image_url: "https://images.unsplash.com/photo-1609592424109-dd9892f1b177?auto=format&fit=crop&w=800&q=80",
-    description: "High-capacity power bank with 200W output for charging laptops, tablets, and phones.",
+    image_url:
+      "https://images.unsplash.com/photo-1609592424109-dd9892f1b177?auto=format&fit=crop&w=800&q=80",
+    description:
+      "High-capacity power bank with 200W output for charging laptops, tablets, and phones.",
     tags: ["charging", "anker", "powerbank"],
   },
   {
@@ -157,7 +173,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0E6F7G8H9",
     current_price: 82.5,
     previous_price: 109.99,
-    image_url: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80",
     description: "Convenient 3-in-1 wireless charger for iPhone, Apple Watch, and AirPods.",
     tags: ["charging", "wireless", "magsafe"],
   },
@@ -169,31 +186,34 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0F9G0H1J2",
     current_price: 349.0,
     previous_price: 429.0,
-    image_url: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=800&q=80",
     description: "Premium noise cancelling headphones with immersive audio and comfortable fit.",
     tags: ["audio", "bose", "anc"],
   },
   {
-    name: "LG UltraGear 27\" OLED 240Hz Gaming Monitor",
+    name: 'LG UltraGear 27" OLED 240Hz Gaming Monitor',
     slug: "lg-ultragear-27-oled-240hz-gaming-monitor",
     category: "physical",
     brand: "LG",
     amazon_asin: "B0K3L4M5N6",
     current_price: 649.99,
     previous_price: 899.99,
-    image_url: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=800&q=80",
     description: "High-performance gaming monitor with OLED panel and 240Hz refresh rate.",
     tags: ["monitor", "gaming", "oled"],
   },
   {
-    name: "Dell UltraSharp 32\" 4K USB-C Hub Monitor",
+    name: 'Dell UltraSharp 32" 4K USB-C Hub Monitor',
     slug: "dell-ultrasharp-32-4k-usb-c-hub-monitor",
     category: "physical",
     brand: "Dell",
     amazon_asin: "B0P7Q8R9S0",
     current_price: 699.0,
     previous_price: 859.99,
-    image_url: "https://images.unsplash.com/photo-1547119957-637f8679db1e?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1547119957-637f8679db1e?auto=format&fit=crop&w=800&q=80",
     description: "Professional 4K monitor with USB-C hub and built-in network connectivity.",
     tags: ["monitor", "dell", "4k"],
   },
@@ -205,7 +225,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0T1U2V3W4",
     current_price: 599.0,
     previous_price: 669.0,
-    image_url: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80",
     description: "Compact 3-axis gimbal camera with 1-inch CMOS sensor for creators.",
     tags: ["camera", "video", "dji"],
   },
@@ -217,7 +238,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0X5Y6Z7A8",
     current_price: 949.99,
     previous_price: 1199.99,
-    image_url: "https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&w=800&q=80",
     description: "Premium Android tablet with large AMOLED display and S Pen included.",
     tags: ["tablet", "samsung", "android"],
   },
@@ -229,8 +251,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0BDHX7BZQ",
     current_price: 189.99,
     previous_price: 249.0,
-    image_url: "https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?auto=format&fit=crop&w=800&q=80",
-    description: "Active noise cancellation wireless earbuds with adaptive transparency and personalized spatial audio.",
+    image_url:
+      "https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Active noise cancellation wireless earbuds with adaptive transparency and personalized spatial audio.",
     tags: ["audio", "earbuds", "anc"],
   },
   {
@@ -241,7 +265,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0CX9K2M4P",
     current_price: 999.99,
     previous_price: 1299.99,
-    image_url: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=800&q=80",
     description: "Premium Android smartphone with S Pen and advanced AI features.",
     tags: ["phone", "samsung", "android"],
   },
@@ -253,8 +278,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0D6E7F8G9",
     current_price: 1299.0,
     previous_price: 1499.0,
-    image_url: "https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?auto=format&fit=crop&w=800&q=80",
-    description: "Premium 16-inch laptop with stunning OLED display and powerful Intel Core Ultra processor.",
+    image_url:
+      "https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Premium 16-inch laptop with stunning OLED display and powerful Intel Core Ultra processor.",
     tags: ["laptop", "dell", "ultrabook"],
   },
   {
@@ -265,7 +292,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0H9I0J1K2",
     current_price: 449.99,
     previous_price: 499.99,
-    image_url: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=800&q=80",
     description: "Next-gen gaming console with ultra-high speed SSD and ray tracing support.",
     tags: ["gaming", "console", "playstation"],
   },
@@ -277,7 +305,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0L3M4N5O6",
     current_price: 299.99,
     previous_price: 349.99,
-    image_url: "https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?auto=format&fit=crop&w=800&q=80",
     description: "Hybrid gaming console with vibrant 7-inch OLED screen and enhanced audio.",
     tags: ["gaming", "console", "nintendo"],
   },
@@ -289,8 +318,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0F5G6H7J8",
     current_price: 109.99,
     previous_price: 139.99,
-    image_url: "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=800&q=80",
-    description: "Massive capacity power bank with 140W output for charging multiple devices simultaneously.",
+    image_url:
+      "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Massive capacity power bank with 140W output for charging multiple devices simultaneously.",
     tags: ["charging", "anker", "powerbank"],
   },
   {
@@ -301,7 +332,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0C9D0E1F2",
     current_price: 349.0,
     previous_price: 399.0,
-    image_url: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=800&q=80",
     description: "Powerful portable Bluetooth speaker with deep bass and 20-hour battery life.",
     tags: ["audio", "speaker", "portable"],
   },
@@ -313,19 +345,21 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0G2H3I4J5",
     current_price: 149.99,
     previous_price: 159.99,
-    image_url: "https://images.unsplash.com/photo-1527814050087-3793815479db?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1527814050087-3793815479db?auto=format&fit=crop&w=800&q=80",
     description: "Ultra-lightweight wireless gaming mouse with HERO 2 sensor and 95-hour battery.",
     tags: ["mouse", "logitech", "gaming"],
   },
   {
-    name: "Samsung 49\" Odyssey OLED G9 Monitor",
+    name: 'Samsung 49" Odyssey OLED G9 Monitor',
     slug: "samsung-49-odyssey-oled-g9-monitor",
     category: "physical",
     brand: "Samsung",
     amazon_asin: "B0K6L7M8N9",
     current_price: 1299.99,
     previous_price: 1799.99,
-    image_url: "https://images.unsplash.com/photo-1585792180666-f7347f490ea2?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1585792180666-f7347f490ea2?auto=format&fit=crop&w=800&q=80",
     description: "Immersive dual-4K curved gaming monitor with OLED panel and 240Hz refresh rate.",
     tags: ["monitor", "gaming", "oled"],
   },
@@ -337,7 +371,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0CCHMQBQH",
     current_price: 699.0,
     previous_price: 799.0,
-    image_url: "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?auto=format&fit=crop&w=800&q=80",
     description: "Most rugged and capable Apple Watch with precision GPS and action button.",
     tags: ["wearable", "apple", "smartwatch"],
   },
@@ -349,7 +384,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0BJGK7BZP",
     current_price: 2198.0,
     previous_price: 2498.0,
-    image_url: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80",
     description: "Full-frame mirrorless camera with 33MP sensor and advanced autofocus system.",
     tags: ["camera", "sony", "photography"],
   },
@@ -361,7 +397,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0P1Q2R3S4",
     current_price: 109.0,
     previous_price: 129.0,
-    image_url: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80",
     description: "Wireless mechanical keyboard with Gateron switches and macOS compatibility.",
     tags: ["keyboard", "mechanical", "custom"],
   },
@@ -373,7 +410,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0C5D6E7F8",
     current_price: 759.0,
     previous_price: 859.0,
-    image_url: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1473968512647-3e447244af8f?auto=format&fit=crop&w=800&q=80",
     description: "Compact drone with 4K/60fps HDR video and omnidirectional obstacle sensing.",
     tags: ["camera", "drone", "dji"],
   },
@@ -385,32 +423,36 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0BSHZ3BZQ",
     current_price: 249.0,
     previous_price: 299.0,
-    image_url: "https://images.unsplash.com/photo-1589492477829-5e65395b66cc?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1589492477829-5e65395b66cc?auto=format&fit=crop&w=800&q=80",
     description: "Intelligent speaker with room-filling sound and Siri intelligence.",
     tags: ["audio", "speaker", "smart-home"],
   },
   {
-    name: "LG C3 55\" OLED 4K Smart TV",
+    name: 'LG C3 55" OLED 4K Smart TV',
     slug: "lg-c3-55-oled-4k-smart-tv",
     category: "physical",
     brand: "LG",
     amazon_asin: "B0B8C9D0E1",
     current_price: 1096.99,
     previous_price: 1499.99,
-    image_url: "https://images.unsplash.com/photo-1593359677879-a4d92f7d9d0e?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1593359677879-a4d92f7d9d0e?auto=format&fit=crop&w=800&q=80",
     description: "Stunning OLED TV with self-lit pixels, perfect for movies and gaming.",
     tags: ["tv", "lg", "oled"],
   },
   {
-    name: "Sony A80K 65\" OLED 4K Google TV",
+    name: 'Sony A80K 65" OLED 4K Google TV',
     slug: "sony-a80k-65-oled-4k-google-tv",
     category: "physical",
     brand: "Sony",
     amazon_asin: "B0B8C9D0E2",
     current_price: 1398.0,
     previous_price: 1798.0,
-    image_url: "https://images.unsplash.com/photo-1593784991095-a995069ad35a?auto=format&fit=crop&w=800&q=80",
-    description: "Cognitive intelligence TV with stunning OLED picture and Google TV smart platform.",
+    image_url:
+      "https://images.unsplash.com/photo-1593784991095-a995069ad35a?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Cognitive intelligence TV with stunning OLED picture and Google TV smart platform.",
     tags: ["tv", "sony", "oled"],
   },
   {
@@ -421,7 +463,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0F2G3H4J5",
     current_price: 229.99,
     previous_price: 249.99,
-    image_url: "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=800&q=80",
     description: "Premium gaming keyboard with Razer Green switches and command dial.",
     tags: ["keyboard", "razer", "gaming"],
   },
@@ -433,7 +476,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0D3F4G5H7",
     current_price: 79.99,
     previous_price: 99.99,
-    image_url: "https://images.unsplash.com/photo-1634152962476-4b8a00e1915c?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1634152962476-4b8a00e1915c?auto=format&fit=crop&w=800&q=80",
     description: "Keep track of your items with precision finding and the Find My network.",
     tags: ["accessories", "apple", "tracking"],
   },
@@ -445,7 +489,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0B6C7D8E9",
     current_price: 199.0,
     previous_price: 279.0,
-    image_url: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80",
     description: "World-class noise cancelling earbuds with personalized sound profile.",
     tags: ["audio", "earbuds", "anc"],
   },
@@ -457,7 +502,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0C9D0E1F3",
     current_price: 299.99,
     previous_price: 399.99,
-    image_url: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&q=80",
     description: "Premium smartwatch with rotating bezel and advanced health monitoring.",
     tags: ["wearable", "samsung", "smartwatch"],
   },
@@ -469,7 +515,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0B4C5D6E7",
     current_price: 69.99,
     previous_price: 79.99,
-    image_url: "https://images.unsplash.com/photo-1587826080692-f439cd0b70da?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1587826080692-f439cd0b70da?auto=format&fit=crop&w=800&q=80",
     description: "Full HD 1080p webcam with stereo audio and adjustable field of view.",
     tags: ["webcam", "logitech", "streaming"],
   },
@@ -481,7 +528,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0B7C8D9E0",
     current_price: 89.99,
     previous_price: 149.99,
-    image_url: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=800&q=80",
     description: "Ultra-lightweight ergonomic gaming mouse with Focus Pro 30K optical sensor.",
     tags: ["mouse", "razer", "gaming"],
   },
@@ -493,7 +541,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0C6F7G8H0",
     current_price: 349.0,
     previous_price: 429.0,
-    image_url: "https://images.unsplash.com/photo-1564466809058-bf4114d55352?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1564466809058-bf4114d55352?auto=format&fit=crop&w=800&q=80",
     description: "Waterproof action camera with 4K/120fps video and RockSteady 3.0 stabilization.",
     tags: ["camera", "action", "dji"],
   },
@@ -505,8 +554,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0D7E8F9G0",
     current_price: 698.0,
     previous_price: 798.0,
-    image_url: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80",
-    description: "Compact vlog camera with 26MP sensor and improved autofocus for content creators.",
+    image_url:
+      "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Compact vlog camera with 26MP sensor and improved autofocus for content creators.",
     tags: ["camera", "sony", "vlogging"],
   },
   {
@@ -517,8 +568,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0CZ7M4O6R",
     current_price: 49.99,
     previous_price: 59.99,
-    image_url: "https://images.unsplash.com/photo-1625842268584-8f3296236761?auto=format&fit=crop&w=800&q=80",
-    description: "Compact USB-C hub with 8 ports including 4K HDMI, SD card, and 100W power delivery.",
+    image_url:
+      "https://images.unsplash.com/photo-1625842268584-8f3296236761?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Compact USB-C hub with 8 ports including 4K HDMI, SD card, and 100W power delivery.",
     tags: ["accessories", "anker", "usb-c"],
   },
   {
@@ -529,7 +582,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0B8C9D0E3",
     current_price: 149.0,
     previous_price: 179.0,
-    image_url: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80",
     description: "Wireless keyboard with Touch ID for secure authentication and Apple Pay.",
     tags: ["keyboard", "apple", "wireless"],
   },
@@ -541,8 +595,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0B4C5D6E8",
     current_price: 119.99,
     previous_price: 159.99,
-    image_url: "https://images.unsplash.com/photo-1597872200967-794b89f74db9?auto=format&fit=crop&w=800&q=80",
-    description: "Rugged portable SSD with 1050MB/s read speeds and IP65 water and dust resistance.",
+    image_url:
+      "https://images.unsplash.com/photo-1597872200967-794b89f74db9?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Rugged portable SSD with 1050MB/s read speeds and IP65 water and dust resistance.",
     tags: ["storage", "samsung", "portable"],
   },
   {
@@ -553,7 +609,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0C9D0E1F4",
     current_price: 39.99,
     previous_price: 59.99,
-    image_url: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=800&q=80",
     description: "Compact portable speaker with extra bass and 16-hour battery life.",
     tags: ["audio", "speaker", "portable"],
   },
@@ -565,8 +622,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0D2E3F4G5",
     current_price: 399.99,
     previous_price: 499.99,
-    image_url: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=800&q=80",
-    description: "Unique 16:18 aspect ratio monitor ideal for coding, multitasking, and content creation.",
+    image_url:
+      "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Unique 16:18 aspect ratio monitor ideal for coding, multitasking, and content creation.",
     tags: ["monitor", "lg", "productivity"],
   },
   {
@@ -577,7 +636,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0F1G2H3J4",
     current_price: 149.99,
     previous_price: 179.99,
-    image_url: "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=800&q=80",
     description: "Low-profile gaming keyboard with GX mechanical switches and RGB lighting.",
     tags: ["keyboard", "logitech", "gaming"],
   },
@@ -589,8 +649,10 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0C5D6E7F9",
     current_price: 249.0,
     previous_price: 329.0,
-    image_url: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=800&q=80",
-    description: "Professional wireless microphone with 32-bit float recording and noise cancellation.",
+    image_url:
+      "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Professional wireless microphone with 32-bit float recording and noise cancellation.",
     tags: ["audio", "microphone", "dji"],
   },
   {
@@ -601,7 +663,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0H8I9J0K1",
     current_price: 139.99,
     previous_price: 159.99,
-    image_url: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=800&q=80",
     description: "Esports-grade wireless mouse with Focus Pro 30K sensor and 90-hour battery.",
     tags: ["mouse", "razer", "gaming"],
   },
@@ -613,7 +676,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0B8C9D0E4",
     current_price: 149.99,
     previous_price: 229.99,
-    image_url: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80",
     description: "Premium wireless earbuds with intelligent ANC and 360 audio.",
     tags: ["audio", "earbuds", "anc"],
   },
@@ -625,7 +689,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0C5D6E7F0",
     current_price: 499.0,
     previous_price: 619.0,
-    image_url: "https://images.unsplash.com/photo-1547119957-637f8679db1e?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1547119957-637f8679db1e?auto=format&fit=crop&w=800&q=80",
     description: "27-inch QHD IPS monitor with USB-C hub and 120Hz refresh rate.",
     tags: ["monitor", "dell", "productivity"],
   },
@@ -637,7 +702,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0D3F4G5H8",
     current_price: 99.0,
     previous_price: 129.0,
-    image_url: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=800&q=80",
     description: "Advanced Apple Pencil with squeeze, barrel roll, and haptic feedback.",
     tags: ["accessories", "apple", "stylus"],
   },
@@ -649,7 +715,8 @@ const CATALOG: ProductSeed[] = [
     amazon_asin: "B0CY8L3N5Q",
     current_price: 148.0,
     previous_price: 198.0,
-    image_url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
     description: "Lightweight wireless noise cancelling headphones with 35-hour battery life.",
     tags: ["audio", "headphones", "anc"],
   },
@@ -660,7 +727,8 @@ const CATALOG: ProductSeed[] = [
     brand: "Nord Security",
     current_price: 83.76,
     previous_price: 286.8,
-    image_url: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=800&q=80",
     description: "Complete VPN protection with 2-year subscription including all premium features.",
     tags: ["vpn", "security", "privacy"],
   },
@@ -671,7 +739,8 @@ const CATALOG: ProductSeed[] = [
     brand: "MacPaw",
     current_price: 59.95,
     previous_price: 89.95,
-    image_url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
     description: "Complete Mac optimization suite with malware removal and cleanup tools.",
     tags: ["mac", "utility", "optimization"],
   },
@@ -682,7 +751,8 @@ const CATALOG: ProductSeed[] = [
     brand: "Raycast",
     current_price: 96.0,
     previous_price: 120.0,
-    image_url: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80",
     description: "Productivity launcher for Mac with AI commands, snippets, and clipboard history.",
     tags: ["productivity", "ai", "launcher"],
   },
@@ -693,8 +763,10 @@ const CATALOG: ProductSeed[] = [
     brand: "1Password",
     current_price: 47.88,
     previous_price: 59.88,
-    image_url: "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?auto=format&fit=crop&w=800&q=80",
-    description: "Secure password manager for families with cross-platform support and Travel Mode.",
+    image_url:
+      "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Secure password manager for families with cross-platform support and Travel Mode.",
     tags: ["security", "passwords", "saas"],
   },
   {
@@ -704,8 +776,10 @@ const CATALOG: ProductSeed[] = [
     brand: "Setapp",
     current_price: 107.88,
     previous_price: 119.88,
-    image_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
-    description: "Subscription to 240+ premium Mac apps including CleanMyMac, Bartender, and iMazing.",
+    image_url:
+      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Subscription to 240+ premium Mac apps including CleanMyMac, Bartender, and iMazing.",
     tags: ["mac", "apps", "bundle"],
   },
   {
@@ -715,7 +789,8 @@ const CATALOG: ProductSeed[] = [
     brand: "JetBrains",
     current_price: 289.0,
     previous_price: 499.0,
-    image_url: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80",
     description: "Complete developer toolkit with IntelliJ IDEA, PyCharm, WebStorm, and more.",
     tags: ["developer", "ide", "jetbrains"],
   },
@@ -726,7 +801,8 @@ const CATALOG: ProductSeed[] = [
     brand: "Cursor",
     current_price: 192.0,
     previous_price: 240.0,
-    image_url: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80",
     description: "AI-first code editor built on VS Code with intelligent code completion and chat.",
     tags: ["ai", "developer", "coding"],
   },
@@ -737,7 +813,8 @@ const CATALOG: ProductSeed[] = [
     brand: "Notion",
     current_price: 96.0,
     previous_price: 120.0,
-    image_url: "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80",
     description: "All-in-one workspace with AI writing, databases, wikis, and project management.",
     tags: ["notes", "workspace", "productivity"],
   },
@@ -748,8 +825,10 @@ const CATALOG: ProductSeed[] = [
     brand: "Figma",
     current_price: 144.0,
     previous_price: 180.0,
-    image_url: "https://images.unsplash.com/photo-1581291518633-83b4eb1d83e?auto=format&fit=crop&w=800&q=80",
-    description: "Collaborative interface design tool with prototyping, design systems, and dev handoff.",
+    image_url:
+      "https://images.unsplash.com/photo-1581291518633-83b4eb1d83e?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Collaborative interface design tool with prototyping, design systems, and dev handoff.",
     tags: ["design", "ui", "collaboration"],
   },
   {
@@ -759,7 +838,8 @@ const CATALOG: ProductSeed[] = [
     brand: "Surge",
     current_price: 49.99,
     previous_price: 69.99,
-    image_url: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=800&q=80",
     description: "Advanced network proxy and VPN client for Mac with powerful scripting support.",
     tags: ["networking", "mac", "developer"],
   },
@@ -770,7 +850,8 @@ const CATALOG: ProductSeed[] = [
     brand: "Adobe",
     current_price: 119.88,
     previous_price: 239.88,
-    image_url: "https://images.unsplash.com/photo-1572044162444-ad6029d2f68d?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1572044162444-ad6029d2f68d?auto=format&fit=crop&w=800&q=80",
     description: "Professional photo editing and management with 100GB cloud storage included.",
     tags: ["design", "photo", "adobe"],
   },
@@ -781,8 +862,10 @@ const CATALOG: ProductSeed[] = [
     brand: "Microsoft",
     current_price: 79.99,
     previous_price: 149.99,
-    image_url: "https://images.unsplash.com/photo-1633419461186-7d40a38105ec?auto=format&fit=crop&w=800&q=80",
-    description: "Premium Office apps, 1TB OneDrive storage, and advanced security for up to 6 users.",
+    image_url:
+      "https://images.unsplash.com/photo-1633419461186-7d40a38105ec?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Premium Office apps, 1TB OneDrive storage, and advanced security for up to 6 users.",
     tags: ["productivity", "microsoft", "office"],
   },
   {
@@ -792,7 +875,8 @@ const CATALOG: ProductSeed[] = [
     brand: "Dashlane",
     current_price: 39.99,
     previous_price: 59.99,
-    image_url: "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?auto=format&fit=crop&w=800&q=80",
     description: "Secure password manager with VPN, dark web monitoring, and secure notes.",
     tags: ["security", "passwords", "saas"],
   },
@@ -803,8 +887,10 @@ const CATALOG: ProductSeed[] = [
     brand: "Grammarly",
     current_price: 71.88,
     previous_price: 144.0,
-    image_url: "https://images.unsplash.com/photo-1455390502266-744c9d7895ea?auto=format&fit=crop&w=800&q=80",
-    description: "AI-powered writing assistant with grammar checking, tone detection, and clarity suggestions.",
+    image_url:
+      "https://images.unsplash.com/photo-1455390502266-744c9d7895ea?auto=format&fit=crop&w=800&q=80",
+    description:
+      "AI-powered writing assistant with grammar checking, tone detection, and clarity suggestions.",
     tags: ["writing", "ai", "productivity"],
   },
   {
@@ -814,7 +900,8 @@ const CATALOG: ProductSeed[] = [
     brand: "Bartender",
     current_price: 16.0,
     previous_price: 25.0,
-    image_url: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=800&q=80",
     description: "Organize your menu bar icons and keep your Mac desktop clean and focused.",
     tags: ["mac", "utility", "productivity"],
   },
@@ -825,7 +912,8 @@ const CATALOG: ProductSeed[] = [
     brand: "iMazing",
     current_price: 49.99,
     previous_price: 69.99,
-    image_url: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80",
     description: "Transfer files, backup data, and manage your iPhone or iPad from your Mac or PC.",
     tags: ["mac", "utility", "ios"],
   },
@@ -836,8 +924,10 @@ const CATALOG: ProductSeed[] = [
     brand: "MacPaw",
     current_price: 19.95,
     previous_price: 39.95,
-    image_url: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80",
-    description: "PC optimization tool that removes junk files, protects privacy, and boosts performance.",
+    image_url:
+      "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80",
+    description:
+      "PC optimization tool that removes junk files, protects privacy, and boosts performance.",
     tags: ["windows", "utility", "optimization"],
   },
   {
@@ -847,7 +937,8 @@ const CATALOG: ProductSeed[] = [
     brand: "PDF Expert",
     current_price: 49.99,
     previous_price: 79.99,
-    image_url: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80",
     description: "Best PDF editor for Mac with OCR, form filling, and cloud integration.",
     tags: ["mac", "pdf", "productivity"],
   },
@@ -858,7 +949,8 @@ const CATALOG: ProductSeed[] = [
     brand: "Magnet",
     current_price: 9.99,
     previous_price: 19.99,
-    image_url: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=800&q=80",
     description: "Simple window snapping tool to organize your desktop with keyboard shortcuts.",
     tags: ["mac", "utility", "productivity"],
   },
@@ -869,7 +961,8 @@ const CATALOG: ProductSeed[] = [
     brand: "Alfred",
     current_price: 34.0,
     previous_price: 49.0,
-    image_url: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80",
     description: "Boost your efficiency with keyboard shortcuts, snippets, and custom workflows.",
     tags: ["mac", "productivity", "launcher"],
   },
@@ -878,7 +971,12 @@ const CATALOG: ProductSeed[] = [
 function generateSlugs(): ProductSeed[] {
   return CATALOG.map((item, index) => ({
     ...item,
-    slug: item.slug || `${item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}-${index + 1}`,
+    slug:
+      item.slug ||
+      `${item.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "")}-${index + 1}`,
   }));
 }
 
@@ -909,9 +1007,7 @@ function buildAmazonLink(asin: string): string | null {
 // campaign ID is not configured.
 function buildEbayLink(epid: string): string | null {
   if (!env.EBAY_AFFILIATE_CAMPAIGN_ID) {
-    console.warn(
-      `[seed] eBay campaign ID not configured; skipping eBay link for EPID ${epid}`,
-    );
+    console.warn(`[seed] eBay campaign ID not configured; skipping eBay link for EPID ${epid}`);
     return null;
   }
 
@@ -922,12 +1018,8 @@ export async function runSeeder(): Promise<void> {
   console.log("==========================================");
   console.log("  ThinkaBell 50 Product Seeder Launch     ");
   console.log("==========================================");
-  console.log(
-    "WARNING: bundled catalog is placeholder data (unverified ASINs/prices).",
-  );
-  console.log(
-    "Replace with genuinely curated entries before relying on deal pages.",
-  );
+  console.log("WARNING: bundled catalog is placeholder data (unverified ASINs/prices).");
+  console.log("Replace with genuinely curated entries before relying on deal pages.");
 
   const catalog = generateSlugs();
   console.log(`Seeding ${catalog.length} manually curated products.`);
@@ -950,24 +1042,26 @@ export async function runSeeder(): Promise<void> {
     }
     affiliateLinks["direct"] = `${appUrl}/deal/${item.slug}`;
 
-    const { error } = await getSupabaseServiceClient().from("products").upsert(
-      {
-        name: item.name,
-        slug: item.slug,
-        category: item.category,
-        brand: item.brand,
-        amazon_asin: item.amazon_asin || null,
-        ebay_epid: item.ebay_epid || null,
-        affiliate_links: affiliateLinks,
-        current_price: item.current_price,
-        previous_price: item.previous_price,
-        price_updated_at: new Date().toISOString(),
-        image_url: item.image_url,
-        description: item.description,
-        tags: item.tags,
-      },
-      { onConflict: "slug" },
-    );
+    const { error } = await getSupabaseServiceClient()
+      .from("products")
+      .upsert(
+        {
+          name: item.name,
+          slug: item.slug,
+          category: item.category,
+          brand: item.brand,
+          amazon_asin: item.amazon_asin || null,
+          ebay_epid: item.ebay_epid || null,
+          affiliate_links: affiliateLinks,
+          current_price: item.current_price,
+          previous_price: item.previous_price,
+          price_updated_at: new Date().toISOString(),
+          image_url: item.image_url,
+          description: item.description,
+          tags: item.tags,
+        },
+        { onConflict: "slug" },
+      );
 
     if (error) {
       console.warn(`Failed inserting ${item.name}:`, error.message);

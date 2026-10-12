@@ -38,7 +38,11 @@ export function DealCountdown({ endDate }: DealCountdownProps) {
   }, [endDate]);
 
   return (
-    <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800" aria-live="polite" aria-label={`Deal ends in ${timeLeft}`}>
+    <div
+      className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800"
+      aria-live="polite"
+      aria-label={`Deal ends in ${timeLeft}`}
+    >
       <Clock className="h-3.5 w-3.5" />
       <span>Ends in {timeLeft}</span>
     </div>

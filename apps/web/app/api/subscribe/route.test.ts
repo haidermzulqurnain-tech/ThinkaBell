@@ -19,7 +19,9 @@ const mockComputeBlindIndex = vi.fn((email: string) => `hash:${email.toLowerCase
 const mockEncryptField = vi.fn(async (value: string | null | undefined, _key?: string | null) =>
   value ? `enc:${value}` : null,
 );
-const mockGetEncryptionKey = vi.fn(() => "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff");
+const mockGetEncryptionKey = vi.fn(
+  () => "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+);
 
 const mockClickUpdate = vi.fn();
 const mockClickEq = vi.fn();
@@ -66,7 +68,9 @@ describe("POST /api/subscribe", () => {
     vi.clearAllMocks();
     upsertCalls = [];
     mockRateLimit.mockResolvedValue(true);
-    mockGetEncryptionKey.mockReturnValue("00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff");
+    mockGetEncryptionKey.mockReturnValue(
+      "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+    );
     mockEncryptField.mockImplementation(async (value: string | null | undefined) =>
       value ? `enc:${value}` : null,
     );
@@ -74,7 +78,9 @@ describe("POST /api/subscribe", () => {
 
   it("should upsert with blind index and encrypted PII", async () => {
     const { POST } = await import("./route");
-    const response = await POST(post({ email: "  User@Example.COM ", push_subscription_id: "push-1" }) as any);
+    const response = await POST(
+      post({ email: "  User@Example.COM ", push_subscription_id: "push-1" }) as any,
+    );
     const data = await response.json();
 
     expect(response.status).toBe(200);

@@ -19,10 +19,7 @@ function getApiKey(request: NextRequest): string | null {
  */
 function isValidPath(path: string): boolean {
   return (
-    path.startsWith("/") &&
-    !path.includes("..") &&
-    !path.includes(":") &&
-    !path.includes("//")
+    path.startsWith("/") && !path.includes("..") && !path.includes(":") && !path.includes("//")
   );
 }
 
@@ -37,7 +34,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => null);
 
     if (!body || !Array.isArray(body.paths)) {
-      return NextResponse.json({ error: "Invalid payload. Expected { paths: string[] }" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid payload. Expected { paths: string[] }" },
+        { status: 400 },
+      );
     }
 
     const paths = body.paths.filter((path: unknown): path is string => typeof path === "string");

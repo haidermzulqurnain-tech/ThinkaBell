@@ -11,7 +11,10 @@ function createChainableMock(returnValue: any) {
   for (const method of methods) {
     if (method === "then") {
       chain[method] = (onFulfilled: any) => {
-        return Promise.resolve({ data: returnValue.data ?? returnValue, error: returnValue.error ?? null }).then(onFulfilled);
+        return Promise.resolve({
+          data: returnValue.data ?? returnValue,
+          error: returnValue.error ?? null,
+        }).then(onFulfilled);
       };
     } else {
       chain[method] = vi.fn(() => chain);
@@ -70,7 +73,10 @@ describe("PriceHistoryRepository", () => {
     });
 
     it("should return empty array on database error", async () => {
-      const chain = createChainableMock({ data: null, error: { message: "Query failed", code: "500" } });
+      const chain = createChainableMock({
+        data: null,
+        error: { message: "Query failed", code: "500" },
+      });
       chain.limit.mockReturnValue({ data: null, error: { message: "Query failed", code: "500" } });
       mockAnonClient.from.mockReturnValue(chain);
 
@@ -125,19 +131,13 @@ describe("PriceHistoryRepository", () => {
       const { PriceHistoryRepository } = await import("./priceHistoryRepository");
 
       await PriceHistoryRepository.recordPrice(1, 99.99, "amazon");
-      expect(chain.insert).toHaveBeenCalledWith(
-        expect.objectContaining({ source: "amazon" }),
-      );
+      expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ source: "amazon" }));
 
       await PriceHistoryRepository.recordPrice(2, 49.99, "ebay");
-      expect(chain.insert).toHaveBeenCalledWith(
-        expect.objectContaining({ source: "ebay" }),
-      );
+      expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ source: "ebay" }));
 
       await PriceHistoryRepository.recordPrice(3, 19.99, "direct");
-      expect(chain.insert).toHaveBeenCalledWith(
-        expect.objectContaining({ source: "direct" }),
-      );
+      expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ source: "direct" }));
     });
 
     it("should include ISO timestamp", async () => {

@@ -46,7 +46,9 @@ describe("WalmartClient", () => {
     it("should throw error when API key is missing", async () => {
       vi.resetModules();
       const { walmartClient } = await import("./walmartClient");
-      await expect(walmartClient.getItemPrice("ITEM-12345")).rejects.toThrow("Walmart API key is not configured");
+      await expect(walmartClient.getItemPrice("ITEM-12345")).rejects.toThrow(
+        "Walmart API key is not configured",
+      );
     });
   });
 
@@ -138,7 +140,9 @@ describe("WalmartClient", () => {
     it("should throw error when API key is missing", async () => {
       vi.resetModules();
       const { walmartClient } = await import("./walmartClient");
-      await expect(walmartClient.searchItems("test", 3)).rejects.toThrow("Walmart API key is not configured");
+      await expect(walmartClient.searchItems("test", 3)).rejects.toThrow(
+        "Walmart API key is not configured",
+      );
     });
   });
 

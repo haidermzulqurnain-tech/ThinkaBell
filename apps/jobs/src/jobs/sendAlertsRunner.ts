@@ -1,5 +1,9 @@
 import { getSupabaseServiceClient } from "@thinkabell/database";
-import { AlertRepository, SubscriberRepository, RetailerLinkRepository } from "@thinkabell/database";
+import {
+  AlertRepository,
+  SubscriberRepository,
+  RetailerLinkRepository,
+} from "@thinkabell/database";
 import { notificationClient, logger, env } from "@thinkabell/shared";
 import { retryWithBackoff } from "@thinkabell/shared";
 import { decryptField, getEncryptionKey } from "@thinkabell/shared";
@@ -139,7 +143,13 @@ export async function runSendAlerts(): Promise<{ processed: number; notification
     let totalNotifications = 0;
     let failedCount = 0;
     const batchSize = 50;
-    const updateBatch: Array<{ id: number; sent: boolean; attempts: number; last_error?: string | null; last_notified_at?: string | null }> = [];
+    const updateBatch: Array<{
+      id: number;
+      sent: boolean;
+      attempts: number;
+      last_error?: string | null;
+      last_notified_at?: string | null;
+    }> = [];
 
     const subscriberIds = [...new Set(alerts.map((a) => a.subscriber_id))];
     const { data: subscribers } = await supabase
@@ -156,10 +166,16 @@ export async function runSendAlerts(): Promise<{ processed: number; notification
       (subscribers ?? []).map(async (s) => {
         try {
           const email = await decryptField(s.email ?? null, encryptionKey);
-          const pushSubscriptionId = await decryptField(s.push_subscription_id ?? null, encryptionKey);
+          const pushSubscriptionId = await decryptField(
+            s.push_subscription_id ?? null,
+            encryptionKey,
+          );
           return { ...s, email: email ?? null, push_subscription_id: pushSubscriptionId };
         } catch (decryptError) {
-          logger.error(`[sendAlerts] PII decryption failed for subscriber ${s.id}; disabling channels for this run:`, decryptError);
+          logger.error(
+            `[sendAlerts] PII decryption failed for subscriber ${s.id}; disabling channels for this run:`,
+            decryptError,
+          );
           return { ...s, email: null, push_subscription_id: null };
         }
       }),
@@ -171,7 +187,12 @@ export async function runSendAlerts(): Promise<{ processed: number; notification
         const product = alert.products;
         if (!product) {
           await AlertRepository.recordFailure(alert.id, "Missing product relation");
-          updateBatch.push({ id: alert.id, sent: true, attempts: alert.attempts + 1, last_error: "Missing product" });
+          updateBatch.push({
+            id: alert.id,
+            sent: true,
+            attempts: alert.attempts + 1,
+            last_error: "Missing product",
+          });
           failedCount++;
           continue;
         }
@@ -184,13 +205,23 @@ export async function runSendAlerts(): Promise<{ processed: number; notification
 
         if (!subscriber) {
           await AlertRepository.recordFailure(alert.id, "Subscriber not found");
-          updateBatch.push({ id: alert.id, sent: true, attempts: alert.attempts + 1, last_error: "Subscriber not found" });
+          updateBatch.push({
+            id: alert.id,
+            sent: true,
+            attempts: alert.attempts + 1,
+            last_error: "Subscriber not found",
+          });
           failedCount++;
           continue;
         }
 
         if (!subscriber.is_active) {
-          updateBatch.push({ id: alert.id, sent: true, attempts: alert.attempts, last_error: "Subscriber inactive" });
+          updateBatch.push({
+            id: alert.id,
+            sent: true,
+            attempts: alert.attempts,
+            last_error: "Subscriber inactive",
+          });
           failedCount++;
           continue;
         }
@@ -223,12 +254,13 @@ export async function runSendAlerts(): Promise<{ processed: number; notification
         if (subscriber.push_subscription_id) {
           try {
             await retryWithBackoff(
-              () => notificationClient.sendPush(subscriber.push_subscription_id!, {
-                title,
-                message,
-                url: dealUrl,
-                imageUrl: product.image_url,
-              }),
+              () =>
+                notificationClient.sendPush(subscriber.push_subscription_id!, {
+                  title,
+                  message,
+                  url: dealUrl,
+                  imageUrl: product.image_url,
+                }),
               { maxAttempts: 2 },
             );
             pushSuccess = true;
@@ -269,19 +301,32 @@ export async function runSendAlerts(): Promise<{ processed: number; notification
           } catch (clickError) {
             logger.debug(`[sendAlerts] No retailer links for product ${alert.product_id}`);
           }
-          updateBatch.push({ id: alert.id, sent: true, attempts: alert.attempts, last_notified_at: new Date().toISOString() });
+          updateBatch.push({
+            id: alert.id,
+            sent: true,
+            attempts: alert.attempts,
+            last_notified_at: new Date().toISOString(),
+          });
         } else if (alert.attempts + 1 >= 5) {
           await supabase.rpc("move_to_dead_letter", { p_alert_id: alert.id });
           failedCount++;
         } else {
           await AlertRepository.recordFailure(alert.id, lastError || "Unknown error");
-          updateBatch.push({ id: alert.id, sent: false, attempts: alert.attempts + 1, last_error: lastError || "Unknown error" });
+          updateBatch.push({
+            id: alert.id,
+            sent: false,
+            attempts: alert.attempts + 1,
+            last_error: lastError || "Unknown error",
+          });
           failedCount++;
         }
       } catch (alertError) {
         failedCount++;
         logger.error(`[sendAlerts] Failed processing alert ${alert.id}:`, alertError);
-        await AlertRepository.recordFailure(alert.id, alertError instanceof Error ? alertError.message : String(alertError));
+        await AlertRepository.recordFailure(
+          alert.id,
+          alertError instanceof Error ? alertError.message : String(alertError),
+        );
       }
     }
 

@@ -10,7 +10,10 @@ export class RetailerLinkRepository {
       .eq("product_id", productId);
 
     if (error) {
-      console.error(`[RetailerLinkRepository] Error fetching links for product ${productId}:`, error.message);
+      console.error(
+        `[RetailerLinkRepository] Error fetching links for product ${productId}:`,
+        error.message,
+      );
       return [];
     }
 
@@ -39,7 +42,10 @@ export class RetailerLinkRepository {
       .single();
 
     if (error) {
-      console.error(`[RetailerLinkRepository] Failed to upsert link for product ${productId}:`, error.message);
+      console.error(
+        `[RetailerLinkRepository] Failed to upsert link for product ${productId}:`,
+        error.message,
+      );
       throw error;
     }
 
@@ -65,7 +71,10 @@ export class RetailerLinkRepository {
           .eq("id", linkId);
 
         if (updateError) {
-          console.error(`[RetailerLinkRepository] Failed to increment click for link ${linkId}:`, updateError.message);
+          console.error(
+            `[RetailerLinkRepository] Failed to increment click for link ${linkId}:`,
+            updateError.message,
+          );
           throw updateError;
         }
       }

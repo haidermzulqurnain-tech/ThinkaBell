@@ -81,10 +81,7 @@ class AmazonPaApiClient implements IAmazonClient {
 
     const payload = JSON.stringify({
       ItemIds: [asin],
-      Resources: [
-        "Offers.Listings.Price",
-        "ItemInfo.Title",
-      ],
+      Resources: ["Offers.Listings.Price", "ItemInfo.Title"],
       PartnerTag: this.partnerTag,
       PartnerType: "Associates",
       Marketplace: "www.amazon.com",
@@ -103,7 +100,9 @@ class AmazonPaApiClient implements IAmazonClient {
           }).then(async (res) => {
             if (!res.ok) {
               const errorText = await res.text();
-              const err = new Error(`HTTP ${res.status}: ${errorText}`) as Error & { status: number };
+              const err = new Error(`HTTP ${res.status}: ${errorText}`) as Error & {
+                status: number;
+              };
               err.status = res.status;
               throw err;
             }

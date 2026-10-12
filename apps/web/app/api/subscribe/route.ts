@@ -84,7 +84,10 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("[SubscribeAPI] Supabase error:", error.message);
-      return NextResponse.json({ error: "Failed to save subscription preferences." }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to save subscription preferences." },
+        { status: 500 },
+      );
     }
 
     // Click attribution: if the browser carries the tb_click cookie set by

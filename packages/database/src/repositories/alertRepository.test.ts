@@ -7,11 +7,25 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 function createChainableMock(returnValue: any) {
   const chain: any = {};
-  const methods = ["select", "eq", "update", "insert", "order", "limit", "single", "rpc", "then", "onConflict"];
+  const methods = [
+    "select",
+    "eq",
+    "update",
+    "insert",
+    "order",
+    "limit",
+    "single",
+    "rpc",
+    "then",
+    "onConflict",
+  ];
   for (const method of methods) {
     if (method === "then") {
       chain[method] = (onFulfilled: any) => {
-        return Promise.resolve({ data: returnValue.data ?? returnValue, error: returnValue.error ?? null }).then(onFulfilled);
+        return Promise.resolve({
+          data: returnValue.data ?? returnValue,
+          error: returnValue.error ?? null,
+        }).then(onFulfilled);
       };
     } else {
       chain[method] = vi.fn(() => {
@@ -85,17 +99,24 @@ describe("AlertRepository", () => {
     });
 
     it("should throw error on insert failure", async () => {
-      const chain = createChainableMock({ data: null, error: { message: "Insert failed", code: "23503" } });
+      const chain = createChainableMock({
+        data: null,
+        error: { message: "Insert failed", code: "23503" },
+      });
       mockServiceClient.from.mockReturnValue(chain);
 
       const { AlertRepository } = await import("./alertRepository");
-      await expect(
-        AlertRepository.enqueueAlert(1, 1, 1999.0, 1749.0, 12.51),
-      ).rejects.toEqual({ message: "Insert failed", code: "23503" });
+      await expect(AlertRepository.enqueueAlert(1, 1, 1999.0, 1749.0, 12.51)).rejects.toEqual({
+        message: "Insert failed",
+        code: "23503",
+      });
     });
 
     it("should handle large discount percentages", async () => {
-      const chain = createChainableMock({ data: { ...mockAlert, discount_percent: 70.79 }, error: null });
+      const chain = createChainableMock({
+        data: { ...mockAlert, discount_percent: 70.79 },
+        error: null,
+      });
       mockServiceClient.from.mockReturnValue(chain);
 
       const { AlertRepository } = await import("./alertRepository");
@@ -130,7 +151,10 @@ describe("AlertRepository", () => {
     });
 
     it("should throw error on query failure", async () => {
-      const chain = createChainableMock({ data: null, error: { message: "Query failed", code: "500" } });
+      const chain = createChainableMock({
+        data: null,
+        error: { message: "Query failed", code: "500" },
+      });
       mockServiceClient.from.mockReturnValue(chain);
 
       const { AlertRepository } = await import("./alertRepository");

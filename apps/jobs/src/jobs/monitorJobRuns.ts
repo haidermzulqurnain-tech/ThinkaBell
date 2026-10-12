@@ -12,7 +12,9 @@ export async function runJobRunMonitoring(): Promise<{ alerted: number }> {
   const supabase = getSupabaseServiceClient();
   logger.info("[monitorJobRuns] Checking for failed or partial job runs");
 
-  const since = new Date(Date.now() - ALERT_THRESHOLDS.FAILED_RUNS_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
+  const since = new Date(
+    Date.now() - ALERT_THRESHOLDS.FAILED_RUNS_WINDOW_HOURS * 60 * 60 * 1000,
+  ).toISOString();
 
   const { data: failedRuns, error } = await supabase
     .from("job_runs")

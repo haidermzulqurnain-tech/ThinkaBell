@@ -72,7 +72,9 @@ export class EbayBrowseApiClient implements IEbayClient {
 
       if (!res.ok) {
         const errorText = await res.text();
-        const err = new Error(`eBay OAuth error: HTTP ${res.status}: ${errorText}`) as Error & { status: number };
+        const err = new Error(`eBay OAuth error: HTTP ${res.status}: ${errorText}`) as Error & {
+          status: number;
+        };
         err.status = res.status;
         throw err;
       }
@@ -112,10 +114,9 @@ export class EbayBrowseApiClient implements IEbayClient {
 
       const response = await retryWithBackoff(
         () =>
-          fetch(
-            `https://api.ebay.com/buy/browse/v1/item/${encodeURIComponent(epidOrItemId)}`,
-            { headers },
-          ).then(async (res) => {
+          fetch(`https://api.ebay.com/buy/browse/v1/item/${encodeURIComponent(epidOrItemId)}`, {
+            headers,
+          }).then(async (res) => {
             if (!res.ok) {
               const err = new Error(`HTTP ${res.status}`) as Error & { status: number };
               err.status = res.status;
@@ -160,7 +161,7 @@ export class EbayBrowseApiClient implements IEbayClient {
         q: query,
         limit: String(limit),
         filter: "buyItNowOnly",
-        "sort": "price+ascending",
+        sort: "price+ascending",
       });
 
       const response = await retryWithBackoff(
@@ -279,9 +280,10 @@ export class EbayBrowseApiClient implements IEbayClient {
         itemWebUrl?: string;
       };
 
-      const images = [data.image?.imageUrl, ...(data.additionalImages?.map((img) => img.imageUrl).filter(Boolean) || [])].filter(
-        (url): url is string => Boolean(url),
-      );
+      const images = [
+        data.image?.imageUrl,
+        ...(data.additionalImages?.map((img) => img.imageUrl).filter(Boolean) || []),
+      ].filter((url): url is string => Boolean(url));
 
       const shipping = data.shippingOptions?.[0]
         ? `${data.shippingOptions[0].shippingCostType}${data.shippingOptions[0].shippingCost?.value ? ` - $${data.shippingOptions[0].shippingCost.value}` : ""}`

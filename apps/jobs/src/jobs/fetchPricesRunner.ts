@@ -1,5 +1,10 @@
 import { getSupabaseServiceClient } from "@thinkabell/database";
-import { ProductRepository, AlertRepository, SubscriberRepository, RetailerLinkRepository } from "@thinkabell/database";
+import {
+  ProductRepository,
+  AlertRepository,
+  SubscriberRepository,
+  RetailerLinkRepository,
+} from "@thinkabell/database";
 import { amazonClient, ebayClient, walmartClient, redis, logger } from "@thinkabell/shared";
 import { CircuitBreaker } from "@thinkabell/shared";
 import pLimit from "p-limit";
@@ -80,11 +85,17 @@ export async function runFetchPrices(): Promise<{ updated: number; alertsQueued:
             let newPrice: number | null = null;
 
             if (product.amazon_asin) {
-              newPrice = await amazonCircuit.execute(() => amazonClient.getPrice(product.amazon_asin as string));
+              newPrice = await amazonCircuit.execute(() =>
+                amazonClient.getPrice(product.amazon_asin as string),
+              );
             } else if (product.ebay_epid) {
-              newPrice = await ebayCircuit.execute(() => ebayClient.getPrice(product.ebay_epid as string));
+              newPrice = await ebayCircuit.execute(() =>
+                ebayClient.getPrice(product.ebay_epid as string),
+              );
             } else if (product.walmart_sku) {
-              newPrice = await walmartCircuit.execute(() => walmartClient.getItemPrice(product.walmart_sku as string));
+              newPrice = await walmartCircuit.execute(() =>
+                walmartClient.getItemPrice(product.walmart_sku as string),
+              );
             }
 
             if (newPrice === null || isNaN(newPrice)) {
@@ -100,9 +111,7 @@ export async function runFetchPrices(): Promise<{ updated: number; alertsQueued:
             }
 
             const discount =
-              oldPrice && oldPrice > newPrice
-                ? ((oldPrice - newPrice) / oldPrice) * 100
-                : 0;
+              oldPrice && oldPrice > newPrice ? ((oldPrice - newPrice) / oldPrice) * 100 : 0;
 
             logger.info(
               `[fetchPrices] Price change for "${product.name}": $${oldPrice} -> $${newPrice} (${discount.toFixed(1)}% off)`,
@@ -161,7 +170,9 @@ export async function runFetchPrices(): Promise<{ updated: number; alertsQueued:
 
       for (const chunk of chunks) {
         try {
-          const { error } = await (supabase.from("alert_queue").insert(chunk) as any).onConflict("product_id,subscriber_id,sent");
+          const { error } = await (supabase.from("alert_queue").insert(chunk) as any).onConflict(
+            "product_id,subscriber_id,sent",
+          );
           if (error) {
             logger.error("[fetchPrices] Failed to batch insert alerts:", error);
           }
@@ -182,7 +193,9 @@ export async function runFetchPrices(): Promise<{ updated: number; alertsQueued:
       });
     }
 
-    logger.info(`[fetchPrices] Completed run. Updated: ${updatedCount}, Alerts Queued: ${alertsQueuedCount}`);
+    logger.info(
+      `[fetchPrices] Completed run. Updated: ${updatedCount}, Alerts Queued: ${alertsQueuedCount}`,
+    );
     return { updated: updatedCount, alertsQueued: alertsQueuedCount };
   } catch (error) {
     logger.error("[fetchPrices] Run failed:", error);

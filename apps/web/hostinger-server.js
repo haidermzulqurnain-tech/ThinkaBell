@@ -25,14 +25,7 @@ console.log(`[Hostinger] Starting ThinkaBell server on http://${HOSTNAME}:${PORT
 // 2. Repository checkout after `pnpm build:standalone`: the server lives
 //    under .next/standalone/apps/web/server.js.
 const bundleServerPath = path.join(__dirname, "apps", "web", "server.js");
-const repoServerPath = path.join(
-  __dirname,
-  ".next",
-  "standalone",
-  "apps",
-  "web",
-  "server.js",
-);
+const repoServerPath = path.join(__dirname, ".next", "standalone", "apps", "web", "server.js");
 const localServerPath = path.join(__dirname, "server.js");
 
 let serverEntry = null;

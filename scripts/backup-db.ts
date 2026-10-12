@@ -21,14 +21,17 @@ const BACKUP_DIR = process.env.BACKUP_DIR || join(process.cwd(), "backups");
 
 function generateBackupFileName(): string {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-").split("T")[0];
-  const time = new Date().toISOString().replace(/[:.]/g, "-").split("T")[1]?.slice(0, 8) || "000000";
+  const time =
+    new Date().toISOString().replace(/[:.]/g, "-").split("T")[1]?.slice(0, 8) || "000000";
   return `thinkabell-backup-${timestamp}-${time}.sql`;
 }
 
 function runBackup(): void {
   if (!SUPABASE_CONNECTION) {
     console.error("❌ SUPABASE_DB_CONNECTION_STRING environment variable is not set.");
-    console.error("   Export it from your Supabase project settings (Database > Connection string).");
+    console.error(
+      "   Export it from your Supabase project settings (Database > Connection string).",
+    );
     process.exit(1);
   }
 

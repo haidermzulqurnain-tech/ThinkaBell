@@ -9,7 +9,11 @@ interface PriceHistoryChartProps {
 }
 
 export function PriceHistoryChart({ history, currentPrice }: PriceHistoryChartProps) {
-  const [hoveredPoint, setHoveredPoint] = useState<{ price: number; date: string; source: string } | null>(null);
+  const [hoveredPoint, setHoveredPoint] = useState<{
+    price: number;
+    date: string;
+    source: string;
+  } | null>(null);
 
   // If no historical data points exist yet, show empty state
   if (history.length === 0) {
@@ -21,7 +25,9 @@ export function PriceHistoryChart({ history, currentPrice }: PriceHistoryChartPr
         </div>
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-sm text-gray-500">No price history available yet.</p>
-          <p className="text-xs text-gray-400 mt-1">Price tracking begins after the first price fetch.</p>
+          <p className="text-xs text-gray-400 mt-1">
+            Price tracking begins after the first price fetch.
+          </p>
         </div>
       </div>
     );
@@ -158,7 +164,10 @@ export function PriceHistoryChart({ history, currentPrice }: PriceHistoryChartPr
         {hoveredPoint && (
           <div className="absolute top-2 right-4 rounded-lg bg-gray-900 px-3 py-1.5 text-xs text-white shadow-lg">
             <span className="font-bold text-emerald-400">${hoveredPoint.price.toFixed(2)}</span>
-            <span className="text-gray-300"> on {hoveredPoint.date} ({hoveredPoint.source})</span>
+            <span className="text-gray-300">
+              {" "}
+              on {hoveredPoint.date} ({hoveredPoint.source})
+            </span>
           </div>
         )}
       </div>

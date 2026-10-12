@@ -32,9 +32,9 @@ export function CookieConsent() {
           <div className="flex-1">
             <h3 className="text-sm font-semibold text-gray-900">Cookie Consent</h3>
             <p className="mt-1 text-sm text-gray-600">
-              We use cookies to enhance your browsing experience, serve personalized content,
-              and analyze our traffic. By clicking &quot;Accept All&quot;, you consent to our use of cookies.
-              See our{" "}
+              We use cookies to enhance your browsing experience, serve personalized content, and
+              analyze our traffic. By clicking &quot;Accept All&quot;, you consent to our use of
+              cookies. See our{" "}
               <a href="/legal/privacy-policy" className="text-blue-600 hover:underline">
                 Privacy Policy
               </a>{" "}

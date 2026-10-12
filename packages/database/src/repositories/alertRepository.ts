@@ -17,22 +17,25 @@ export class AlertRepository {
     discountPercent: number,
   ): Promise<AlertQueueRow> {
     const supabase = getSupabaseServiceClient();
-    const { data, error } = await (supabase
-      .from("alert_queue")
-      .insert({
+    const { data, error } = await (
+      supabase.from("alert_queue").insert({
         product_id: productId,
         subscriber_id: subscriberId,
         old_price: oldPrice,
         new_price: newPrice,
         discount_percent: discountPercent,
         sent: false,
-      }) as any)
+      }) as any
+    )
       .onConflict("product_id,subscriber_id,sent")
       .select()
       .single();
 
     if (error) {
-      console.error(`[AlertRepository] Failed to enqueue alert for product ${productId}:`, error.message);
+      console.error(
+        `[AlertRepository] Failed to enqueue alert for product ${productId}:`,
+        error.message,
+      );
       throw error;
     }
 
@@ -64,10 +67,7 @@ export class AlertRepository {
    */
   static async markAlertSent(alertId: number): Promise<void> {
     const supabase = getSupabaseServiceClient();
-    const { error } = await supabase
-      .from("alert_queue")
-      .update({ sent: true })
-      .eq("id", alertId);
+    const { error } = await supabase.from("alert_queue").update({ sent: true }).eq("id", alertId);
 
     if (error) {
       console.error(`[AlertRepository] Failed to mark alert ${alertId} as sent:`, error.message);

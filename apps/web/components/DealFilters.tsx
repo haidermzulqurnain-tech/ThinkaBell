@@ -10,7 +10,12 @@ interface DealFiltersProps {
   sort?: string;
 }
 
-export function DealFilters({ selectedCategory, selectedDealType, minDiscount, sort }: DealFiltersProps) {
+export function DealFilters({
+  selectedCategory,
+  selectedDealType,
+  minDiscount,
+  sort,
+}: DealFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

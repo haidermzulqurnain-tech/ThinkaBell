@@ -25,7 +25,10 @@ export async function GET(request: Request) {
     }
 
     const link = data?.[0];
-    return NextResponse.json({ retailer: link?.retailer ?? null, affiliateUrl: link?.affiliate_url ?? null });
+    return NextResponse.json({
+      retailer: link?.retailer ?? null,
+      affiliateUrl: link?.affiliate_url ?? null,
+    });
   } catch (error) {
     console.error("[RetailerLinks] Error fetching sponsored retailer:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

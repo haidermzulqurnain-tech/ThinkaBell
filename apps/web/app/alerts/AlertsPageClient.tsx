@@ -143,7 +143,8 @@ export default function AlertsPage() {
           <h1 className="text-3xl font-extrabold text-gray-900">Alert Preferences</h1>
         </div>
         <p className="text-sm text-gray-500">
-          Manage your price alert subscriptions, notification frequency, and do-not-disturb settings.
+          Manage your price alert subscriptions, notification frequency, and do-not-disturb
+          settings.
         </p>
       </div>
 
@@ -209,9 +210,7 @@ export default function AlertsPage() {
 
             <form onSubmit={updatePreferences} className="space-y-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Categories
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Categories</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -282,9 +281,7 @@ export default function AlertsPage() {
 
               <div className="rounded-lg border border-gray-200 p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <label className="text-sm font-semibold text-gray-700">
-                    Do Not Disturb
-                  </label>
+                  <label className="text-sm font-semibold text-gray-700">Do Not Disturb</label>
                   <button
                     type="button"
                     onClick={() => setEditDndEnabled(!editDndEnabled)}
@@ -369,14 +366,18 @@ export default function AlertsPage() {
                   >
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        Price dropped from ${alert.old_price.toFixed(2)} to ${alert.new_price.toFixed(2)}
+                        Price dropped from ${alert.old_price.toFixed(2)} to $
+                        {alert.new_price.toFixed(2)}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {alert.discount_percent.toFixed(1)}% off • {new Date(alert.created_at).toLocaleDateString()}
+                        {alert.discount_percent.toFixed(1)}% off •{" "}
+                        {new Date(alert.created_at).toLocaleDateString()}
                       </p>
                       {typeof alert.alert_quality_score === "number" && (
                         <div className="mt-2">
-                          <AlertQualityScore score={Math.min(100, Math.max(0, alert.alert_quality_score))} />
+                          <AlertQualityScore
+                            score={Math.min(100, Math.max(0, alert.alert_quality_score))}
+                          />
                         </div>
                       )}
                     </div>
@@ -385,11 +386,15 @@ export default function AlertsPage() {
                         alert.sent
                           ? "bg-emerald-100 text-emerald-800"
                           : alert.attempts > 0
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-gray-100 text-gray-800"
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-gray-100 text-gray-800"
                       }`}
                     >
-                      {alert.sent ? "Sent" : alert.attempts > 0 ? `Retrying (${alert.attempts})` : "Queued"}
+                      {alert.sent
+                        ? "Sent"
+                        : alert.attempts > 0
+                          ? `Retrying (${alert.attempts})`
+                          : "Queued"}
                     </span>
                   </div>
                 ))}

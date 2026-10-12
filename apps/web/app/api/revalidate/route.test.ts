@@ -104,4 +104,3 @@ describe("Revalidation API", () => {
     expect(revalidatePathMock).toHaveBeenCalledTimes(2);
   });
 });
-

@@ -49,10 +49,7 @@ async function simulatePipeline() {
   let testSlug = "apple-macbook-pro-14-m3-pro";
   let testCategory: "physical" | "software" = "physical";
 
-  const { data: existingProducts } = await supabase
-    .from("products")
-    .select("*")
-    .limit(1);
+  const { data: existingProducts } = await supabase.from("products").select("*").limit(1);
 
   if (existingProducts && existingProducts.length > 0) {
     const prod = existingProducts[0]!;
@@ -73,8 +70,9 @@ async function simulatePipeline() {
           current_price: 1999.0,
           previous_price: 2199.0,
           price_updated_at: new Date().toISOString(),
-          image_url: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80",
-           affiliate_links: { amazon: amazonLink("B0CM5N4G3T") },
+          image_url:
+            "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80",
+          affiliate_links: { amazon: amazonLink("B0CM5N4G3T") },
         },
         { onConflict: "slug" },
       )
@@ -91,7 +89,9 @@ async function simulatePipeline() {
   const oldPrice = 1999.0;
   const newPrice = 1599.0;
   const discountPercent = ((oldPrice - newPrice) / oldPrice) * 100;
-  console.log(`✓ Price dropped: $${oldPrice} -> $${newPrice} (${discountPercent.toFixed(1)}% drop)\n`);
+  console.log(
+    `✓ Price dropped: $${oldPrice} -> $${newPrice} (${discountPercent.toFixed(1)}% drop)\n`,
+  );
 
   // Step 3: Update database & price_history
   console.log("[Step 3/6] Updating product & recording price history in Supabase...");

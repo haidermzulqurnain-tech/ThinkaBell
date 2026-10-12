@@ -39,12 +39,18 @@ export async function GET(request: NextRequest) {
     }
 
     if (!links || links.length === 0) {
-      return NextResponse.json({ error: "No retailer links found for this product." }, { status: 404 });
+      return NextResponse.json(
+        { error: "No retailer links found for this product." },
+        { status: 404 },
+      );
     }
 
     const best = links[0];
     if (!best) {
-      return NextResponse.json({ error: "No retailer links found for this product." }, { status: 404 });
+      return NextResponse.json(
+        { error: "No retailer links found for this product." },
+        { status: 404 },
+      );
     }
 
     const affiliateUrl = best.affiliate_url;

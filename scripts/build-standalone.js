@@ -42,7 +42,9 @@ function checkSymlinkSupport() {
     return true;
   } catch (error) {
     console.error("❌ Symlink creation failed — `output: standalone` requires symlink support.");
-    console.error("   On Windows, enable Developer Mode (Settings → Privacy & security → For developers)");
+    console.error(
+      "   On Windows, enable Developer Mode (Settings → Privacy & security → For developers)",
+    );
     console.error("   or run from an elevated terminal, then retry.");
     console.error("   Alternatively, deploy the full project without the standalone bundle");
     console.error("   (see docs/HOSTINGER_DEPLOYMENT.md).");

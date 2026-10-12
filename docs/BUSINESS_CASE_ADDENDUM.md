@@ -9,6 +9,7 @@
 ## 1. Problem Statement
 
 Consumers and SMBs overpay for software, hardware, and SaaS tools because:
+
 - Price changes are fragmented across retailers, marketplaces, and vendor sites.
 - Deal aggregators lack transparency, affiliate disclosure, and verified price history.
 - Alert tools (e.g., CamelCamelCamel) do not cover SaaS or developer tools.
@@ -19,12 +20,12 @@ ThinkaBell solves this by unifying price tracking across physical goods and SaaS
 
 ## 2. Target Market
 
-| Segment | Examples | Estimated TAM |
-|---|---|---|
-| Developer / Prosumer hardware | Laptops, monitors, NVMe, peripherals | $4.2B |
-| AI hardware | Accelerators, dev kits, sensors | $1.8B |
-| SaaS / software deals | Productivity, dev tools, AI APIs | $2.5B |
-| SMB procurement | Bulk licensing, seat-based tools | $1.1B |
+| Segment                       | Examples                             | Estimated TAM |
+| ----------------------------- | ------------------------------------ | ------------- |
+| Developer / Prosumer hardware | Laptops, monitors, NVMe, peripherals | $4.2B         |
+| AI hardware                   | Accelerators, dev kits, sensors      | $1.8B         |
+| SaaS / software deals         | Productivity, dev tools, AI APIs     | $2.5B         |
+| SMB procurement               | Bulk licensing, seat-based tools     | $1.1B         |
 
 **Serviceable market (Year 1):** US/EU/UK independent developers and 1–50 person startups.
 
@@ -41,11 +42,11 @@ ThinkaBell solves this by unifying price tracking across physical goods and SaaS
 
 ## 4. Revenue Model
 
-| Stream | Mechanism | Rate | Year 1 Target |
-|---|---|---|---|
-| Affiliate commissions | Amazon Associates, eBay, Walmart, SaaS networks | 1–4% | $45K ARR |
-| Sponsored placements | Retailer link slots on deal pages | CPM / flat | $18K ARR |
-| Premium subscriptions | Ad-free, advanced alerts, price history | $4.99/mo | $12K ARR |
+| Stream                | Mechanism                                       | Rate       | Year 1 Target |
+| --------------------- | ----------------------------------------------- | ---------- | ------------- |
+| Affiliate commissions | Amazon Associates, eBay, Walmart, SaaS networks | 1–4%       | $45K ARR      |
+| Sponsored placements  | Retailer link slots on deal pages               | CPM / flat | $18K ARR      |
+| Premium subscriptions | Ad-free, advanced alerts, price history         | $4.99/mo   | $12K ARR      |
 
 **Blended revenue per MAU:** $0.18–$0.32
 
@@ -62,26 +63,26 @@ ThinkaBell solves this by unifying price tracking across physical goods and SaaS
 
 ## 6. Success Metrics
 
-| Metric | Target | Measurement |
-|---|---|---|
-| Store-to-alert conversion | > 15% | Subscribe funnel |
-| Alert-to-store CTR | > 10% | Brevo / OneSignal clicks |
-| CAC | ≤ $5/user | Waitlist signup cost |
-| Brevo delivery rate | > 95% | Brevo dashboard |
-| OneSignal subscription rate | > 8% | Footer + modal prompts |
-| Uptime | > 99.5% | UptimeRobot + `/api/health` |
+| Metric                      | Target    | Measurement                 |
+| --------------------------- | --------- | --------------------------- |
+| Store-to-alert conversion   | > 15%     | Subscribe funnel            |
+| Alert-to-store CTR          | > 10%     | Brevo / OneSignal clicks    |
+| CAC                         | ≤ $5/user | Waitlist signup cost        |
+| Brevo delivery rate         | > 95%     | Brevo dashboard             |
+| OneSignal subscription rate | > 8%      | Footer + modal prompts      |
+| Uptime                      | > 99.5%   | UptimeRobot + `/api/health` |
 
 ---
 
 ## 7. Risks & Mitigations
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Low conversion | Medium | High | Pivot to manual curation + direct sales outreach |
-| Brevo free-tier ceiling | Medium | High | Hard cap at 9,000 emails/month; add Telegram/Discord backup |
-| Hostinger CPU throttling | Medium | High | Cloudflare cache rules + static generation |
-| DPA delays | Medium | Critical | Defer EU/UK launch until DPAs signed |
-| SaaS API simulation only | High | Medium | Replace with live APIs once credentials obtained |
+| Risk                     | Likelihood | Impact   | Mitigation                                                  |
+| ------------------------ | ---------- | -------- | ----------------------------------------------------------- |
+| Low conversion           | Medium     | High     | Pivot to manual curation + direct sales outreach            |
+| Brevo free-tier ceiling  | Medium     | High     | Hard cap at 9,000 emails/month; add Telegram/Discord backup |
+| Hostinger CPU throttling | Medium     | High     | Cloudflare cache rules + static generation                  |
+| DPA delays               | Medium     | Critical | Defer EU/UK launch until DPAs signed                        |
+| SaaS API simulation only | High       | Medium   | Replace with live APIs once credentials obtained            |
 
 ---
 

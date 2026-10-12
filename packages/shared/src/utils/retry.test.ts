@@ -44,8 +44,7 @@ describe("retryWithBackoff", () => {
 
   it("should retry on timeout errors", async () => {
     const fn = vi.fn();
-    fn.mockRejectedValueOnce(new Error("Request timeout"))
-      .mockResolvedValue("success");
+    fn.mockRejectedValueOnce(new Error("Request timeout")).mockResolvedValue("success");
 
     const result = await retryWithBackoff(fn, {
       maxAttempts: 3,

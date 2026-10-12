@@ -81,13 +81,13 @@ pnpm wrangler deploy
 
 The worker fails closed (5xx) when configuration is missing — it never redirects or proxies with placeholder values. Set these as Worker secrets:
 
-| Secret | Purpose |
-| --- | --- |
-| `ORIGIN_URL` | Hostinger origin base URL the worker proxies to (e.g. `https://thinkabell.click`). Unset → `503`. |
-| `AMAZON_US_TAG` | Affiliate tag for `www.amazon.com` (US) |
-| `AMAZON_GB_TAG` | Affiliate tag for `www.amazon.co.uk` (GB) |
-| `AMAZON_DE_TAG` | Affiliate tag for `www.amazon.de` (DE) |
-| `AMAZON_CA_TAG` | Affiliate tag for `www.amazon.ca` (CA) |
+| Secret          | Purpose                                                                                           |
+| --------------- | ------------------------------------------------------------------------------------------------- |
+| `ORIGIN_URL`    | Hostinger origin base URL the worker proxies to (e.g. `https://thinkabell.click`). Unset → `503`. |
+| `AMAZON_US_TAG` | Affiliate tag for `www.amazon.com` (US)                                                           |
+| `AMAZON_GB_TAG` | Affiliate tag for `www.amazon.co.uk` (GB)                                                         |
+| `AMAZON_DE_TAG` | Affiliate tag for `www.amazon.de` (DE)                                                            |
+| `AMAZON_CA_TAG` | Affiliate tag for `www.amazon.ca` (CA)                                                            |
 
 ```bash
 pnpm --filter @thinkabell/edge-worker exec wrangler secret put ORIGIN_URL

@@ -21,7 +21,9 @@ console.log("==========================================");
 
 if (!fs.existsSync(STANDALONE_DIR)) {
   console.error("❌ Standalone build not found at:", STANDALONE_DIR);
-  console.error("   Run `pnpm build:standalone` first (a plain build does not emit .next/standalone).");
+  console.error(
+    "   Run `pnpm build:standalone` first (a plain build does not emit .next/standalone).",
+  );
   process.exit(1);
 }
 
@@ -50,4 +52,6 @@ console.log("==========================================");
 console.log("✅ Hostinger deployment bundle ready in:");
 console.log(`   ${OUTPUT_DIR}`);
 console.log("==========================================");
-console.log("Upload the contents of dist/hostinger-deploy/ to your Hostinger public_html or app directory.");
+console.log(
+  "Upload the contents of dist/hostinger-deploy/ to your Hostinger public_html or app directory.",
+);

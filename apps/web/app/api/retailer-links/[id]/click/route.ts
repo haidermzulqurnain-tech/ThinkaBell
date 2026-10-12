@@ -3,16 +3,14 @@ import { getSupabaseServiceClient } from "@thinkabell/database";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const linkId = Number(id);
     const supabase = getSupabaseServiceClient();
 
-    const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || null;
+    const ipAddress =
+      request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || null;
     const userAgent = request.headers.get("user-agent") || null;
 
     const { error } = await supabase.from("click_tracking").insert({

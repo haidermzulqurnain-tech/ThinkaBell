@@ -30,7 +30,9 @@ function makeFrom(subscriber: Record<string, unknown> | null, alerts: unknown[])
   alertChain.select = vi.fn(() => alertChain);
   alertChain.eq = vi.fn(() => alertChain);
   alertChain.order = vi.fn(() => alertChain);
-  alertChain.limit = vi.fn(() => ({ then: (onFulfilled: any) => Promise.resolve({ data: alerts, error: null }).then(onFulfilled) }));
+  alertChain.limit = vi.fn(() => ({
+    then: (onFulfilled: any) => Promise.resolve({ data: alerts, error: null }).then(onFulfilled),
+  }));
 
   const from = vi.fn((table: string) => {
     if (table === "subscribers") return subscriberChain;
@@ -53,7 +55,9 @@ function setup(subscriber: Record<string, unknown> | null, alerts: unknown[]) {
 }
 
 vi.mock("@thinkabell/database", () => ({
-  getSupabaseServiceClient: () => ({ from: (...args: unknown[]) => mockFrom(...(args as [string])) }),
+  getSupabaseServiceClient: () => ({
+    from: (...args: unknown[]) => mockFrom(...(args as [string])),
+  }),
 }));
 
 function withApiKey(req: NextRequest): NextRequest {
@@ -76,7 +80,9 @@ describe("GET /api/alerts", () => {
   it("should return 401 without an API key", async () => {
     setup(null, []);
     const { GET } = await import("./route");
-    const response = await GET(new NextRequest("http://localhost:3000/api/alerts?email=user@example.com"));
+    const response = await GET(
+      new NextRequest("http://localhost:3000/api/alerts?email=user@example.com"),
+    );
     expect(response.status).toBe(401);
   });
 
@@ -85,7 +91,9 @@ describe("GET /api/alerts", () => {
     const { GET } = await import("./route");
     const headers = new Headers();
     headers.set("authorization", "Bearer wrong-key");
-    const response = await GET(new NextRequest("http://localhost:3000/api/alerts?email=user@example.com", { headers }));
+    const response = await GET(
+      new NextRequest("http://localhost:3000/api/alerts?email=user@example.com", { headers }),
+    );
     expect(response.status).toBe(401);
   });
 
@@ -93,7 +101,9 @@ describe("GET /api/alerts", () => {
     mockRateLimit.mockResolvedValueOnce(false);
     setup(null, []);
     const { GET } = await import("./route");
-    const response = await GET(withApiKey(new NextRequest("http://localhost:3000/api/alerts?email=user@example.com")));
+    const response = await GET(
+      withApiKey(new NextRequest("http://localhost:3000/api/alerts?email=user@example.com")),
+    );
     const body = await response.json();
 
     expect(response.status).toBe(429);
@@ -110,7 +120,9 @@ describe("GET /api/alerts", () => {
   it("should return 404 when no subscriber matches the blind index", async () => {
     setup(null, []);
     const { GET } = await import("./route");
-    const response = await GET(withApiKey(new NextRequest("http://localhost:3000/api/alerts?email=ghost@example.com")));
+    const response = await GET(
+      withApiKey(new NextRequest("http://localhost:3000/api/alerts?email=ghost@example.com")),
+    );
     const body = await response.json();
 
     expect(response.status).toBe(404);
@@ -130,7 +142,9 @@ describe("GET /api/alerts", () => {
     setup(subscriber, alerts);
 
     const { GET } = await import("./route");
-    const response = await GET(withApiKey(new NextRequest("http://localhost:3000/api/alerts?email=User@Example.COM")));
+    const response = await GET(
+      withApiKey(new NextRequest("http://localhost:3000/api/alerts?email=User@Example.COM")),
+    );
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -183,7 +197,9 @@ describe("PATCH /api/alerts", () => {
   it("should return 400 for invalid preferences", async () => {
     setup(null, []);
     const { PATCH } = await import("./route");
-    const response = await PATCH(patch({ email: "user@example.com", preferences: { min_discount: 999 } }));
+    const response = await PATCH(
+      patch({ email: "user@example.com", preferences: { min_discount: 999 } }),
+    );
     expect(response.status).toBe(400);
   });
 
@@ -198,13 +214,19 @@ describe("PATCH /api/alerts", () => {
     chain.update = vi.fn(() => chain);
     chain.eq = vi.fn(() => chain);
     chain.select = vi.fn(() => chain);
-    chain.single = vi.fn(() => ({ then: (onFulfilled: any) => Promise.resolve({ data: updatedRow, error: null }).then(onFulfilled) }));
+    chain.single = vi.fn(() => ({
+      then: (onFulfilled: any) =>
+        Promise.resolve({ data: updatedRow, error: null }).then(onFulfilled),
+    }));
     setup(updatedRow, []);
     mockFrom.mockReturnValue(chain);
 
     const { PATCH } = await import("./route");
     const response = await PATCH(
-      patch({ email: "User@Example.COM", preferences: { min_discount: 25, digest_frequency: "daily" } }),
+      patch({
+        email: "User@Example.COM",
+        preferences: { min_discount: 25, digest_frequency: "daily" },
+      }),
     );
     const body = await response.json();
 
@@ -212,7 +234,9 @@ describe("PATCH /api/alerts", () => {
     expect(body.success).toBe(true);
     expect(body.data.email).toBe("user@example.com");
     expect(body.data.preferences).toEqual({ categories: ["software"], min_discount: 25 });
-    expect(chain.update).toHaveBeenCalledWith(expect.objectContaining({ digest_frequency: "daily" }));
+    expect(chain.update).toHaveBeenCalledWith(
+      expect.objectContaining({ digest_frequency: "daily" }),
+    );
     expect(chain.eq).toHaveBeenCalledWith("email_hash", "hash:user@example.com");
   });
 
@@ -221,7 +245,10 @@ describe("PATCH /api/alerts", () => {
     chain.update = vi.fn(() => chain);
     chain.eq = vi.fn(() => chain);
     chain.select = vi.fn(() => chain);
-    chain.single = vi.fn(() => ({ then: (onFulfilled: any) => Promise.resolve({ data: null, error: { message: "db error" } }).then(onFulfilled) }));
+    chain.single = vi.fn(() => ({
+      then: (onFulfilled: any) =>
+        Promise.resolve({ data: null, error: { message: "db error" } }).then(onFulfilled),
+    }));
     setup(null, []);
     mockFrom.mockReturnValue(chain);
 

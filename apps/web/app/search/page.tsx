@@ -42,7 +42,15 @@ async function searchDeals(query: string, category?: string, cursor?: string) {
   }
 }
 
-function SearchResults({ query, category, cursor }: { query: string; category?: string; cursor?: string }) {
+function SearchResults({
+  query,
+  category,
+  cursor,
+}: {
+  query: string;
+  category?: string;
+  cursor?: string;
+}) {
   const data = searchDeals(query, category, cursor);
 
   if (!query) {
@@ -64,7 +72,15 @@ function SearchResults({ query, category, cursor }: { query: string; category?: 
   );
 }
 
-async function SearchResultsInner({ query, category, cursor }: { query: string; category?: string; cursor?: string }) {
+async function SearchResultsInner({
+  query,
+  category,
+  cursor,
+}: {
+  query: string;
+  category?: string;
+  cursor?: string;
+}) {
   const data = await searchDeals(query, category, cursor);
 
   if (data.count === 0) {
@@ -143,10 +159,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       </Suspense>
 
       <div className="mt-8">
-        <Link
-          href="/"
-          className="text-sm font-semibold text-blue-600 hover:text-blue-700"
-        >
+        <Link href="/" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
           ← Back to all deals
         </Link>
       </div>

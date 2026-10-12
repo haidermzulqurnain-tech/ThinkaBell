@@ -79,7 +79,10 @@ export class ProductRepository {
       .eq("id", productId);
 
     if (error) {
-      console.error(`[ProductRepository] Failed to update price for product ${productId}:`, error.message);
+      console.error(
+        `[ProductRepository] Failed to update price for product ${productId}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -115,7 +118,9 @@ export class ProductRepository {
     const supabase = getSupabaseServiceClient();
     const now = new Date().toISOString();
     const rows = products.map((product) => {
-      const slug = `${product.source}-${product.sourceId}`.toLowerCase().replace(/[^a-z0-9-]+/g, "-");
+      const slug = `${product.source}-${product.sourceId}`
+        .toLowerCase()
+        .replace(/[^a-z0-9-]+/g, "-");
       const normalizedPrice = product.price;
       const affiliateLinks: Record<string, string> = {};
 

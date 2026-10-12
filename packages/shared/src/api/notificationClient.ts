@@ -25,7 +25,10 @@ class NotificationClient implements INotificationClient {
   /**
    * Dispatch push notification via OneSignal REST API
    */
-  async sendPush(subscriptionIdOrPlayerId: string, payload: PushNotificationPayload): Promise<boolean> {
+  async sendPush(
+    subscriptionIdOrPlayerId: string,
+    payload: PushNotificationPayload,
+  ): Promise<boolean> {
     if (!this.oneSignalAppId || !this.oneSignalApiKey) {
       throw new Error("OneSignal credentials are not configured");
     }
@@ -50,14 +53,20 @@ class NotificationClient implements INotificationClient {
 
       if (!response.ok) {
         const errorText = await response.text();
-        logger.error(`[NotificationClient:Push] OneSignal API error HTTP ${response.status}`, errorText);
+        logger.error(
+          `[NotificationClient:Push] OneSignal API error HTTP ${response.status}`,
+          errorText,
+        );
         return false;
       }
 
       logger.info(`[NotificationClient:Push] Push delivered to ${subscriptionIdOrPlayerId}`);
       return true;
     } catch (err) {
-      logger.error(`[NotificationClient:Push] Failed to send push to ${subscriptionIdOrPlayerId}:`, err);
+      logger.error(
+        `[NotificationClient:Push] Failed to send push to ${subscriptionIdOrPlayerId}:`,
+        err,
+      );
       return false;
     }
   }
@@ -117,7 +126,9 @@ class NotificationClient implements INotificationClient {
 
       if (!response.ok) {
         const errorText = await response.text();
-        logger.warn(`[NotificationClient:Email] Brevo API responded with status ${response.status}: ${errorText}`);
+        logger.warn(
+          `[NotificationClient:Email] Brevo API responded with status ${response.status}: ${errorText}`,
+        );
         return false;
       }
 

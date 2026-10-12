@@ -1,13 +1,6 @@
 "use client";
 
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "thinkabell-compare";
 const MAX_COMPARE_ITEMS = 4;
@@ -68,11 +61,7 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
     [slugs, isInCompare, toggle, clear],
   );
 
-  return (
-    <CompareContext.Provider value={value}>
-      {children}
-    </CompareContext.Provider>
-  );
+  return <CompareContext.Provider value={value}>{children}</CompareContext.Provider>;
 }
 
 export function useCompare(): CompareContextValue {

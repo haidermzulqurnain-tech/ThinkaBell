@@ -56,7 +56,9 @@ function buildSupabaseMock(overrides: any = {}) {
 const { mockRateLimit, mockSupabase, mockEncodeCursor, mockDecodeCursor } = vi.hoisted(() => {
   const mockRateLimit = vi.fn(() => Promise.resolve(true));
   const mockSupabase = buildSupabaseMock();
-  const mockEncodeCursor = vi.fn((params: any) => Buffer.from(JSON.stringify(params)).toString("base64url"));
+  const mockEncodeCursor = vi.fn((params: any) =>
+    Buffer.from(JSON.stringify(params)).toString("base64url"),
+  );
   const mockDecodeCursor = vi.fn((cursor: string) => {
     try {
       return JSON.parse(Buffer.from(cursor, "base64url").toString("utf-8"));

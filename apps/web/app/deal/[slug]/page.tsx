@@ -23,7 +23,9 @@ interface DealPageProps {
   }>;
 }
 
-async function getDeal(slug: string): Promise<{ product: Product; history: PriceHistory[]; related: Product[] } | null> {
+async function getDeal(
+  slug: string,
+): Promise<{ product: Product; history: PriceHistory[]; related: Product[] } | null> {
   try {
     const { data: product, error } = await getSupabaseAnonClient()
       .from("products")
@@ -70,7 +72,8 @@ export async function generateMetadata({ params }: DealPageProps): Promise<Metad
 
   return {
     title: `${product.name} - Deal Alert ${price} | ThinkaBell`,
-    description: product.description || `Get the lowest tracked price on ${product.name} at ThinkaBell.`,
+    description:
+      product.description || `Get the lowest tracked price on ${product.name} at ThinkaBell.`,
     openGraph: {
       title: `${product.name} | ThinkaBell Deal`,
       description: `Tracked price drop to ${price}`,
@@ -317,9 +320,7 @@ export default async function DealPage({ params }: DealPageProps) {
             {hasDiscount && (
               <div>
                 <p className="text-xs text-gray-500">Regular Price</p>
-                <p className="text-lg text-gray-500 line-through">
-                  ${previousPrice.toFixed(2)}
-                </p>
+                <p className="text-lg text-gray-500 line-through">${previousPrice.toFixed(2)}</p>
               </div>
             )}
           </div>
@@ -344,9 +345,7 @@ export default async function DealPage({ params }: DealPageProps) {
           {product.category === "software" && product.promo_code && (
             <div className="mt-6 space-y-4">
               <PromoCodeCopy code={product.promo_code} />
-              {product.deal_end_date && (
-                <DealCountdown endDate={product.deal_end_date} />
-              )}
+              {product.deal_end_date && <DealCountdown endDate={product.deal_end_date} />}
             </div>
           )}
 
@@ -412,7 +411,7 @@ export default async function DealPage({ params }: DealPageProps) {
       {/* Description & Tags */}
       <div className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-bold text-gray-900">About this deal</h2>
-        
+
         {/* TL;DR Block */}
         <div className="mt-4 rounded-xl bg-blue-50 border border-blue-100 p-4">
           <h3 className="text-sm font-semibold text-blue-900 mb-2">TL;DR</h3>
@@ -461,7 +460,7 @@ export default async function DealPage({ params }: DealPageProps) {
         )}
 
         <button
-          onClick={() => document.dispatchEvent(new CustomEvent('open-subscribe-modal'))}
+          onClick={() => document.dispatchEvent(new CustomEvent("open-subscribe-modal"))}
           className="mt-6 w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-colors"
         >
           Get Notified When Price Drops

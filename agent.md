@@ -1,6 +1,7 @@
 # ThinkaBell Implementation Plan
 
 ## Current State Summary
+
 - **Monorepo scaffolded**: pnpm workspaces, Turborepo, TypeScript strict, ESLint, Prettier, Vitest
 - **Packages exist**: `config` (Zod env with `resetEnv()` for test isolation), `database` (Supabase client + schema with `search_vector` TSVECTOR, GIN index, RLS), `shared` (Amazon, eBay, Walmart, OneSignal, Brevo, Redis, rate limiter, circuit breaker, retry, logger)
 - **Jobs exist**: `fetchPrices` (per-subscriber model, circuit breaker, DND, dead-letter handling), `sendAlerts` (per-subscriber model with quality scoring)
@@ -24,60 +25,62 @@
 
 ## Expert Review & Recommendations
 
-| # | Expert | Priority | Key Recommendations |
-|---|--------|----------|---------------------|
-| 1 | **Product/Business Strategist** | 🔴 Critical | Focus SaaS-first but keep physical as traffic driver. Add early monetization via clearly labeled premium placements. Defer watchlists to post-MVP. |
-| 2 | **CTO/Solution Architect** | 🔴 Critical | Service-role client for all job writes. Circuit breaker pattern for external APIs. Trigger.dev job monitoring. |
-| 3 | **Full-Stack Engineer** | 🔴 Critical | Clear visual distinction between SaaS/physical tracks. Loading skeletons. Search returns minimal fields. |
-| 4 | **Data Engineer** | 🔴 Critical | Supabase migrations for schema changes. JSONB validation for `affiliate_links`. `fetchPrices` must upsert, not insert. |
-| 5 | **Web Scraping/Data Acquisition Engineer** | 🔴 Critical | Circuit breaker: 5 failures → pause 1 hour. User-agent rotation. Proxy strategy for eBay/Walmart if IP-blocked. |
-| 6 | **AI/ML Engineer** | 🟠 High | Simple fuzzy matching for cross-retailer deduplication. Keyword-based sentiment for MVP; upgrade to ML later. |
-| 7 | **Price Intelligence Specialist** | 🔴 Critical | Normalize all prices to USD. 90-day price history retention. Alert thresholds: default 10%, per-user customization. |
-| 8 | **Product/Software Research Analyst** | 🔴 Critical | SaaS testing: free trial, feature limits, support quality. Comparison criteria: pricing, features, integrations, reliability. |
-| 9 | **Editorial/Technical Writer** | 🟠 High | Standardize deal description templates. "Best X for Y" buying guides. Pros/cons/verdict format. |
-| 10 | **SEO/AEO/GEO Specialist** | 🟠 High | `FAQPage` and `HowTo` structured data. AI-search summaries at top of deal pages. Internal linking between related products. |
-| 11 | **UX/UI + Product Designer** | 🟠 High | Transparency banner above the fold. Clear SaaS vs physical visual distinction. Empty states for search. Mobile-first deal page. |
-| 12 | **Legal/Compliance/Privacy Specialist** | 🔴 Critical | Affiliate disclosure "clear and conspicuous" per FTC. OneSignal requires push consent. Privacy policy and ToS required. |
-| 13 | **Affiliate Marketing Expert** | 🔴 Critical | Never override cookies. Never accept pay-for-play. Track conversion by network. Disclose affiliate relationship prominently. |
-| 14 | **Comparative Engine Expert** | 🟠 High | "Best for" badges based on category analysis. Side-by-side comparison feature (post-MVP). Price normalization across retailers. |
-| 15 | **Sentiment Analyst Designer** | 🟠 High | Reddit sentiment: simple keyword scoring for MVP. Store summary, not raw data. Visual sentiment indicator on deal page. |
-| 16 | **Principal Product Designer** | 🔴 Critical | Split UX into two distinct experiences. SaaS emphasizes trial/transparency; physical emphasizes compatibility/price history. Progressive disclosure in subscribe flow. |
-| 17 | **UX Architect** | 🔴 Critical | Consolidate discovery into `/deals` with filters. Move subscribe to inline modal. Add `/alerts` dashboard for preference management. |
-| 18 | **Design-System Engineer** | 🟠 High | Define design tokens in Tailwind before building components. Create `components/ui/` primitives. All deal-page components extend base primitives. |
-| 19 | **Frontend UX Engineer** | 🔴 Critical | ISR revalidation conflicts need handling. Client-side "last verified" must match server data. Add loading skeletons and error boundaries. |
-| 20 | **Accessibility Specialist** | 🔴 Critical | Color badges must include text/icon indicators. PromoCodeCopy needs `aria-live` announcement. Skip links on all pages. Test with axe DevTools in CI. |
-| 21 | **SEO/AEO UX Strategist** | 🟠 High | Add 1-2 sentence TL;DR block for AI search consumption. Breadcrumb structured data. `speakable` schema for voice search. Topic clusters around categories. |
-| 22 | **Visual QA Engineer** | 🟠 High | Add visual regression tests for deal pages in both SaaS/physical states. Test at 320px, 768px, 1024px, 1440px. Screenshot comparison for key components. |
-| 23 | **Backend Expert** | 🔴 Critical | Supabase connection pooling. `sendAlerts` N+1 query risk - batch-fetch subscribers. Add indexes on `alert_queue(subscriber_id, sent)` and `products(sources)`. |
-| 24 | **Affiliate Marketing Expert** | 🔴 Critical | Affiliate links must be direct, no redirect chains. Disclosure within first 100px of deal page. `rel="sponsored"` on all affiliate links. Geo-based link routing. Track clicks via `/api/out?url=`. |
-| 25 | **Comparative Engine Expert** | 🟠 High | Define "Best for" criteria explicitly. Create `comparisons` table for post-MVP. For MVP, show "Also consider" section instead of full comparison. |
-| 26 | **Sentiment Analyst Designer** | 🟠 High | Display sentiment as 3-state indicator (Positive/Mixed/Negative) with 1-sentence summary. Do not show numeric scores in MVP - false precision. |
-| 27 | **Platform/Infrastructure Architect** | 🔴 Critical | Cloudflare cache rules: static 1 day, HTML 5 min, API 1 min. Add `/api/health` endpoint. Trigger.dev `maxDuration` and `retry` config. Queue-based processing for alert spikes. |
-| 28 | **Backend Infrastructure Specialist** *(new)* | 🔴 Critical | Amazon PA-API has a 10-sales/30-day eligibility gate — new accounts get `AssociateNotEligible 403`. Start with eBay Browse API; add third-party scraping API (Canopy/Rainforest/ScrapingBee) as Amazon fallback. Manual curation for first 50–100 products until PA-API eligibility is earned. |
-| 29 | **Affiliate Marketing Expert** *(enhanced)* | 🔴 Critical | Create `retailer_links` table. Route to retailer with highest effective commission (`price × commission_rate`), with tie-breaker to Amazon. Enforce `rel="sponsored"` at component-primitive level. Add `/api/route-link` endpoint. |
-| 30 | **Business Viability Analyst** *(new)* | 🟠 High | First-year affiliate average: $636/month; 95% of beginners fail. Physical electronics commissions: 1–4%; SaaS commissions: 20–60% recurring. Do not project meaningful physical revenue in year one. Expect 12–18 months to meaningful revenue. |
-| 31 | **SEO/AEO Specialist** *(new)* | 🟠 High | Programmatic SEO at scale (10k pages) will trigger Google's 2025/2026 low-quality content filters. Apply `noindex` to thin pages; only index pages receiving organic traffic or backlinks. Prioritize topical authority over page count. |
-| 32 | **Notification Systems Specialist** *(new)* | 🟠 High | OneSignal free tier: 1,000 MAU mobile push, 10,000 web push. MailerLite cut to 250 subscribers / 2,500 emails/month. Use web push as primary channel. Migrate to Brevo (300 emails/day = 9,000/month free). Diversify to Telegram/Discord/RSS as zero-cost backup channels. |
-| 33 | **CEO/Board Director** *(new)* | 🔴 Critical | 6-week timeline unrealistic for current scope. Slash Sprint 0 to 2-week hard stop; defer design system, S2S postbacks, comparison tables, visual QA pipeline, sentiment infrastructure to post-launch. Launch manual-curation MVP to 50 beta users within 3 weeks to validate acquisition cost and conversion. Add 2-page business-case addendum with competitive positioning, unit economics, capital requirements, and 4 board-level Go/No-Go checkpoints. |
-| 34 | **CFO / Finance Director** *(new)* | 🔴 Critical | No revenue model or break-even analysis; hidden costs not aggregated; physical-product work built despite year-one non-performance; notification cost ceilings unaddressed. Build 12-month P&L with 3 scenarios; defer physical-product UI/data-source work to Sprint 3 or post-MVP; replace Trigger.dev with Vercel Cron/Supabase pg_cron; define 3 platform service tiers ($9/$29/$79/mo); establish $0 paid notification/infra budget until MRR hits $500; require SaaS affiliate conversion tracking to validate commission assumptions. |
-| 35 | **Legal/Compliance Director** *(new)* | 🔴 Critical | Missing GDPR/CCPA lawful-basis framework and DPA strategy; Reddit scraping legal risk; no unified data retention/erasure workflow; no cookie-consent mechanism; no compliance checks in CI. Pre-Sprint 0: draft privacy policy and terms of service; add geo-IP-based privacy routing with cookie-consent banner; halt Reddit scraping until legal review; define unified data-retention schedule with automated archival/deletion; encode legal checks in CI (rel="sponsored", FTC disclosure, privacy-policy links, Brevo unsubscribe header); add DPA review for Brevo/OneSignal/Redis before EU/UK launch. |
-| 36 | **Security Director / CISO** | ⚫ PENDING | Output not yet available. |
-| 37 | **CTO / Technical Director** | ⚫ PENDING | Output not yet available. |
+| #   | Expert                                        | Priority    | Key Recommendations                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| --- | --------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Product/Business Strategist**               | 🔴 Critical | Focus SaaS-first but keep physical as traffic driver. Add early monetization via clearly labeled premium placements. Defer watchlists to post-MVP.                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| 2   | **CTO/Solution Architect**                    | 🔴 Critical | Service-role client for all job writes. Circuit breaker pattern for external APIs. Trigger.dev job monitoring.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 3   | **Full-Stack Engineer**                       | 🔴 Critical | Clear visual distinction between SaaS/physical tracks. Loading skeletons. Search returns minimal fields.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| 4   | **Data Engineer**                             | 🔴 Critical | Supabase migrations for schema changes. JSONB validation for `affiliate_links`. `fetchPrices` must upsert, not insert.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 5   | **Web Scraping/Data Acquisition Engineer**    | 🔴 Critical | Circuit breaker: 5 failures → pause 1 hour. User-agent rotation. Proxy strategy for eBay/Walmart if IP-blocked.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 6   | **AI/ML Engineer**                            | 🟠 High     | Simple fuzzy matching for cross-retailer deduplication. Keyword-based sentiment for MVP; upgrade to ML later.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 7   | **Price Intelligence Specialist**             | 🔴 Critical | Normalize all prices to USD. 90-day price history retention. Alert thresholds: default 10%, per-user customization.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 8   | **Product/Software Research Analyst**         | 🔴 Critical | SaaS testing: free trial, feature limits, support quality. Comparison criteria: pricing, features, integrations, reliability.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 9   | **Editorial/Technical Writer**                | 🟠 High     | Standardize deal description templates. "Best X for Y" buying guides. Pros/cons/verdict format.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 10  | **SEO/AEO/GEO Specialist**                    | 🟠 High     | `FAQPage` and `HowTo` structured data. AI-search summaries at top of deal pages. Internal linking between related products.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 11  | **UX/UI + Product Designer**                  | 🟠 High     | Transparency banner above the fold. Clear SaaS vs physical visual distinction. Empty states for search. Mobile-first deal page.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 12  | **Legal/Compliance/Privacy Specialist**       | 🔴 Critical | Affiliate disclosure "clear and conspicuous" per FTC. OneSignal requires push consent. Privacy policy and ToS required.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 13  | **Affiliate Marketing Expert**                | 🔴 Critical | Never override cookies. Never accept pay-for-play. Track conversion by network. Disclose affiliate relationship prominently.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 14  | **Comparative Engine Expert**                 | 🟠 High     | "Best for" badges based on category analysis. Side-by-side comparison feature (post-MVP). Price normalization across retailers.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 15  | **Sentiment Analyst Designer**                | 🟠 High     | Reddit sentiment: simple keyword scoring for MVP. Store summary, not raw data. Visual sentiment indicator on deal page.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 16  | **Principal Product Designer**                | 🔴 Critical | Split UX into two distinct experiences. SaaS emphasizes trial/transparency; physical emphasizes compatibility/price history. Progressive disclosure in subscribe flow.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 17  | **UX Architect**                              | 🔴 Critical | Consolidate discovery into `/deals` with filters. Move subscribe to inline modal. Add `/alerts` dashboard for preference management.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 18  | **Design-System Engineer**                    | 🟠 High     | Define design tokens in Tailwind before building components. Create `components/ui/` primitives. All deal-page components extend base primitives.                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 19  | **Frontend UX Engineer**                      | 🔴 Critical | ISR revalidation conflicts need handling. Client-side "last verified" must match server data. Add loading skeletons and error boundaries.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 20  | **Accessibility Specialist**                  | 🔴 Critical | Color badges must include text/icon indicators. PromoCodeCopy needs `aria-live` announcement. Skip links on all pages. Test with axe DevTools in CI.                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 21  | **SEO/AEO UX Strategist**                     | 🟠 High     | Add 1-2 sentence TL;DR block for AI search consumption. Breadcrumb structured data. `speakable` schema for voice search. Topic clusters around categories.                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 22  | **Visual QA Engineer**                        | 🟠 High     | Add visual regression tests for deal pages in both SaaS/physical states. Test at 320px, 768px, 1024px, 1440px. Screenshot comparison for key components.                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| 23  | **Backend Expert**                            | 🔴 Critical | Supabase connection pooling. `sendAlerts` N+1 query risk - batch-fetch subscribers. Add indexes on `alert_queue(subscriber_id, sent)` and `products(sources)`.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 24  | **Affiliate Marketing Expert**                | 🔴 Critical | Affiliate links must be direct, no redirect chains. Disclosure within first 100px of deal page. `rel="sponsored"` on all affiliate links. Geo-based link routing. Track clicks via `/api/out?url=`.                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 25  | **Comparative Engine Expert**                 | 🟠 High     | Define "Best for" criteria explicitly. Create `comparisons` table for post-MVP. For MVP, show "Also consider" section instead of full comparison.                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 26  | **Sentiment Analyst Designer**                | 🟠 High     | Display sentiment as 3-state indicator (Positive/Mixed/Negative) with 1-sentence summary. Do not show numeric scores in MVP - false precision.                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 27  | **Platform/Infrastructure Architect**         | 🔴 Critical | Cloudflare cache rules: static 1 day, HTML 5 min, API 1 min. Add `/api/health` endpoint. Trigger.dev `maxDuration` and `retry` config. Queue-based processing for alert spikes.                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 28  | **Backend Infrastructure Specialist** _(new)_ | 🔴 Critical | Amazon PA-API has a 10-sales/30-day eligibility gate — new accounts get `AssociateNotEligible 403`. Start with eBay Browse API; add third-party scraping API (Canopy/Rainforest/ScrapingBee) as Amazon fallback. Manual curation for first 50–100 products until PA-API eligibility is earned.                                                                                                                                                                                                                                                                                                                 |
+| 29  | **Affiliate Marketing Expert** _(enhanced)_   | 🔴 Critical | Create `retailer_links` table. Route to retailer with highest effective commission (`price × commission_rate`), with tie-breaker to Amazon. Enforce `rel="sponsored"` at component-primitive level. Add `/api/route-link` endpoint.                                                                                                                                                                                                                                                                                                                                                                            |
+| 30  | **Business Viability Analyst** _(new)_        | 🟠 High     | First-year affiliate average: $636/month; 95% of beginners fail. Physical electronics commissions: 1–4%; SaaS commissions: 20–60% recurring. Do not project meaningful physical revenue in year one. Expect 12–18 months to meaningful revenue.                                                                                                                                                                                                                                                                                                                                                                |
+| 31  | **SEO/AEO Specialist** _(new)_                | 🟠 High     | Programmatic SEO at scale (10k pages) will trigger Google's 2025/2026 low-quality content filters. Apply `noindex` to thin pages; only index pages receiving organic traffic or backlinks. Prioritize topical authority over page count.                                                                                                                                                                                                                                                                                                                                                                       |
+| 32  | **Notification Systems Specialist** _(new)_   | 🟠 High     | OneSignal free tier: 1,000 MAU mobile push, 10,000 web push. MailerLite cut to 250 subscribers / 2,500 emails/month. Use web push as primary channel. Migrate to Brevo (300 emails/day = 9,000/month free). Diversify to Telegram/Discord/RSS as zero-cost backup channels.                                                                                                                                                                                                                                                                                                                                    |
+| 33  | **CEO/Board Director** _(new)_                | 🔴 Critical | 6-week timeline unrealistic for current scope. Slash Sprint 0 to 2-week hard stop; defer design system, S2S postbacks, comparison tables, visual QA pipeline, sentiment infrastructure to post-launch. Launch manual-curation MVP to 50 beta users within 3 weeks to validate acquisition cost and conversion. Add 2-page business-case addendum with competitive positioning, unit economics, capital requirements, and 4 board-level Go/No-Go checkpoints.                                                                                                                                                   |
+| 34  | **CFO / Finance Director** _(new)_            | 🔴 Critical | No revenue model or break-even analysis; hidden costs not aggregated; physical-product work built despite year-one non-performance; notification cost ceilings unaddressed. Build 12-month P&L with 3 scenarios; defer physical-product UI/data-source work to Sprint 3 or post-MVP; replace Trigger.dev with Vercel Cron/Supabase pg_cron; define 3 platform service tiers ($9/$29/$79/mo); establish $0 paid notification/infra budget until MRR hits $500; require SaaS affiliate conversion tracking to validate commission assumptions.                                                                   |
+| 35  | **Legal/Compliance Director** _(new)_         | 🔴 Critical | Missing GDPR/CCPA lawful-basis framework and DPA strategy; Reddit scraping legal risk; no unified data retention/erasure workflow; no cookie-consent mechanism; no compliance checks in CI. Pre-Sprint 0: draft privacy policy and terms of service; add geo-IP-based privacy routing with cookie-consent banner; halt Reddit scraping until legal review; define unified data-retention schedule with automated archival/deletion; encode legal checks in CI (rel="sponsored", FTC disclosure, privacy-policy links, Brevo unsubscribe header); add DPA review for Brevo/OneSignal/Redis before EU/UK launch. |
+| 36  | **Security Director / CISO**                  | ⚫ PENDING  | Output not yet available.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 37  | **CTO / Technical Director**                  | ⚫ PENDING  | Output not yet available.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ---
 
 ## Expert Critical Analysis
 
-*(Full expert critical analysis sections retained as-is from original plan — Principal Product Designer, UX Architect, Design-System Engineer, Frontend UX Engineer, Accessibility Specialist, SEO/AEO UX Strategist, Visual QA Engineer, Backend Expert, Affiliate Marketing Expert, Comparative Engine Expert, Sentiment Analyst Designer, Platform/Infrastructure Architect.)*
+_(Full expert critical analysis sections retained as-is from original plan — Principal Product Designer, UX Architect, Design-System Engineer, Frontend UX Engineer, Accessibility Specialist, SEO/AEO UX Strategist, Visual QA Engineer, Backend Expert, Affiliate Marketing Expert, Comparative Engine Expert, Sentiment Analyst Designer, Platform/Infrastructure Architect.)_
 
-### CEO/Board Director *(new)*
+### CEO/Board Director _(new)_
+
 - **Finding:** 6-week timeline is unrealistic for the current scope. No business case, unit economics, or Go/No-Go gates exist. Physical-product infrastructure is being built despite year-one non-performance projections.
 - **Recommendations:**
   - Slash Sprint 0 to a 2-week hard stop; defer design system, S2S postbacks, comparison tables, visual QA pipeline, and sentiment infrastructure to post-launch
   - Launch a manual-curation MVP to 50 beta users within 3 weeks to validate acquisition cost and conversion before building more automation
   - Add 2-page business-case addendum with competitive positioning, unit economics, capital requirements, and 4 board-level Go/No-Go checkpoints
 
-### CFO / Finance Director *(new)*
+### CFO / Finance Director _(new)_
+
 - **Finding:** No revenue model or break-even analysis. Hidden costs are not aggregated. Physical-product UI and data-source work is being built despite year-one non-performance projections. Notification cost ceilings are unaddressed.
 - **Recommendations:**
   - Build 12-month P&L with 3 scenarios (conservative / base / aggressive) before Sprint 1 begins
@@ -87,7 +90,8 @@
   - Establish a $0 paid notification and infrastructure budget until MRR hits $500
   - Require SaaS affiliate conversion tracking to validate commission assumptions before scaling spend
 
-### Legal/Compliance Director *(new)*
+### Legal/Compliance Director _(new)_
+
 - **Finding:** Missing GDPR/CCPA lawful-basis framework and DPA strategy. Reddit scraping carries unassessed legal risk. No unified data retention/erasure workflow. No cookie-consent mechanism. No compliance checks in CI.
 - **Recommendations:**
   - **Pre-Sprint 0**: Draft and publish privacy policy and terms of service
@@ -98,10 +102,12 @@
   - Complete DPA review for Brevo, OneSignal, and Redis before launching in EU/UK markets
 
 ### Security Director / CISO
+
 - **Finding:** [PENDING — output not yet available]
 - **Recommendations:** [PENDING — extract when output is received]
 
 ### CTO / Technical Director
+
 - **Finding:** [PENDING — output not yet available]
 - **Recommendations:** [PENDING — extract when output is received]
 
@@ -112,10 +118,12 @@
 **Chosen: Per-subscriber.** One `alert_queue` row per (product + subscriber). Enables per-subscriber Alert Quality Score, DND hours, dead-letter queue, and daily digest tracking. With 100–1,000 subscribers this produces manageable row counts.
 
 **Data flow change:**
+
 - Old (broadcast): `fetchPrices` creates 1 alert row per price drop → `sendAlerts` loops all subscribers in memory
 - New (per-subscriber): `fetchPrices` queries matching subscribers and creates 1 row per (product, subscriber) → `sendAlerts` processes each row directly without subscriber filtering
 
 **Migration:** Existing broadcast rows (no `subscriber_id`) are legacy.
+
 1. Add `subscriber_id INT NULL` to `alert_queue`
 2. Backfill or discard legacy rows
 3. Add `NOT NULL` constraint
@@ -158,6 +166,7 @@ The following adjustments are mandated by the CEO/Board, CFO, and Legal/Complian
 Sprint 0 is restructured as a 2-week hard stop with an explicit deferral list. The original 6-week all-up timeline is replaced by a **3-week beta gate** followed by a board Go/No-Go review before Sprint 2 work commences.
 
 **2-week Sprint 0 deliverables only:**
+
 1. Remove WooCommerce artifacts (0.1)
 2. Switch email from MailerLite to Brevo (0.2)
 3. Fix job database clients to use service role (0.3)
@@ -169,6 +178,7 @@ Sprint 0 is restructured as a 2-week hard stop with an explicit deferral list. T
 9. Notification service audit: confirm Brevo + OneSignal web push primary + Telegram/Discord backup wired (0.11)
 
 **Explicitly deferred out of Sprint 0 (post-launch / Sprint 4+):**
+
 - Design-system token namespaces and primitive component library (`Button`, `Badge`, `Card`, `Skeleton`)
 - `DealPageShell` composite component and MDX API contracts
 - Visual QA pipeline (Playwright visual regression tests)
@@ -187,6 +197,7 @@ Sprint 0 is restructured as a 2-week hard stop with an explicit deferral list. T
 ### Business Case Requirement: 2-Page Addendum Before Sprint 1
 
 A 2-page business-case addendum must be drafted and board-approved before any Sprint 1 work begins. It must contain:
+
 - **Competitive positioning**: direct and indirect competitors; differentiation thesis
 - **Unit economics**: CAC, LTV, commission rates by category (SaaS vs physical), break-even subscriber count
 - **Capital requirements**: 12-month cash need at $0 paid infra (free tiers only) vs. paid-tier escalation path
@@ -206,6 +217,7 @@ A 2-page business-case addendum must be drafted and board-approved before any Sp
 ### Legal Pre-Work: Before Sprint 0 Starts
 
 The following items are blocking prerequisites. Sprint 0 does not begin until they are complete:
+
 1. **Privacy policy** published at `/privacy-policy` covering: data collected, lawful basis per GDPR Art. 6, retention periods, user rights (access, erasure, portability), DPO contact
 2. **Terms of service** published at `/terms-of-service` covering: acceptable use, affiliate disclosure obligation, liability limits, dispute resolution
 3. **Cookie-consent banner** implemented: geo-IP detection routes EU/UK visitors to consent flow before any tracker fires; consent state stored in cookie with 12-month TTL
@@ -216,6 +228,7 @@ The following items are blocking prerequisites. Sprint 0 does not begin until th
 ### Compliance CI Gates
 
 The following checks must pass in CI before any PR can be merged to `main` or deployed to production:
+
 1. **`rel="sponsored"` enforcement**: automated scan of all rendered `<a>` tags with `href` matching affiliate network domains; fail build if any affiliate link lacks the attribute
 2. **FTC disclosure check**: automated scan of deal page templates confirms disclosure block is present in the first 200px of rendered HTML
 3. **Privacy-policy link check**: automated scan of footer and legal pages confirms `/privacy-policy` link exists on every page template
@@ -227,6 +240,7 @@ The following checks must pass in CI before any PR can be merged to `main` or de
 ## Sprint 0: Foundation (2-Week Hard Stop)
 
 **Validation gates (all must pass before Sprint 0 is considered complete):**
+
 - `pnpm type-check` passes
 - `pnpm test` passes
 - Privacy policy and ToS are live and accessible
@@ -238,23 +252,27 @@ The following checks must pass in CI before any PR can be merged to `main` or de
 - No Reddit scraping code is executed (halting gate enforced)
 
 ### 0.1 Remove WooCommerce (Day 1)
+
 1. Move `thinkabell-woo/` to `thinkabell-woo-backup-YYYYMMDD/`
 2. Remove WooCommerce references from `agent.md`
 3. Verify no references in `.ts`, `.js`, `.json`, `.md`, `.yml` files
 4. Verify `pnpm type-check` passes
 
 ### 0.2 Switch Email to Brevo (Day 1)
+
 1. Update `packages/config/src/env.ts`: replace `MAILERLITE_API_KEY` with `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`
 2. Update `packages/shared/src/api/notificationClient.ts`: replace MailerLite endpoint with Brevo (`https://api.brevo.com/v3/smtp/email`, `sender: { email, name }` payload)
 3. Update `.env.example`: replace MailerLite vars with Brevo vars
 4. Update `agent.md`: replace MailerLite references
 
 ### 0.3 Fix Job Database Clients (Security) (Day 1–2)
+
 1. Update `apps/jobs/src/jobs/fetchPrices.ts`: import `getSupabaseServiceClient` from `@thinkabell/database`; replace all `supabase` write calls with `serviceClient`
 2. Update `apps/jobs/src/jobs/sendAlerts.ts`: same replacement
 3. Verify `alertRepository.ts` already uses `getSupabaseServiceClient()` (it does)
 
 ### 0.4 Schema Migration + Bug Fixes (Day 2–5)
+
 1. Update `packages/database/schema.sql`:
    - Add columns to `products`: `deal_type`, `deal_start_date`, `deal_end_date`, `promo_code`, `original_price`, `discount_percent`, `affiliate_network`, `affiliate_id`, `sources`
    - Add columns to `alert_queue`: `subscriber_id INT REFERENCES subscribers(id) ON DELETE CASCADE`, `alert_quality_score INT CHECK (alert_quality_score BETWEEN 0 AND 100)`, `failed_at TIMESTAMPTZ`, `error_message TEXT`
@@ -268,6 +286,7 @@ The following checks must pass in CI before any PR can be merged to `main` or de
 5. **Data Engineer**: Add JSONB validation for `affiliate_links` shape in API routes
 
 ### 0.5 Fix `fetchPrices` for Per-Subscriber Model (Day 4–8)
+
 1. Add `DealSource` interface to `packages/shared/src/types/index.ts`
 2. Update `apps/jobs/src/jobs/fetchPrices.ts`:
    - Import `getSupabaseServiceClient`; use it for all writes
@@ -281,6 +300,7 @@ The following checks must pass in CI before any PR can be merged to `main` or de
 4. **Backend Infrastructure Specialist**: No Amazon PA-API call is made unless eligibility is confirmed; use eBay Browse API as primary source for MVP
 
 ### 0.6 Job Locking + Circuit Breaker (Day 5–9)
+
 1. Create `packages/shared/src/utils/retryWithBackoff.ts`
 2. Wrap ALL external API calls in `fetchPrices.ts` with exponential backoff (base 1s, max 30s, max 3 retries)
 3. Add circuit breaker state (in-memory or Redis): after 5 consecutive failures for a source, pause that source for 1 hour
@@ -290,6 +310,7 @@ The following checks must pass in CI before any PR can be merged to `main` or de
 5. Add `job_runs` table and log every job execution with status, row count, and duration
 
 ### 0.7 Replace Trigger.dev with Vercel Cron / Supabase `pg_cron` (Day 6–10)
+
 1. Remove Trigger.dev from `turbo.json`, `package.json`, and CI workflow
 2. Add Vercel Cron configuration in `vercel.json` OR Supabase `pg_cron` schedule for:
    - `fetchPrices`: every 6 hours (implemented: `0 */6 * * *` in `vercel.json`)
@@ -302,6 +323,7 @@ The following checks must pass in CI before any PR can be merged to `main` or de
 5. **CFO**: Confirm zero job-runner license cost in 12-month P&L
 
 ### 0.8 `retailer_links` Migration + `/api/route-link` (Day 7–10)
+
 1. **Affiliate Marketing Expert**: Add `retailer_links` table to `schema.sql` with `product_id`, `retailer`, `affiliate_url`, `commission_rate`, `current_price`, `last_checked`
 2. Add unique constraint on `(product_id, retailer)`
 3. Add indexes and RLS policies
@@ -311,6 +333,7 @@ The following checks must pass in CI before any PR can be merged to `main` or de
 7. Inline disclosure text adjacent to every affiliate CTA in search results and deal page
 
 ### 0.9 Notification Service Audit (Day 8–10)
+
 1. Confirm all MailerLite references are fully replaced with Brevo
 2. Document OneSignal web push 10,000 subscriber free limit vs. 1,000 MAU mobile push limit
 3. Add Telegram bot webhook configuration as zero-cost backup channel
@@ -319,6 +342,7 @@ The following checks must pass in CI before any PR can be merged to `main` or de
 6. **CFO**: Document $0 paid notification cost path in 12-month P&L
 
 ### 0.10 Compliance Pre-Work Verification (Day 9–10, blocking)
+
 1. **Legal/Compliance Director**: Confirm privacy policy and ToS are published and accessible
 2. **Legal/Compliance Director**: Confirm cookie-consent banner blocks EU/UK tracker scripts until consent
 3. **Legal/Compliance Director**: Confirm Reddit scraping code is gated behind a feature flag set to `false` in all environments
@@ -327,6 +351,7 @@ The following checks must pass in CI before any PR can be merged to `main` or de
 6. **Legal/Compliance Director**: Confirm DPA review status for Brevo, OneSignal, Redis is documented
 
 ### 0.11 `sendAlerts` Per-Subscriber Rewrite (Day 10–14)
+
 1. Rewrite `apps/jobs/src/jobs/sendAlerts.ts`:
    - Use `getSupabaseServiceClient()` for all queries and writes
    - Query `alert_queue` where `sent = false`, limit 50, JOIN with `products` and `subscribers`
@@ -344,22 +369,22 @@ The following checks must pass in CI before any PR can be merged to `main` or de
 
 The following items are explicitly deferred by CEO/Board mandate or by scope-reduction requirements. They are not forgotten — they are parked for the post-MVP roadmap.
 
-| Item | Reason Deferred | Owner |
-|------|----------------|-------|
-| Design-system token namespaces + primitive library | 2-week Sprint 0 hard stop; Tailwind utilities sufficient for MVP | Design-System Engineer |
-| `DealPageShell` composite component + MDX API contracts | Dependent on design-system foundation; deferred | Design-System Engineer |
-| Visual QA pipeline (Playwright visual regression) | Post-launch quality hardening; MVP ships without automated visual diffs | Visual QA Engineer |
-| Sentiment infrastructure (Reddit keyword-scoring pipeline) | Legal review required; MVP stores summary text only | Sentiment Analyst Designer |
-| S2S postback/webhook ingestion for affiliate networks | Commission assumptions validated via dashboard analytics first | Affiliate Marketing Expert |
-| Full comparison tables (side-by-side editorial) | "Also consider" algorithm sufficient for MVP; editorial tables post-launch | Comparative Engine Expert |
-| Reddit scraping for sentiment/compatibility | Legal review not complete; gated behind feature flag | Legal/Compliance Director |
-| SaaS data source clients (PartnerStack, AppSumo, Impact) — full integration | Simulation mode acceptable for beta; real API integration post-launch if SaaS track validated | Full-Stack Engineer |
-| `/alerts` dashboard with full preference management | MVP uses simple frequency/discount thresholds; full dashboard post-launch | UX Architect |
-| Trigger.dev job monitoring + observability | Replaced by Vercel Cron + Supabase `pg_cron`; observability added post-launch | Platform/Infrastructure Architect |
-| Physical-product UI (PriceHistoryChart, compatibility badges) | Deferred to Sprint 3 or post-MVP per CFO/CEO | Principal Product Designer |
-| Watchlist feature | Deferred to post-MVP per Product/Business Strategist | Product/Business Strategist |
-| Natural language search (`/ai-search`) | Post-launch SEO enhancement; keyword search sufficient for MVP | SEO/AEO Specialist |
-| Hostinger → Vercel/Cloudflare Pages migration | Planned within 3–6 months; Hostinger is temporary MVP host | Platform/Infrastructure Architect |
+| Item                                                                        | Reason Deferred                                                                               | Owner                             |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | --------------------------------- |
+| Design-system token namespaces + primitive library                          | 2-week Sprint 0 hard stop; Tailwind utilities sufficient for MVP                              | Design-System Engineer            |
+| `DealPageShell` composite component + MDX API contracts                     | Dependent on design-system foundation; deferred                                               | Design-System Engineer            |
+| Visual QA pipeline (Playwright visual regression)                           | Post-launch quality hardening; MVP ships without automated visual diffs                       | Visual QA Engineer                |
+| Sentiment infrastructure (Reddit keyword-scoring pipeline)                  | Legal review required; MVP stores summary text only                                           | Sentiment Analyst Designer        |
+| S2S postback/webhook ingestion for affiliate networks                       | Commission assumptions validated via dashboard analytics first                                | Affiliate Marketing Expert        |
+| Full comparison tables (side-by-side editorial)                             | "Also consider" algorithm sufficient for MVP; editorial tables post-launch                    | Comparative Engine Expert         |
+| Reddit scraping for sentiment/compatibility                                 | Legal review not complete; gated behind feature flag                                          | Legal/Compliance Director         |
+| SaaS data source clients (PartnerStack, AppSumo, Impact) — full integration | Simulation mode acceptable for beta; real API integration post-launch if SaaS track validated | Full-Stack Engineer               |
+| `/alerts` dashboard with full preference management                         | MVP uses simple frequency/discount thresholds; full dashboard post-launch                     | UX Architect                      |
+| Trigger.dev job monitoring + observability                                  | Replaced by Vercel Cron + Supabase `pg_cron`; observability added post-launch                 | Platform/Infrastructure Architect |
+| Physical-product UI (PriceHistoryChart, compatibility badges)               | Deferred to Sprint 3 or post-MVP per CFO/CEO                                                  | Principal Product Designer        |
+| Watchlist feature                                                           | Deferred to post-MVP per Product/Business Strategist                                          | Product/Business Strategist       |
+| Natural language search (`/ai-search`)                                      | Post-launch SEO enhancement; keyword search sufficient for MVP                                | SEO/AEO Specialist                |
+| Hostinger → Vercel/Cloudflare Pages migration                               | Planned within 3–6 months; Hostinger is temporary MVP host                                    | Platform/Infrastructure Architect |
 
 ---
 
@@ -372,6 +397,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 > **Note for Sprint 1 designers:** The design-system primitive library has been deferred to post-launch. Components should be styled with Tailwind utility classes directly. Maintain a shared `components/ui/` directory for consistent class patterns even without a formal token system.
 
 ### 1.1 Deal Detail Page (Trust-First Design)
+
 1. Update `apps/web/app/deal/[slug]/page.tsx`:
    - Fetch product by slug with new fields
    - **UX Designer**: Clear visual distinction between SaaS and physical tracks using Tailwind color classes (indigo for SaaS, emerald for physical) and iconography
@@ -387,6 +413,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 6. Update `sitemap.ts` and `robots.ts`
 
 ### 1.2 Search API
+
 1. Create `apps/web/app/api/search/route.ts` with rate limiting, filters (`q`, `category`, `deal_type`, `min_discount`, `compatible_with`)
 2. **Full-Stack**: Return minimal fields for performance
 3. **Backend Expert**: Add `tsvector` column with GIN index on `products(name, description)` for full-text search
@@ -394,6 +421,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 5. Create `apps/web/app/search/page.tsx` with loading skeletons and empty states
 
 ### 1.3 SaaS Data Sources (Simulation Mode)
+
 1. Create `packages/shared/src/api/partnerStackClient.ts` (simulation mode)
 2. Create `packages/shared/src/api/appSumoClient.ts` (RSS parser, simulation mode)
 3. Create `packages/shared/src/api/impactClient.ts` (simulation mode)
@@ -401,6 +429,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 5. Wire into `fetchPrices.ts` — real API integration deferred to post-launch pending SaaS track validation
 
 ### 1.4 Homepage + Content Strategy
+
 1. Update homepage hero: "AI tools, SaaS deals, smart home discounts"
 2. Add "Deal of the Day" section
 3. Update `FALLBACK_DEALS` to include SaaS
@@ -409,6 +438,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 6. **SEO/AEO**: Add 1-2 sentence TL;DR block at top of deal pages for AI search consumption
 
 ### 1.5 Subscribe Flow (Progressive Disclosure)
+
 1. Replace `/subscribe` page with inline modal triggered from deal pages and homepage
 2. **Principal Product Designer**: Contextual modal pre-selecting triggering deal's category
 3. Progressive disclosure stepper: category → frequency → channel (email/push) → threshold
@@ -416,17 +446,20 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 5. **Accessibility**: Focus trapping, restoration on close, semantic form labels, `aria-live` for validation errors
 
 ### 1.6 Programmatic SEO Guardrails
+
 1. **SEO/AEO Specialist**: Apply `noindex` to all auto-generated listing pages; only remove `noindex` once page receives organic traffic or earned backlink
 2. Add editorial-content gating: a product page is only indexable when `editorial_summary` field is non-empty
 3. Add `X-Robots-Tag` header on thin API responses
 4. Prioritize topical authority over page count: 100 excellent pages on AI/smart home will outperform 10,000 auto-generated pages
 
 ### 1.7 Watchlist UI + Subscription Wiring (Deferred — Placeholder Only)
+
 1. **Product/Business Strategist**: Add Watchlist button to `DealCard` and `DealDetailPage` as UI placeholder (non-functional)
 2. Wire to `alert_queue` deferred to post-MVP
 3. Retire `/subscribe` page as primary funnel; keep as backup
 
 ### 1.8 Intelligent Link Routing
+
 1. **Affiliate Marketing Expert**: Implement `/api/route-link` endpoint with commission-based routing logic (already built in Sprint 0.8; verify integration here)
 2. Route to retailer with highest effective commission (`current_price × commission_rate`), with tie-breaker to Amazon
 3. Add `rel="sponsored"` enforcement to all affiliate `<a>` tags — CI gate enforces this
@@ -442,6 +475,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 > **Note:** Physical-product trust tools (PriceHistoryChart, compatibility badges) are deferred. Sprint 2 delivers SaaS trust tools only.
 
 ### 2.1 Alert System Refactor (Per-Subscriber Model)
+
 1. Update `subscribers` table: add `notification_frequency`, `digest_time`, `min_discount_percent`, `min_absolute_savings`, `do_not_disturb_start`, `do_not_disturb_end`, `alert_preferences`
 2. Rewrite `sendAlerts.ts` for per-subscriber rows:
    - Use `getSupabaseServiceClient()` for all queries and writes
@@ -459,6 +493,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 7. **Backend Expert**: Batch-fetch subscribers by IDs; add unique constraint on `alert_queue(subscriber_id, product_id, created_at)`
 
 ### 2.2 Alert Quality Score
+
 1. Add `alert_quality_score` to `alert_queue` (0–100)
 2. Score logic in `fetchPrices.ts`:
    - discount magnitude (0–40 pts)
@@ -469,6 +504,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 4. **UX Architect**: Surface alert quality as "Why this alert?" explainer tooltip in `/alerts` dashboard (post-launch dashboard; placeholder in MVP)
 
 ### 2.3 SaaS Trust Tools
+
 1. Update `products` table: add `true_cost_estimate`, `pricing_transparency_score`, `reddit_sentiment_summary` (text only, no numeric score in MVP), `program_stability_score`, `stability_notes`, `compatibility`, `setup_difficulty`, `app_count`, `reliability_notes`, `verified_working`
    - **Note**: Do NOT add `reddit_sentiment_score` numeric column in MVP; store summary text only
 2. Create `apps/web/app/true-cost/page.tsx` (interactive calculator)
@@ -477,11 +513,13 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 5. **Sentiment Analyst Designer**: Store summary text only; keyword-scoring pipeline and 3-state indicator deferred to post-launch
 
 ### 2.4 Smart Home Compatibility (Placeholder)
+
 1. Create compatibility filter API: `GET /api/products?compatible_with=alexa,google_home,homekit`
 2. Show compatibility badges on deal pages as text labels (icon rendering deferred to post-launch design system)
 3. `compatibilityScraper.ts` scaffolding created but Reddit scraping execution blocked by legal review gate
 
 ### 2.5 Content + Comparison
+
 1. **Comparative Engine**: Define "Best for" criteria explicitly in code rubric (price, features, ease of use, support quality, integrations) with fixed weights per category
 2. Add "Also consider" section on deal pages: algorithmic selection (same category, ≤20% price difference, ≥3 shared core features), hard-cap at 3 products
 3. `comparison_audit` table and `comparison_disputes` table already exist from Sprint 0 schema
@@ -489,6 +527,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 5. **Sentiment Analyst**: Display 3-state sentiment placeholder ("Sentiment data coming soon") — full keyword-scoring pipeline deferred to post-launch
 
 ### 2.6 Affiliate Infrastructure
+
 1. `/api/route-link` endpoint already built in Sprint 0.8; verify end-to-end in Sprint 2
 2. **Affiliate Expert**: Generate unique click identifiers per outbound redirect with TTL matching longest attribution window (90 days); tie to `subscriber_id`
 3. Add geo-routing fallback for PartnerStack/Impact networks
@@ -497,12 +536,14 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 6. S2S postback ingestion deferred to post-MVP; commission reconciliation via dashboard analytics only in MVP
 
 ### 2.7 Alerts Dashboard (Placeholder)
+
 1. Create `/alerts` page where subscribers manage preferences
 2. Collapsible sections: frequency, DND time-picker, discount thresholds
 3. Show queued alerts list with basic info; quality explainer tooltip deferred to post-launch
 4. **UX Architect**: MVP dashboard is functional but minimal; full preference management and alert quality explainer post-launch
 
 ### 2.8 Realistic Revenue Targets
+
 1. **Business Viability Analyst**: Add revenue dashboard tracking actual commission rates by network and product category
 2. Set expectation: SaaS (20–60% commission) is revenue foundation; physical (1–4%) is traffic/engagement
 3. Model 12–18 month ramp to meaningful revenue; do not project meaningful physical revenue in year one
@@ -518,11 +559,13 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 > **Note:** Visual QA pipeline, sentiment infrastructure, and natural language search are deferred to post-launch. Sprint 3 focuses on CI compliance hardening and production readiness within the 6-week total timeline.
 
 ### 3.1 E2E Tests
+
 1. Expand `scripts/simulate-pipeline.ts` (seed 30 SaaS + 20 physical, mock APIs)
 2. Add integration tests for `/api/subscribe`, `/api/search`, `/deal/[slug]`
 3. **Accessibility**: Automated axe checks in CI; keyboard-only E2E smoke tests
 
 ### 3.2 Security Hardening
+
 1. Add CSP headers to `next.config.js`
 2. Validate `affiliate_links` JSONB schema in API routes
 3. Verify rate limiting on `/api/search` and `/api/subscribe`
@@ -531,6 +574,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 6. **Legal/Compliance**: Verify cookie-consent banner blocks all non-essential scripts for EU/UK geo-IP sessions before any consent is given
 
 ### 3.3 Compliance CI Gates (Mandatory Before Deploy)
+
 1. **Legal/Compliance Director**: Encode all compliance checks as CI gates:
    - `rel="sponsored"` scan: fail build if any affiliate `<a>` tag lacks the attribute
    - FTC disclosure placement check: fail build if disclosure block is not in the first 200px of deal page templates
@@ -540,6 +584,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 2. All gates must pass before PR merge to `main`
 
 ### 3.4 Performance
+
 1. Benchmark Upstash Redis latency
 2. Add cursor-based pagination for product lists
 3. **Full-Stack**: Add loading skeletons and modular error boundaries per section (banner, pricing, trust)
@@ -547,6 +592,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 5. **Platform**: Define and enforce Core Web Vitals budgets in CI: LCP < 2.5s on 4G, INP < 200ms, CLS < 0.1
 
 ### 3.5 Trust Policy + Legal Pages
+
 1. `docs/TRUST_POLICY.md`: no pay-for-play, no cookie override, one-click cancellation, no dark patterns
 2. `/privacy-policy` page — must be live before Sprint 0 starts per Legal Director mandate
 3. `/terms-of-service` page — must be live before Sprint 0 starts per Legal Director mandate
@@ -554,6 +600,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 5. **Legal**: Affiliate disclosure above the fold on deal pages and homepage. OneSignal consent flow. Unsubscribe link in all Brevo emails.
 
 ### 3.6 Monitoring
+
 1. **Architecture**: Add Cloudflare Uptime Monitoring (5min ping on `/api/health`)
 2. **Architecture**: Add Sentry error tracking
 3. **Architecture**: Add job monitoring alerts: `alert_queue` > 500 unsent, `fetchPrices` fails 2 consecutive runs, `dead_letter_queue` > 10 items
@@ -561,12 +608,14 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 5. **Backend**: Schedule `retryDeadLetters` job with exponential backoff (1h, 6h, 24h)
 
 ### 3.7 Hostinger Migration Trigger Monitoring
+
 1. **Platform/Infrastructure Architect**: Add alerting for CPU throttle events, memory usage >80%, response time p95 >2s
 2. Define migration checklist and dry-run procedure for Vercel/Cloudflare Pages frontend migration
 3. Set Cloudflare cache rules: static assets 1 day, HTML 5 min, API 1 min
 4. Plan frontend migration within 3–6 months; Hostinger is temporary MVP host only
 
 ### 3.8 Beta Gate Review + Go/No-Go Checkpoint 1
+
 1. Compile beta metrics: CAC, store-to-alert conversion, alert-to-store CTR, MRR if any paid tiers activated
 2. Present to board against checkpoint 1 criteria
 3. If Go: proceed to post-launch Sprint 4 roadmap (design system, sentiment pipeline, S2S postbacks, visual QA, full comparison tables)
@@ -577,6 +626,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 ## Pre-Flight (Blocking Prerequisites — Must Complete Before Sprint 0 Starts)
 
 ### Legal & Business Prerequisites (New — Mandated by Legal Director, CEO, CFO)
+
 - [ ] **Privacy policy drafted, reviewed by legal counsel, and published at `/privacy-policy`**
 - [ ] **Terms of service drafted, reviewed by legal counsel, and published at `/terms-of-service`**
 - [ ] **Cookie-consent banner implemented and tested**: geo-IP detection routes EU/UK visitors to consent flow; no tracker scripts fire before consent; consent state stored in cookie
@@ -587,6 +637,7 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 - [ ] **12-month P&L with 3 scenarios** (conservative/base/aggressive) finalized and shared with engineering leads
 
 ### Technical Prerequisites (Existing)
+
 - [ ] Sign up for PartnerStack → API key (simulation mode acceptable for beta)
 - [ ] Sign up for AppSumo → RSS feed URL (simulation mode acceptable for beta)
 - [ ] Sign up for Impact.com → API key (simulation mode acceptable for beta)
@@ -607,7 +658,8 @@ The following items are explicitly deferred by CEO/Board mandate or by scope-red
 ## Scale-Out Triggers (Post-MVP)
 
 Migrate when any threshold is hit:
-- >500 subscribers
+
+- > 500 subscribers
 - Hostinger CPU throttling >2x/week
 - Monthly Hostinger cost >$20
 - Alert queue row count exceeds 1M without archiving strategy

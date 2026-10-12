@@ -27,9 +27,7 @@ async function fetchCompareProducts(
   }
 }
 
-export async function generateMetadata({
-  searchParams,
-}: ComparePageProps): Promise<Metadata> {
+export async function generateMetadata({ searchParams }: ComparePageProps): Promise<Metadata> {
   const products = await fetchCompareProducts(searchParams);
   const names = products
     .slice(0, 3)
@@ -37,9 +35,7 @@ export async function generateMetadata({
     .join(", ");
 
   return {
-    title: names
-      ? `Compare: ${names} | ThinkaBell`
-      : "Compare Products | ThinkaBell",
+    title: names ? `Compare: ${names} | ThinkaBell` : "Compare Products | ThinkaBell",
     description:
       "Compare prices, discounts, and features side-by-side across tracked products and make the best buying decision.",
     alternates: { canonical: "/compare" },
@@ -84,26 +80,19 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
       />
 
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900">
-          Compare Products
-        </h1>
+        <h1 className="text-3xl font-extrabold text-gray-900">Compare Products</h1>
         <p className="mt-2 text-sm text-gray-500">
-          View prices, discounts, and details side-by-side to pick the best
-          deal.
+          View prices, discounts, and details side-by-side to pick the best deal.
         </p>
       </div>
 
       {products.length === 0 ? (
         <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
           <Scale className="mx-auto h-10 w-10 text-gray-300" />
-          <h2 className="mt-4 text-lg font-bold text-gray-900">
-            Nothing to compare yet
-          </h2>
+          <h2 className="mt-4 text-lg font-bold text-gray-900">Nothing to compare yet</h2>
           <p className="mt-2 text-sm text-gray-500">
-            Select{" "}
-            <span className="font-medium">Compare</span> on up to four deal
-            cards to compare them side-by-side, or open a category comparison
-            directly.
+            Select <span className="font-medium">Compare</span> on up to four deal cards to compare
+            them side-by-side, or open a category comparison directly.
           </p>
           <Link
             href="/deals"

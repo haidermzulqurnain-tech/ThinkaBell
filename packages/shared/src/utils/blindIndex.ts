@@ -55,11 +55,15 @@ export function computeBlindIndex(value: string, key?: BlindIndexKey | null): st
 
   if (!warnedAboutMissingKey && resolvedKey !== null) {
     warnedAboutMissingKey = true;
-    logger.warn("[BlindIndex] BLIND_INDEX_KEY is set but malformed (expected 64-char hex). Falling back to lower-case index.");
+    logger.warn(
+      "[BlindIndex] BLIND_INDEX_KEY is set but malformed (expected 64-char hex). Falling back to lower-case index.",
+    );
   }
   if (!warnedAboutMissingKey && resolvedKey === null) {
     warnedAboutMissingKey = true;
-    logger.warn("[BlindIndex] BLIND_INDEX_KEY is not set. Using lower-case fallback (dev mode only).");
+    logger.warn(
+      "[BlindIndex] BLIND_INDEX_KEY is not set. Using lower-case fallback (dev mode only).",
+    );
   }
 
   return normalized;

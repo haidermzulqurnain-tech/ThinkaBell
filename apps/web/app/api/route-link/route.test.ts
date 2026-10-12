@@ -27,7 +27,9 @@ function makeFrom(table: string) {
     const chain: Record<string, any> = {};
     chain.select = vi.fn(() => chain);
     chain.eq = vi.fn(() => chain);
-    chain.order = vi.fn(() => ({ then: (onFulfilled: any) => Promise.resolve(selectResult).then(onFulfilled) }));
+    chain.order = vi.fn(() => ({
+      then: (onFulfilled: any) => Promise.resolve(selectResult).then(onFulfilled),
+    }));
     return chain;
   }
   if (table === "click_tracking") {
@@ -69,14 +71,18 @@ describe("GET /api/route-link", () => {
   it("should return 429 when rate limited", async () => {
     mockRateLimit.mockResolvedValueOnce(false);
     const { GET } = await import("./route");
-    const response = await GET(new NextRequest("http://localhost:3000/api/route-link?product_id=10"));
+    const response = await GET(
+      new NextRequest("http://localhost:3000/api/route-link?product_id=10"),
+    );
     expect(response.status).toBe(429);
   });
 
   it("should return 404 when no retailer links exist", async () => {
     selectResult = { data: [], error: null };
     const { GET } = await import("./route");
-    const response = await GET(new NextRequest("http://localhost:3000/api/route-link?product_id=10"));
+    const response = await GET(
+      new NextRequest("http://localhost:3000/api/route-link?product_id=10"),
+    );
     expect(response.status).toBe(404);
   });
 
@@ -122,9 +128,7 @@ describe("GET /api/route-link", () => {
     const response = await GET(request);
 
     expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3000/go/amazon/B0TEST1234",
-    );
+    expect(response.headers.get("location")).toBe("http://localhost:3000/go/amazon/B0TEST1234");
     // Click tracking and attribution still run for geo-routed clicks.
     expect(mockFrom).toHaveBeenCalledWith("click_tracking");
     expect(mockRpc).toHaveBeenCalledWith("increment_retailer_click", { link_id: 42 });
@@ -133,7 +137,9 @@ describe("GET /api/route-link", () => {
   it("should return 500 when the retailer link query fails", async () => {
     selectResult = { data: null, error: { message: "db error" } };
     const { GET } = await import("./route");
-    const response = await GET(new NextRequest("http://localhost:3000/api/route-link?product_id=10"));
+    const response = await GET(
+      new NextRequest("http://localhost:3000/api/route-link?product_id=10"),
+    );
     expect(response.status).toBe(500);
   });
 });

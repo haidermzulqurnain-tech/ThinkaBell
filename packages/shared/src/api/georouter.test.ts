@@ -34,18 +34,14 @@ describe("GeoRouter", () => {
     it("ignores the edge-proxy header when the proxy is not trusted", async () => {
       const { resolveVisitorCountry } = await import("./georouter");
       mockConfig.EDGE_PROXY_TRUSTED = false;
-      const country = resolveVisitorCountry(
-        headersOf({ "x-thinkabell-country": "CA" }),
-      );
+      const country = resolveVisitorCountry(headersOf({ "x-thinkabell-country": "CA" }));
       expect(country).toBeUndefined();
     });
 
     it("honors the edge-proxy header when the proxy is trusted", async () => {
       const { resolveVisitorCountry } = await import("./georouter");
       mockConfig.EDGE_PROXY_TRUSTED = true;
-      const country = resolveVisitorCountry(
-        headersOf({ "x-thinkabell-country": "ca" }),
-      );
+      const country = resolveVisitorCountry(headersOf({ "x-thinkabell-country": "ca" }));
       expect(country).toBe("ca");
       mockConfig.EDGE_PROXY_TRUSTED = false;
     });
@@ -61,25 +57,17 @@ describe("GeoRouter", () => {
     it("extracts ASINs from supported Amazon URL formats", async () => {
       const { extractAsinFromAmazonUrl } = await import("./georouter");
       expect(
-        extractAsinFromAmazonUrl(
-          "https://amazon.com/dp/B08N5WRWNW?tag=thinkabell-us-20",
-        ),
+        extractAsinFromAmazonUrl("https://amazon.com/dp/B08N5WRWNW?tag=thinkabell-us-20"),
       ).toBe("B08N5WRWNW");
-      expect(
-        extractAsinFromAmazonUrl(
-          "https://www.amazon.co.uk/gp/product/B07PGL2ZSN",
-        ),
-      ).toBe("B07PGL2ZSN");
-      expect(
-        extractAsinFromAmazonUrl("https://amazon.de/gp/aw/d/B09XYZ1234"),
-      ).toBe("B09XYZ1234");
+      expect(extractAsinFromAmazonUrl("https://www.amazon.co.uk/gp/product/B07PGL2ZSN")).toBe(
+        "B07PGL2ZSN",
+      );
+      expect(extractAsinFromAmazonUrl("https://amazon.de/gp/aw/d/B09XYZ1234")).toBe("B09XYZ1234");
     });
 
     it("returns null for non-Amazon or ASIN-less URLs", async () => {
       const { extractAsinFromAmazonUrl } = await import("./georouter");
-      expect(
-        extractAsinFromAmazonUrl("https://www.ebay.com/itm/12345"),
-      ).toBeNull();
+      expect(extractAsinFromAmazonUrl("https://www.ebay.com/itm/12345")).toBeNull();
       expect(extractAsinFromAmazonUrl("https://amazon.com/dp/")).toBeNull();
       expect(extractAsinFromAmazonUrl("not-a-url")).toBeNull();
       expect(extractAsinFromAmazonUrl("")).toBeNull();
@@ -110,9 +98,7 @@ describe("GeoRouter", () => {
     it("fails closed on malformed ASINs", async () => {
       const { buildAmazonCtaLink } = await import("./georouter");
       expect(buildAmazonCtaLink({ asin: "nope" })).toBeNull();
-      expect(
-        buildAmazonCtaLink({ affiliateUrl: "https://amazon.com/dp/zzz" }),
-      ).toBeNull();
+      expect(buildAmazonCtaLink({ affiliateUrl: "https://amazon.com/dp/zzz" })).toBeNull();
     });
 
     it("fails closed when the marketplace tag is unconfigured", async () => {
@@ -139,16 +125,14 @@ describe("GeoRouter", () => {
         "https://amazon.com/dp/B08N5WRWNW?tag=thinkabell-us-20",
         headersOf({ "x-vercel-ip-country": "GB" }),
       );
-      expect(destination).toBe(
-        "https://thinkabell.click/go/amazon/B08N5WRWNW",
-      );
+      expect(destination).toBe("https://thinkabell.click/go/amazon/B08N5WRWNW");
     });
 
     it("keeps non-Amazon URLs untouched", async () => {
       const { resolveAmazonDestination } = await import("./georouter");
-      expect(
-        resolveAmazonDestination("https://www.ebay.com/itm/123"),
-      ).toBe("https://www.ebay.com/itm/123");
+      expect(resolveAmazonDestination("https://www.ebay.com/itm/123")).toBe(
+        "https://www.ebay.com/itm/123",
+      );
     });
 
     it("keeps the stored URL when the marketplace is unconfigured", async () => {
@@ -161,9 +145,9 @@ describe("GeoRouter", () => {
 
     it("keeps the stored URL when the ASIN cannot be extracted", async () => {
       const { resolveAmazonDestination } = await import("./georouter");
-      expect(
-        resolveAmazonDestination("https://amazon.com/gp/bestsellers"),
-      ).toBe("https://amazon.com/gp/bestsellers");
+      expect(resolveAmazonDestination("https://amazon.com/gp/bestsellers")).toBe(
+        "https://amazon.com/gp/bestsellers",
+      );
     });
   });
 });

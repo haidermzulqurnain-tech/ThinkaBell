@@ -48,7 +48,10 @@ function buildSupabase(options: {
         select: vi.fn(() => ({
           order: vi.fn(() => ({
             limit: vi.fn(() =>
-              Promise.resolve({ data: options.queryError ? null : options.deadLetters ?? [], error: options.queryError ?? null }),
+              Promise.resolve({
+                data: options.queryError ? null : (options.deadLetters ?? []),
+                error: options.queryError ?? null,
+              }),
             ),
           })),
         })),
@@ -81,7 +84,9 @@ vi.mock("@thinkabell/shared", () => ({
 
 async function setClient(client: ReturnType<typeof buildSupabase>) {
   const { getSupabaseServiceClient } = await import("@thinkabell/database");
-  (getSupabaseServiceClient as unknown as { mockReturnValue: (value: unknown) => void }).mockReturnValue(client);
+  (
+    getSupabaseServiceClient as unknown as { mockReturnValue: (value: unknown) => void }
+  ).mockReturnValue(client);
 }
 
 describe("runDeadLetterRetry", () => {
@@ -161,4 +166,3 @@ describe("runDeadLetterRetry", () => {
     expect(client.rpc).toHaveBeenCalledWith("release_job_lock", { lock_id: 1003 });
   });
 });
-

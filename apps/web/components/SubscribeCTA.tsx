@@ -34,8 +34,8 @@ export function SubscribeCTA() {
               Never Miss a Deal Again
             </h2>
             <p className="text-sm sm:text-base text-blue-100 max-w-2xl mx-auto mb-6">
-              Get instant email and push notifications when prices drop on the products you care about.
-              Track Amazon, eBay, and SaaS deals in real-time.
+              Get instant email and push notifications when prices drop on the products you care
+              about. Track Amazon, eBay, and SaaS deals in real-time.
             </p>
             <button
               onClick={openModal}

@@ -4,7 +4,8 @@ import { ShieldCheck, Bell, Zap, Users } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "About ThinkaBell | Real-Time Deal Alerts & Price Tracking",
-  description: "Learn about ThinkaBell's mission to help shoppers never miss a price drop on AI hardware, smart gadgets, and software tools.",
+  description:
+    "Learn about ThinkaBell's mission to help shoppers never miss a price drop on AI hardware, smart gadgets, and software tools.",
 };
 
 export default function AboutPage() {
@@ -16,8 +17,8 @@ export default function AboutPage() {
             About ThinkaBell
           </h1>
           <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-            We believe everyone deserves access to the best deals on the tech they love.
-            ThinkaBell monitors prices 24/7 so you can buy with confidence.
+            We believe everyone deserves access to the best deals on the tech they love. ThinkaBell
+            monitors prices 24/7 so you can buy with confidence.
           </p>
         </div>
 
@@ -50,8 +51,9 @@ export default function AboutPage() {
             </div>
             <h3 className="text-base font-bold text-gray-900 mb-2">SaaS-First Focus</h3>
             <p className="text-sm text-gray-600">
-              While we track physical gadgets, our real passion is software deals. Lifetime licenses,
-              subscription bundles, and promo codes for developer tools — curated and verified.
+              While we track physical gadgets, our real passion is software deals. Lifetime
+              licenses, subscription bundles, and promo codes for developer tools — curated and
+              verified.
             </p>
           </div>
 
@@ -71,8 +73,8 @@ export default function AboutPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Our Mission</h2>
           <div className="space-y-4 text-gray-700">
             <p>
-              ThinkaBell was built to solve a simple problem: finding the right deal at the right time
-              shouldn&apos;t require constant monitoring across dozens of websites.
+              ThinkaBell was built to solve a simple problem: finding the right deal at the right
+              time shouldn&apos;t require constant monitoring across dozens of websites.
             </p>
             <p>
               We combine automated price tracking with manual curation to surface deals that are
@@ -80,8 +82,8 @@ export default function AboutPage() {
               every alert is sent with your preferences in mind.
             </p>
             <p>
-              We&apos;re starting with a tight focus on AI hardware, developer tools, and SaaS software —
-              categories where price drops matter most and commissions are transparent.
+              We&apos;re starting with a tight focus on AI hardware, developer tools, and SaaS
+              software — categories where price drops matter most and commissions are transparent.
             </p>
           </div>
         </div>

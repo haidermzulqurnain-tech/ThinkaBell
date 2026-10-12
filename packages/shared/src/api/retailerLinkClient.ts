@@ -12,7 +12,9 @@ export class RetailerLinkClient implements IRetailerLinkClient {
   async getAffiliateUrl(productId: number, retailer: RetailerType): Promise<string | null> {
     try {
       const baseUrl = env.NEXT_PUBLIC_APP_URL;
-      const response = await fetch(`${baseUrl}/api/retailer-links?productId=${productId}&retailer=${retailer}`);
+      const response = await fetch(
+        `${baseUrl}/api/retailer-links?productId=${productId}&retailer=${retailer}`,
+      );
 
       if (!response.ok) {
         return null;
@@ -21,7 +23,10 @@ export class RetailerLinkClient implements IRetailerLinkClient {
       const data = (await response.json()) as { affiliateUrl?: string };
       return data.affiliateUrl ?? null;
     } catch (error) {
-      logger.error(`[RetailerLinkClient] Error fetching affiliate URL for product ${productId}:`, error);
+      logger.error(
+        `[RetailerLinkClient] Error fetching affiliate URL for product ${productId}:`,
+        error,
+      );
       return null;
     }
   }
@@ -29,7 +34,9 @@ export class RetailerLinkClient implements IRetailerLinkClient {
   async getSponsoredRetailer(productId: number): Promise<RetailerType | null> {
     try {
       const baseUrl = env.NEXT_PUBLIC_APP_URL;
-      const response = await fetch(`${baseUrl}/api/retailer-links/sponsored?productId=${productId}`);
+      const response = await fetch(
+        `${baseUrl}/api/retailer-links/sponsored?productId=${productId}`,
+      );
 
       if (!response.ok) {
         return null;
@@ -38,7 +45,10 @@ export class RetailerLinkClient implements IRetailerLinkClient {
       const data = (await response.json()) as { retailer?: RetailerType };
       return data.retailer ?? null;
     } catch (error) {
-      logger.error(`[RetailerLinkClient] Error fetching sponsored retailer for product ${productId}:`, error);
+      logger.error(
+        `[RetailerLinkClient] Error fetching sponsored retailer for product ${productId}:`,
+        error,
+      );
       return null;
     }
   }

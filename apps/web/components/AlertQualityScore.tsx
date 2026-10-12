@@ -55,8 +55,8 @@ export function AlertQualityScore({ score }: AlertQualityScoreProps) {
       <div className="mt-3 flex items-start gap-1.5 text-[11px] opacity-80">
         <Info className="h-3 w-3 shrink-0 mt-0.5" />
         <span>
-          Score reflects discount depth, source reliability, and historical price accuracy.
-          Higher scores indicate stronger deal confidence.
+          Score reflects discount depth, source reliability, and historical price accuracy. Higher
+          scores indicate stronger deal confidence.
         </span>
       </div>
     </div>

@@ -41,9 +41,7 @@ export function CompareTable({ products }: CompareTableProps) {
   const bestPrice = prices.length > 0 ? Math.min(...prices) : null;
 
   const removeProduct = (slug: string) => {
-    const remaining = products
-      .filter((p) => p.slug !== slug)
-      .map((p) => p.slug);
+    const remaining = products.filter((p) => p.slug !== slug).map((p) => p.slug);
 
     trackEvent("compare_remove_product", {
       slug,
@@ -72,10 +70,7 @@ export function CompareTable({ products }: CompareTableProps) {
             {products.map((product) => (
               <th key={product.id} className="p-4 text-left align-top">
                 <div className="relative group">
-                  <Link
-                    href={`/deal/${product.slug}`}
-                    className="block"
-                  >
+                  <Link href={`/deal/${product.slug}`} className="block">
                     <div className="relative h-32 w-full overflow-hidden rounded-xl bg-gray-100">
                       <Image
                         src={product.image_url || fallbackImageUrl(product.category)}
@@ -115,9 +110,7 @@ export function CompareTable({ products }: CompareTableProps) {
                 bestPrice !== null &&
                 typeof p.current_price === "number" &&
                 p.current_price === bestPrice &&
-                products.filter(
-                  (other) => other.current_price === bestPrice,
-                ).length === 1;
+                products.filter((other) => other.current_price === bestPrice).length === 1;
               return (
                 <Cell key={p.id} highlight>
                   <span className="inline-flex items-center gap-1.5">
@@ -139,9 +132,7 @@ export function CompareTable({ products }: CompareTableProps) {
           <Row label="Previous Price">
             {products.map((p) => (
               <Cell key={p.id}>
-                <span className="text-gray-500 line-through">
-                  {formatPrice(p.previous_price)}
-                </span>
+                <span className="text-gray-500 line-through">{formatPrice(p.previous_price)}</span>
               </Cell>
             ))}
           </Row>
@@ -225,9 +216,7 @@ function Row({
   return (
     <tr
       className={
-        highlight
-          ? "border-b border-gray-100 bg-emerald-50/40"
-          : "border-b border-gray-100"
+        highlight ? "border-b border-gray-100 bg-emerald-50/40" : "border-b border-gray-100"
       }
     >
       <td className="p-4 text-sm font-medium text-gray-500">{label}</td>
@@ -236,16 +225,6 @@ function Row({
   );
 }
 
-function Cell({
-  children,
-  highlight,
-}: {
-  children: React.ReactNode;
-  highlight?: boolean;
-}) {
-  return (
-    <td className={highlight ? "p-4" : "p-4 text-sm text-gray-900"}>
-      {children}
-    </td>
-  );
+function Cell({ children, highlight }: { children: React.ReactNode; highlight?: boolean }) {
+  return <td className={highlight ? "p-4" : "p-4 text-sm text-gray-900"}>{children}</td>;
 }

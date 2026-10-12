@@ -9,6 +9,7 @@ Learn how to configure 24/7 uptime monitoring and error observability for **thin
 We recommend using [UptimeRobot](https://uptimerobot.com/) (free tier includes 50 monitors with 5-minute intervals).
 
 ### Step 1: Create a Monitor
+
 1. Log in to your UptimeRobot account.
 2. Click **+ Add New Monitor**.
 3. Fill in the following details:
@@ -19,6 +20,7 @@ We recommend using [UptimeRobot](https://uptimerobot.com/) (free tier includes 5
    - **Monitor Timeout**: `30 seconds`
 
 ### Step 2: Configure Keyword / Status Alerting
+
 1. Under **Advanced Settings**:
    - Verify HTTP status code expects `200 OK`.
    - Optionally check that response body contains `"status":"healthy"`.

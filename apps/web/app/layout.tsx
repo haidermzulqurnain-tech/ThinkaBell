@@ -15,12 +15,13 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "ThinkaBell | Real-Time Deal Alerts & Price Tracking",
-  description: "Track price drops on AI hardware, smart gadgets, and software tools. Get instant alerts before deals expire.",
+  description:
+    "Track price drops on AI hardware, smart gadgets, and software tools. Get instant alerts before deals expire.",
   metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
   alternates: {
     canonical: "/",
     languages: {
-      "en": "/",
+      en: "/",
       "x-default": "/",
     },
   },
@@ -45,11 +46,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const nonce = await getNonce();
   const baseUrl = env.NEXT_PUBLIC_APP_URL;
 
@@ -58,7 +55,8 @@ export default async function RootLayout({
     "@type": "WebSite",
     name: "ThinkaBell",
     url: baseUrl,
-    description: "Real-time deal alerts and price tracking for AI hardware, smart gadgets, and software tools.",
+    description:
+      "Real-time deal alerts and price tracking for AI hardware, smart gadgets, and software tools.",
     potentialAction: {
       "@type": "SearchAction",
       target: {

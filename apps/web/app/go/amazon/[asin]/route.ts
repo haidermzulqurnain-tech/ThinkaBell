@@ -40,10 +40,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   }
 
   try {
-    const affiliateUrl = generateAmazonAffiliateLink(
-      asin,
-      resolveVisitorCountry(request.headers),
-    );
+    const affiliateUrl = generateAmazonAffiliateLink(asin, resolveVisitorCountry(request.headers));
     return NextResponse.redirect(new URL(affiliateUrl), 302);
   } catch (error) {
     if (error instanceof AmazonAffiliateLinkError) {

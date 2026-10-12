@@ -61,9 +61,8 @@ describe("AmazonAffiliateLinkGenerator", () => {
 
     it("fails closed when the marketplace tag is not configured", async () => {
       mockConfig.AMAZON_PARTNER_TAG_DE = "";
-      const { resolveAmazonMarketplace, AmazonAffiliateLinkError } = await import(
-        "./amazonAffiliateLinkGenerator"
-      );
+      const { resolveAmazonMarketplace, AmazonAffiliateLinkError } =
+        await import("./amazonAffiliateLinkGenerator");
 
       expect(() => resolveAmazonMarketplace("DE")).toThrow(AmazonAffiliateLinkError);
       expect(() => resolveAmazonMarketplace("DE")).toThrow(
@@ -74,9 +73,8 @@ describe("AmazonAffiliateLinkGenerator", () => {
 
     it("fails closed when the US fallback tag is not configured", async () => {
       mockConfig.AMAZON_PARTNER_TAG = "";
-      const { resolveAmazonMarketplace, AmazonAffiliateLinkError } = await import(
-        "./amazonAffiliateLinkGenerator"
-      );
+      const { resolveAmazonMarketplace, AmazonAffiliateLinkError } =
+        await import("./amazonAffiliateLinkGenerator");
 
       expect(() => resolveAmazonMarketplace("FR")).toThrow(AmazonAffiliateLinkError);
       mockConfig.AMAZON_PARTNER_TAG = "thinkabell-us-20";
@@ -129,9 +127,7 @@ describe("AmazonAffiliateLinkGenerator", () => {
   describe("buildAmazonProductUrl", () => {
     it("builds a plain product URL without a tag", async () => {
       const { buildAmazonProductUrl } = await import("./amazonAffiliateLinkGenerator");
-      expect(buildAmazonProductUrl("B08N5WRWNW", "DE")).toBe(
-        "https://amazon.de/dp/B08N5WRWNW",
-      );
+      expect(buildAmazonProductUrl("B08N5WRWNW", "DE")).toBe("https://amazon.de/dp/B08N5WRWNW");
     });
 
     it("throws on a malformed ASIN", async () => {

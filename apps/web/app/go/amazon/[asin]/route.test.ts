@@ -5,9 +5,7 @@ class AmazonAffiliateLinkError extends Error {}
 
 const mockGenerateAmazonAffiliateLink = vi.fn(
   (asin: string, country?: string) =>
-    `https://amazon.com/dp/${asin}?tag=thinkabell-us-20${
-      country ? `&geo=${country}` : ""
-    }`,
+    `https://amazon.com/dp/${asin}?tag=thinkabell-us-20${country ? `&geo=${country}` : ""}`,
 );
 const mockIsValidAsin = vi.fn((asin: string) => /^[A-Z0-9]{10}$/i.test(asin));
 const mockResolveVisitorCountry = vi.fn((): string | undefined => undefined);
@@ -30,13 +28,9 @@ describe("GET /go/amazon/[asin]", () => {
     vi.clearAllMocks();
     mockGenerateAmazonAffiliateLink.mockImplementation(
       (asin: string, country?: string) =>
-        `https://amazon.com/dp/${asin}?tag=thinkabell-us-20${
-          country ? `&geo=${country}` : ""
-        }`,
+        `https://amazon.com/dp/${asin}?tag=thinkabell-us-20${country ? `&geo=${country}` : ""}`,
     );
-    mockIsValidAsin.mockImplementation((asin: string) =>
-      /^[A-Z0-9]{10}$/i.test(asin),
-    );
+    mockIsValidAsin.mockImplementation((asin: string) => /^[A-Z0-9]{10}$/i.test(asin));
     mockResolveVisitorCountry.mockImplementation(() => undefined);
   });
 
@@ -71,10 +65,7 @@ describe("GET /go/amazon/[asin]", () => {
     const response = await GET(requestWith(), { params: Promise.resolve({ asin: "b08n5wrwnw" }) });
 
     expect(response.status).toBe(302);
-    expect(mockGenerateAmazonAffiliateLink).toHaveBeenCalledWith(
-      "B08N5WRWNW",
-      undefined,
-    );
+    expect(mockGenerateAmazonAffiliateLink).toHaveBeenCalledWith("B08N5WRWNW", undefined);
   });
 
   it("returns 400 for malformed ASINs", async () => {
@@ -88,9 +79,7 @@ describe("GET /go/amazon/[asin]", () => {
   it("fails closed with 503 when the marketplace tag is unconfigured", async () => {
     const { GET } = await import("./route");
     mockGenerateAmazonAffiliateLink.mockImplementationOnce(() => {
-      throw new AmazonAffiliateLinkError(
-        "Amazon partner tag not configured for marketplace DE",
-      );
+      throw new AmazonAffiliateLinkError("Amazon partner tag not configured for marketplace DE");
     });
     mockResolveVisitorCountry.mockReturnValueOnce("DE");
 

@@ -22,7 +22,10 @@ export class CircuitBreaker {
     this.threshold = threshold;
     this.recoveryTimeoutMs = recoveryTimeoutMs;
     this.loadState().catch((err) => {
-      logger.debug("[CircuitBreaker] Failed to load state on construction", err as Record<string, unknown>);
+      logger.debug(
+        "[CircuitBreaker] Failed to load state on construction",
+        err as Record<string, unknown>,
+      );
     });
   }
 
@@ -35,7 +38,10 @@ export class CircuitBreaker {
         this.lastFailureTime = stored.lastFailureTime;
       }
     } catch (err) {
-      logger.debug("[CircuitBreaker] Failed to load state from Redis", err as Record<string, unknown>);
+      logger.debug(
+        "[CircuitBreaker] Failed to load state from Redis",
+        err as Record<string, unknown>,
+      );
     }
   }
 
@@ -47,7 +53,10 @@ export class CircuitBreaker {
         lastFailureTime: this.lastFailureTime,
       } as Record<string, unknown>);
     } catch (err) {
-      logger.debug("[CircuitBreaker] Failed to persist state to Redis", err as Record<string, unknown>);
+      logger.debug(
+        "[CircuitBreaker] Failed to persist state to Redis",
+        err as Record<string, unknown>,
+      );
     }
   }
 

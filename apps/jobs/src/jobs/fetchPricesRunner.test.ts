@@ -198,7 +198,10 @@ describe("fetchPricesRunner", () => {
     const { runFetchPrices } = await import("./fetchPricesRunner");
     const result = await runFetchPrices();
 
-    expect(mockSubscriberRepository.getSubscribersForAlert).toHaveBeenCalledWith("physical", expect.closeTo(10.01, 0.1));
+    expect(mockSubscriberRepository.getSubscribersForAlert).toHaveBeenCalledWith(
+      "physical",
+      expect.closeTo(10.01, 0.1),
+    );
     expect(mockRedis.set).toHaveBeenCalledWith("alert_sent:1:1", "1", { ex: 86400 });
     expect(result.alertsQueued).toBe(2);
   });
@@ -227,7 +230,10 @@ describe("fetchPricesRunner", () => {
     const { runFetchPrices } = await import("./fetchPricesRunner");
     const result = await runFetchPrices();
 
-    expect(mockSubscriberRepository.getSubscribersForAlert).toHaveBeenCalledWith("physical", expect.closeTo(10.01, 0.1));
+    expect(mockSubscriberRepository.getSubscribersForAlert).toHaveBeenCalledWith(
+      "physical",
+      expect.closeTo(10.01, 0.1),
+    );
     expect(mockRedis.set).not.toHaveBeenCalled();
     expect(result.alertsQueued).toBe(0);
   });

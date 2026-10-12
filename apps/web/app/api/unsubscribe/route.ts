@@ -28,7 +28,10 @@ export async function GET(request: NextRequest) {
   }
 
   if (!row) {
-    return NextResponse.json({ error: "Unsubscribe token required. Check your email for the unsubscribe link." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Unsubscribe token required. Check your email for the unsubscribe link." },
+      { status: 400 },
+    );
   }
 
   if (!token) {
@@ -47,7 +50,10 @@ export async function GET(request: NextRequest) {
   }
 
   if (row.unsubscribe_token !== token) {
-    return NextResponse.json({ error: "Unsubscribe token required. Check your email for the unsubscribe link." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Unsubscribe token required. Check your email for the unsubscribe link." },
+      { status: 400 },
+    );
   }
 
   // Erasure: the anonymized email gets its own blind index so the original
@@ -74,10 +80,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Break any click attribution link to the erased subscriber.
-  await db
-    .from("click_tracking")
-    .update({ subscriber_id: null })
-    .eq("subscriber_id", row.id);
+  await db.from("click_tracking").update({ subscriber_id: null }).eq("subscriber_id", row.id);
 
   return NextResponse.redirect(new URL("/unsubscribe/confirmed", request.url));
 }

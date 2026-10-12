@@ -15,13 +15,7 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "json", "html", "lcov"],
       include: ["packages/**/src/**/*.{ts,tsx}", "apps/**/src/**/*.{ts,tsx}"],
-      exclude: [
-        "**/index.ts",
-        "**/*.test.ts",
-        "**/*.spec.ts",
-        "**/types.ts",
-        "**/types/index.ts",
-      ],
+      exclude: ["**/index.ts", "**/*.test.ts", "**/*.spec.ts", "**/types.ts", "**/types/index.ts"],
       thresholds: {
         lines: 70,
         functions: 70,
@@ -37,10 +31,7 @@ export default defineConfig({
       "@thinkabell/config": resolve(__dirname, "packages/config/src/index.ts"),
       "@thinkabell/database": resolve(__dirname, "packages/database/src/index.ts"),
       "@thinkabell/shared": resolve(__dirname, "packages/shared/src/index.ts"),
-      "@thinkabell/edge-worker": resolve(
-        __dirname,
-        "packages/edge-worker/src/index.ts",
-      ),
+      "@thinkabell/edge-worker": resolve(__dirname, "packages/edge-worker/src/index.ts"),
     },
   },
 });

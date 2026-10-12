@@ -42,7 +42,9 @@ function isKeyValid(key: EncryptionKey | null): boolean {
 
 function keyToBytes(key: EncryptionKey): Uint8Array<ArrayBuffer> {
   if (!isKeyValid(key)) {
-    throw new FieldEncryptionError("ENCRYPTION_KEY must be a 64-character hex string (32 bytes), e.g. openssl rand -hex 32");
+    throw new FieldEncryptionError(
+      "ENCRYPTION_KEY must be a 64-character hex string (32 bytes), e.g. openssl rand -hex 32",
+    );
   }
   const bytes = new Uint8Array(32);
   for (let i = 0; i < 32; i++) {
@@ -78,7 +80,10 @@ async function importAesKey(key: EncryptionKey, usage: "encrypt" | "decrypt"): P
  * Encrypt a PII field with AES-256-GCM. Output is base64(iv || ciphertext).
  * Returns null for null/empty input. Passes input through when no key is set.
  */
-export async function encryptField(plaintext: string | null | undefined, key?: EncryptionKey | null): Promise<string | null> {
+export async function encryptField(
+  plaintext: string | null | undefined,
+  key?: EncryptionKey | null,
+): Promise<string | null> {
   if (!plaintext) return null;
   if (!key) return plaintext;
 
@@ -107,7 +112,10 @@ export async function encryptField(plaintext: string | null | undefined, key?: E
  * Decrypt a PII field produced by encryptField.
  * Returns null for null input. Passes input through when no key is set.
  */
-export async function decryptField(ciphertext: string | null | undefined, key?: EncryptionKey | null): Promise<string | null> {
+export async function decryptField(
+  ciphertext: string | null | undefined,
+  key?: EncryptionKey | null,
+): Promise<string | null> {
   if (!ciphertext) return null;
   if (!key) return ciphertext;
 
@@ -119,11 +127,7 @@ export async function decryptField(ciphertext: string | null | undefined, key?: 
     }
     const iv = combined.slice(0, IV_LENGTH);
     const encrypted = combined.slice(IV_LENGTH);
-    const decrypted = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
-      cryptoKey,
-      encrypted,
-    );
+    const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, cryptoKey, encrypted);
     return new TextDecoder().decode(decrypted);
   } catch (error) {
     if (error instanceof FieldEncryptionError) {

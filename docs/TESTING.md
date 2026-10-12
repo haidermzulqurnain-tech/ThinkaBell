@@ -67,11 +67,25 @@ Repositories are tested using mocked Supabase clients. The mock pattern uses a c
 ```typescript
 function createChainableMock(terminalReturn: any) {
   const chain: any = {};
-  const methods = ["select", "eq", "update", "insert", "order", "limit", "single", "maybeSingle", "or", "then"];
+  const methods = [
+    "select",
+    "eq",
+    "update",
+    "insert",
+    "order",
+    "limit",
+    "single",
+    "maybeSingle",
+    "or",
+    "then",
+  ];
   for (const method of methods) {
     if (method === "then") {
       chain[method] = (onFulfilled: any) => {
-        return Promise.resolve({ data: terminalReturn.data ?? terminalReturn, error: terminalReturn.error ?? null }).then(onFulfilled);
+        return Promise.resolve({
+          data: terminalReturn.data ?? terminalReturn,
+          error: terminalReturn.error ?? null,
+        }).then(onFulfilled);
       };
     } else {
       chain[method] = vi.fn(() => {
@@ -154,12 +168,14 @@ expect(Array.isArray(data)).toBe(true);
 ## Coverage Requirements
 
 The project maintains a minimum coverage threshold of 70% for:
+
 - Lines
 - Functions
 - Branches
 - Statements
 
 Run coverage report:
+
 ```bash
 pnpm run test --coverage
 ```
@@ -175,16 +191,19 @@ Integration tests verify the interaction between multiple components:
 ## E2E Testing (Future)
 
 For end-to-end testing, consider using:
+
 - Playwright or Cypress for browser automation
 - Test the full flow: subscribe → price drop → notification received
 
 ## CI/CD Integration
 
 Tests run automatically on:
+
 - Pull requests to `main`
 - Pushes to `main`
 
 The CI pipeline runs:
+
 1. Type checking (`pnpm run type-check`)
 2. Linting (`pnpm run lint`)
 3. Unit tests (`pnpm run test`)
@@ -202,16 +221,17 @@ When adding new features:
 6. **Use descriptive test names** - `should [behavior] when [condition]`
 
 Example:
+
 ```typescript
 it("should queue alerts for subscribers when discount >= 5%", async () => {
   // Arrange
   const mockProducts = [{ id: 1, amazon_asin: "B0TEST", current_price: 100.0 }];
   mockProductRepository.getTrackableProducts.mockResolvedValue(mockProducts);
   mockAmazonClient.getPrice.mockResolvedValue(89.99);
-  
+
   // Act
   const result = await runFetchPrices();
-  
+
   // Assert
   expect(result.alertsQueued).toBeGreaterThan(0);
 });
@@ -220,6 +240,7 @@ it("should queue alerts for subscribers when discount >= 5%", async () => {
 ## Debugging Tests
 
 To debug a failing test:
+
 1. Check the error message for the exact assertion that failed
 2. Use `console.log` to inspect mock call arguments
 3. Verify mock implementations match expected behavior

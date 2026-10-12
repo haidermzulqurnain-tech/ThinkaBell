@@ -59,7 +59,9 @@ describe("computeBlindIndex", () => {
   });
 
   it("should be deterministic for the same value and key", () => {
-    expect(computeBlindIndex("user@example.com", TEST_KEY)).toBe(computeBlindIndex("user@example.com", TEST_KEY));
+    expect(computeBlindIndex("user@example.com", TEST_KEY)).toBe(
+      computeBlindIndex("user@example.com", TEST_KEY),
+    );
   });
 
   it("should differ for different values", () => {

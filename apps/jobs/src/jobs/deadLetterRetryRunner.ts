@@ -53,10 +53,7 @@ export async function runDeadLetterRetry(): Promise<{ retried: number; succeeded
           continue;
         }
 
-        await supabase
-          .from("alert_dead_letter")
-          .delete()
-          .eq("id", deadLetter.id);
+        await supabase.from("alert_dead_letter").delete().eq("id", deadLetter.id);
 
         succeeded++;
       } catch (retryError) {
@@ -64,7 +61,9 @@ export async function runDeadLetterRetry(): Promise<{ retried: number; succeeded
       }
     }
 
-    logger.info(`[deadLetterRetry] Completed. Retried: ${deadLetters.length}, Succeeded: ${succeeded}`);
+    logger.info(
+      `[deadLetterRetry] Completed. Retried: ${deadLetters.length}, Succeeded: ${succeeded}`,
+    );
     return { retried: deadLetters.length, succeeded };
   } finally {
     await supabase.rpc("release_job_lock", { lock_id: 1003 });

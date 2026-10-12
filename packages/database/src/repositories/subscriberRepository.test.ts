@@ -11,7 +11,10 @@ function createChainableMock(returnValue: any) {
   for (const method of methods) {
     if (method === "then") {
       chain[method] = (onFulfilled: any) => {
-        return Promise.resolve({ data: returnValue.data ?? returnValue, error: returnValue.error ?? null }).then(onFulfilled);
+        return Promise.resolve({
+          data: returnValue.data ?? returnValue,
+          error: returnValue.error ?? null,
+        }).then(onFulfilled);
       };
     } else {
       chain[method] = vi.fn(() => {
@@ -103,7 +106,12 @@ describe("SubscriberRepository", () => {
       mockAnonClient.from.mockReturnValue(chain);
 
       const { SubscriberRepository } = await import("./subscriberRepository");
-      await SubscriberRepository.upsertSubscriber("test@example.com", "test@example.com", null, undefined);
+      await SubscriberRepository.upsertSubscriber(
+        "test@example.com",
+        "test@example.com",
+        null,
+        undefined,
+      );
 
       expect(chain.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -114,7 +122,10 @@ describe("SubscriberRepository", () => {
     });
 
     it("should throw error on upsert failure", async () => {
-      const chain = createChainableMock({ data: null, error: { message: "Upsert failed", code: "23505" } });
+      const chain = createChainableMock({
+        data: null,
+        error: { message: "Upsert failed", code: "23505" },
+      });
       mockAnonClient.from.mockReturnValue(chain);
 
       const { SubscriberRepository } = await import("./subscriberRepository");
@@ -179,11 +190,7 @@ describe("SubscriberRepository", () => {
 
     beforeEach(() => {
       mockServiceClient.rpc = vi.fn().mockResolvedValue({
-        data: [
-          subscriberWithCategory,
-          subscriberWithoutCategory,
-          subscriberAllCategories,
-        ],
+        data: [subscriberWithCategory, subscriberWithoutCategory, subscriberAllCategories],
         error: null,
       });
     });

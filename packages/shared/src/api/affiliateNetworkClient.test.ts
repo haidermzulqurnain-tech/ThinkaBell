@@ -146,10 +146,7 @@ describe("AffiliateNetworkClient", () => {
 
     it("should add eBay campaign to URL", async () => {
       const { affiliateNetworkClient } = await import("./affiliateNetworkClient");
-      const url = affiliateNetworkClient.buildAffiliateUrl(
-        "https://example.com/item",
-        "ebay",
-      );
+      const url = affiliateNetworkClient.buildAffiliateUrl("https://example.com/item", "ebay");
 
       const parsed = new URL(url);
       expect(parsed.searchParams.get("campid")).toBe("5338000000");
@@ -170,10 +167,7 @@ describe("AffiliateNetworkClient", () => {
 
     it("should add CJ sid to URL", async () => {
       const { affiliateNetworkClient } = await import("./affiliateNetworkClient");
-      const url = affiliateNetworkClient.buildAffiliateUrl(
-        "https://example.com",
-        "cj",
-      );
+      const url = affiliateNetworkClient.buildAffiliateUrl("https://example.com", "cj");
 
       const parsed = new URL(url);
       expect(parsed.searchParams.get("sid")).toBe("organic");
@@ -211,10 +205,7 @@ describe("AffiliateNetworkClient", () => {
       const { affiliateNetworkClient } = await import("./affiliateNetworkClient");
 
       expect(() =>
-        affiliateNetworkClient.buildAffiliateUrl(
-          "https://example.com/product",
-          "amazon",
-        ),
+        affiliateNetworkClient.buildAffiliateUrl("https://example.com/product", "amazon"),
       ).toThrow(/Amazon partner tag is not configured/);
       mockConfig.AMAZON_PARTNER_TAG = "thinkabell-20";
     });
@@ -224,20 +215,14 @@ describe("AffiliateNetworkClient", () => {
       const { affiliateNetworkClient } = await import("./affiliateNetworkClient");
 
       expect(() =>
-        affiliateNetworkClient.buildAffiliateUrl(
-          "https://example.com/item",
-          "ebay",
-        ),
+        affiliateNetworkClient.buildAffiliateUrl("https://example.com/item", "ebay"),
       ).toThrow(/campaign ID is not configured/);
       mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID = "5338000000";
     });
 
     it("should use organic as default clickId", async () => {
       const { affiliateNetworkClient } = await import("./affiliateNetworkClient");
-      const url = affiliateNetworkClient.buildAffiliateUrl(
-        "https://example.com",
-        "amazon",
-      );
+      const url = affiliateNetworkClient.buildAffiliateUrl("https://example.com", "amazon");
 
       const parsed = new URL(url);
       expect(parsed.searchParams.get("ascsubtag")).toBe("organic");
@@ -245,10 +230,7 @@ describe("AffiliateNetworkClient", () => {
 
     it("should return original URL on parsing error", async () => {
       const { affiliateNetworkClient } = await import("./affiliateNetworkClient");
-      const url = affiliateNetworkClient.buildAffiliateUrl(
-        "not-a-valid-url",
-        "amazon",
-      );
+      const url = affiliateNetworkClient.buildAffiliateUrl("not-a-valid-url", "amazon");
 
       expect(url).toBe("not-a-valid-url");
     });

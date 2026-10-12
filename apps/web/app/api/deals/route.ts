@@ -34,8 +34,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const limit =
-      Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 48) : 24;
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 48) : 24;
 
     const params: DealsParams = {
       category,

@@ -75,9 +75,7 @@ const SKIP_DIRS = new Set(["node_modules", ".next", "dist", ".turbo", ".git"]);
 
 function walk(dir: string): void {
   try {
-    const entries = statSync(dir).isDirectory()
-      ? require("fs").readdirSync(dir)
-      : [];
+    const entries = statSync(dir).isDirectory() ? require("fs").readdirSync(dir) : [];
     if (entries.length === 0 && statSync(dir).isFile()) {
       checkFile(dir);
       return;

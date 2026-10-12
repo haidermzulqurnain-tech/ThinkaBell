@@ -7,9 +7,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { POST } from "./route";
 
 vi.mock("@thinkabell/jobs", () => ({
-  runProductDiscovery: vi.fn(() =>
-    Promise.resolve({ discovered: 0, sources: [], errors: [] }),
-  ),
+  runProductDiscovery: vi.fn(() => Promise.resolve({ discovered: 0, sources: [], errors: [] })),
 }));
 
 vi.mock("@thinkabell/shared", () => ({

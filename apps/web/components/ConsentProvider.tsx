@@ -28,9 +28,7 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
     if (state) {
       localStorage.setItem("cookie-consent", state);
     }
-    window.dispatchEvent(
-      new CustomEvent("thinkabell-consent", { detail: { state } })
-    );
+    window.dispatchEvent(new CustomEvent("thinkabell-consent", { detail: { state } }));
   };
 
   if (!mounted) {
@@ -38,9 +36,7 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ConsentContext.Provider value={{ consent, setConsent }}>
-      {children}
-    </ConsentContext.Provider>
+    <ConsentContext.Provider value={{ consent, setConsent }}>{children}</ConsentContext.Provider>
   );
 }
 

@@ -69,7 +69,9 @@ const SEARCH_LIMIT = 24;
 export async function searchProducts(query: SearchQuery): Promise<SearchResponse> {
   let dbQuery = getSupabaseAnonClient()
     .from("products")
-    .select("id, name, slug, category, brand, current_price, previous_price, image_url, description, tags, price_updated_at")
+    .select(
+      "id, name, slug, category, brand, current_price, previous_price, image_url, description, tags, price_updated_at",
+    )
     .eq("is_active", true);
 
   if (query.category) {
@@ -119,7 +121,12 @@ export async function searchProducts(query: SearchQuery): Promise<SearchResponse
     previous_price: product.previous_price,
     discount_percent:
       product.previous_price && product.current_price
-        ? Number((((product.previous_price - product.current_price) / product.previous_price) * 100).toFixed(2))
+        ? Number(
+            (
+              ((product.previous_price - product.current_price) / product.previous_price) *
+              100
+            ).toFixed(2),
+          )
         : 0,
     image_url: product.image_url,
     description: product.description,
@@ -152,11 +159,15 @@ const DEALS_MAX_LIMIT = 48;
 export async function fetchDeals(query: DealsQuery): Promise<DealsResponse> {
   const rawLimit = query.limit ?? DEALS_DEFAULT_LIMIT;
   const limit =
-    Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, DEALS_MAX_LIMIT) : DEALS_DEFAULT_LIMIT;
+    Number.isFinite(rawLimit) && rawLimit > 0
+      ? Math.min(rawLimit, DEALS_MAX_LIMIT)
+      : DEALS_DEFAULT_LIMIT;
 
   let dbQuery = getSupabaseAnonClient()
     .from("products")
-    .select("id, name, slug, category, brand, current_price, previous_price, image_url, description, tags, price_updated_at, deal_type, promo_code, deal_end_date")
+    .select(
+      "id, name, slug, category, brand, current_price, previous_price, image_url, description, tags, price_updated_at, deal_type, promo_code, deal_end_date",
+    )
     .eq("is_active", true);
 
   if (query.category) {
@@ -218,7 +229,12 @@ export async function fetchDeals(query: DealsQuery): Promise<DealsResponse> {
     previous_price: product.previous_price,
     discount_percent:
       product.previous_price && product.current_price
-        ? Number((((product.previous_price - product.current_price) / product.previous_price) * 100).toFixed(2))
+        ? Number(
+            (
+              ((product.previous_price - product.current_price) / product.previous_price) *
+              100
+            ).toFixed(2),
+          )
         : 0,
     image_url: product.image_url,
     description: product.description,

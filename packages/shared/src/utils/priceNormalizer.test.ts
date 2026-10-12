@@ -175,12 +175,24 @@ describe("priceNormalizer", () => {
 
   describe("formatNormalizedPrice", () => {
     it("should format USD price without original currency", () => {
-      const normalized = { amount: 99.99, currency: "USD" as const, originalCurrency: "USD" as const, originalAmount: 99.99, exchangeRate: 1 };
+      const normalized = {
+        amount: 99.99,
+        currency: "USD" as const,
+        originalCurrency: "USD" as const,
+        originalAmount: 99.99,
+        exchangeRate: 1,
+      };
       expect(formatNormalizedPrice(normalized)).toBe("$99.99");
     });
 
     it("should format non-USD price with conversion note", () => {
-      const normalized = { amount: 108, currency: "USD" as const, originalCurrency: "EUR" as const, originalAmount: 100, exchangeRate: 1.08 };
+      const normalized = {
+        amount: 108,
+        currency: "USD" as const,
+        originalCurrency: "EUR" as const,
+        originalAmount: 100,
+        exchangeRate: 1.08,
+      };
       expect(formatNormalizedPrice(normalized)).toBe("$108.00 USD (EUR 100.00)");
     });
   });

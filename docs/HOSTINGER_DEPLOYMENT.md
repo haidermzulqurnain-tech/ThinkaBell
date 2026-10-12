@@ -35,15 +35,15 @@ This compiles the application and packages all standalone server files, `.next/s
 
 Hostinger auto-detects the framework as **Next.js** — **override it to `Other`**. Hostinger's Next.js mode applies `output: "standalone"` itself and then starts the bundled server from the standard single-app layout (`.next/standalone/server.js`). This monorepo emits the standalone server at `apps/web/.next/standalone/apps/web/server.js`, which that mode cannot locate. The deterministic configuration uses the **Other** application type with the repository's own entrypoint:
 
-| Setting | Value | Why |
-|---|---|---|
-| **Application type** | `Other` | Runs our entrypoint instead of Hostinger's Next.js-mode server start, which expects the standard (non-monorepo) standalone layout. |
-| **Node version** | `22.x` | Matches the `engines.node` field in `package.json` and the CI runners. |
-| **Root directory** | `./` | Must stay the repository root: the automatic `pnpm install` needs the workspace root (`pnpm-workspace.yaml`) to resolve the `workspace:*` dependencies. Hostinger's monorepo auto-detection would pick `apps/web` and build only that subdirectory, which breaks the workspace install. |
-| **Build command** | `pnpm run build:standalone` | Injects `OUTPUT=standalone` cross-platform and copies `.next/static` + `public/` into the standalone output. A plain `pnpm run build` (turbo) does **not** emit `.next/standalone`. |
-| **Package manager** | `pnpm` | **Set this explicitly in hPanel — it is not auto-detected.** The *version* comes from the `packageManager` field in the root `package.json` (currently `pnpm@10.34.6`); `pnpm-workspace.yaml` sets `pmOnFail: download`, so a host whose `pnpm` shim resolves to a newer pnpm (e.g. 11.x) downloads and switches to the pinned version instead of aborting on a version mismatch. If the setting is left on the default (`npm`), the automatic install runs `npm install`, which does not read `pnpm-workspace.yaml`: only the root devDependencies are installed and every workspace package (including `apps/web`) is left without `node_modules`, so the build fails with `next: command not found`. |
-| **Output directory** | *(leave empty)* | Ignored for `Other` when an entry file is set. |
-| **Entry file** | `apps/web/hostinger-server.js` | Relative to the root directory. Resolves the standalone server at `apps/web/.next/standalone/apps/web/server.js`, binds the `PORT` Hostinger assigns, and falls back to `next start` when no standalone build exists. |
+| Setting              | Value                          | Why                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| -------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Application type** | `Other`                        | Runs our entrypoint instead of Hostinger's Next.js-mode server start, which expects the standard (non-monorepo) standalone layout.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Node version**     | `22.x`                         | Matches the `engines.node` field in `package.json` and the CI runners.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **Root directory**   | `./`                           | Must stay the repository root: the automatic `pnpm install` needs the workspace root (`pnpm-workspace.yaml`) to resolve the `workspace:*` dependencies. Hostinger's monorepo auto-detection would pick `apps/web` and build only that subdirectory, which breaks the workspace install.                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **Build command**    | `pnpm run build:standalone`    | Injects `OUTPUT=standalone` cross-platform and copies `.next/static` + `public/` into the standalone output. A plain `pnpm run build` (turbo) does **not** emit `.next/standalone`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Package manager**  | `pnpm`                         | **Set this explicitly in hPanel — it is not auto-detected.** The _version_ comes from the `packageManager` field in the root `package.json` (currently `pnpm@10.34.6`); `pnpm-workspace.yaml` sets `pmOnFail: download`, so a host whose `pnpm` shim resolves to a newer pnpm (e.g. 11.x) downloads and switches to the pinned version instead of aborting on a version mismatch. If the setting is left on the default (`npm`), the automatic install runs `npm install`, which does not read `pnpm-workspace.yaml`: only the root devDependencies are installed and every workspace package (including `apps/web`) is left without `node_modules`, so the build fails with `next: command not found`. |
+| **Output directory** | _(leave empty)_                | Ignored for `Other` when an entry file is set.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Entry file**       | `apps/web/hostinger-server.js` | Relative to the root directory. Resolves the standalone server at `apps/web/.next/standalone/apps/web/server.js`, binds the `PORT` Hostinger assigns, and falls back to `next start` when no standalone build exists.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 With these settings the native GitHub integration runs the full pipeline on Hostinger: `pnpm install` (automatic) → `pnpm run build:standalone` → `node apps/web/hostinger-server.js`. No manual upload is needed — push to `main` and Hostinger rebuilds.
 
@@ -67,59 +67,59 @@ In the Hostinger Node.js control panel (**Environment** section), add the variab
 
 **Core (required for a healthy `/api/health`):**
 
-| Variable | Source | Description |
-|---|---|---|
-| `NODE_ENV` | — | `production` |
-| `PORT` | — | Leave unset; Hostinger assigns the port dynamically |
-| `NEXT_PUBLIC_APP_URL` | — | `https://thinkabell.click` — drives unsubscribe links and `utm_source` |
-| `SUPABASE_URL` | Supabase console (Project Settings → API) | Project URL |
-| `SUPABASE_ANON_KEY` | Supabase console | Public anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase console | Secret key — server-side only, never browser-exposed |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase console | Same as `SUPABASE_URL` (browser-facing) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase console | Same as `SUPABASE_ANON_KEY` (browser-facing) |
-| `UPSTASH_REDIS_REST_URL` | Upstash console | Redis REST URL |
-| `UPSTASH_REDIS_REST_TOKEN` | Upstash console | Redis REST token |
+| Variable                        | Source                                    | Description                                                            |
+| ------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------- |
+| `NODE_ENV`                      | —                                         | `production`                                                           |
+| `PORT`                          | —                                         | Leave unset; Hostinger assigns the port dynamically                    |
+| `NEXT_PUBLIC_APP_URL`           | —                                         | `https://thinkabell.click` — drives unsubscribe links and `utm_source` |
+| `SUPABASE_URL`                  | Supabase console (Project Settings → API) | Project URL                                                            |
+| `SUPABASE_ANON_KEY`             | Supabase console                          | Public anon key                                                        |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase console                          | Secret key — server-side only, never browser-exposed                   |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase console                          | Same as `SUPABASE_URL` (browser-facing)                                |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase console                          | Same as `SUPABASE_ANON_KEY` (browser-facing)                           |
+| `UPSTASH_REDIS_REST_URL`        | Upstash console                           | Redis REST URL                                                         |
+| `UPSTASH_REDIS_REST_TOKEN`      | Upstash console                           | Redis REST token                                                       |
 
 **Security (required — endpoints fail closed without them):**
 
-| Variable | Source | Description |
-|---|---|---|
-| `CRON_SECRET` | generate | Bearer token authorizing `/api/cron/*` |
-| `ALERTS_API_KEY` | generate | Bearer token authorizing `/api/alerts` |
-| `REVALIDATION_SECRET` | generate | Bearer token authorizing `POST /api/revalidate` (ISR cache purge) |
-| `RETAILER_LINKS_API_KEY` | generate | Bearer token authorizing `POST /api/retailer-links` (admin writes) |
-| `ENCRYPTION_KEY` | generate | Encrypts PII at rest |
-| `BLIND_INDEX_KEY` | generate (different value) | Subscriber blind-index key |
+| Variable                 | Source                     | Description                                                        |
+| ------------------------ | -------------------------- | ------------------------------------------------------------------ |
+| `CRON_SECRET`            | generate                   | Bearer token authorizing `/api/cron/*`                             |
+| `ALERTS_API_KEY`         | generate                   | Bearer token authorizing `/api/alerts`                             |
+| `REVALIDATION_SECRET`    | generate                   | Bearer token authorizing `POST /api/revalidate` (ISR cache purge)  |
+| `RETAILER_LINKS_API_KEY` | generate                   | Bearer token authorizing `POST /api/retailer-links` (admin writes) |
+| `ENCRYPTION_KEY`         | generate                   | Encrypts PII at rest                                               |
+| `BLIND_INDEX_KEY`        | generate (different value) | Subscriber blind-index key                                         |
 
 **Notifications (required for alert delivery):**
 
-| Variable | Source | Description |
-|---|---|---|
-| `BREVO_API_KEY` | Brevo console | Email sending |
-| `BREVO_SENDER_EMAIL` | Brevo console | Verified sender address |
-| `BREVO_SENDER_NAME` | — | Optional; defaults to `ThinkaBell` |
-| `ONESIGNAL_APP_ID` | OneSignal console | REST app ID |
-| `ONESIGNAL_REST_API_KEY` | OneSignal console | REST API key |
-| `NEXT_PUBLIC_ONESIGNAL_APP_ID` | OneSignal console | Browser app ID (Web Push) |
+| Variable                       | Source            | Description                        |
+| ------------------------------ | ----------------- | ---------------------------------- |
+| `BREVO_API_KEY`                | Brevo console     | Email sending                      |
+| `BREVO_SENDER_EMAIL`           | Brevo console     | Verified sender address            |
+| `BREVO_SENDER_NAME`            | —                 | Optional; defaults to `ThinkaBell` |
+| `ONESIGNAL_APP_ID`             | OneSignal console | REST app ID                        |
+| `ONESIGNAL_REST_API_KEY`       | OneSignal console | REST API key                       |
+| `NEXT_PUBLIC_ONESIGNAL_APP_ID` | OneSignal console | Browser app ID (Web Push)          |
 
 **Affiliate (required for revenue links; links fail closed until set):**
 
-| Variable | Source | Description |
-|---|---|---|
-| `AMAZON_PARTNER_TAG` | Amazon Associates | US partner tag |
-| `AMAZON_PARTNER_TAG_UK` / `_DE` / `_CA` | Amazon Associates | Optional regional tags |
-| `EBAY_AFFILIATE_CAMPAIGN_ID` | eBay Partner Network | Campaign ID |
-| `AFFILIATE_ATTRIBUTION_ID` | — | Optional; defaults to `thinkabell` |
-| `AMAZON_LIST_URLS` | Your curation | JSON array of `{ url, marketplace }` entries (`docs/AMAZON_LIST_CURATION.md`) |
+| Variable                                | Source               | Description                                                                   |
+| --------------------------------------- | -------------------- | ----------------------------------------------------------------------------- |
+| `AMAZON_PARTNER_TAG`                    | Amazon Associates    | US partner tag                                                                |
+| `AMAZON_PARTNER_TAG_UK` / `_DE` / `_CA` | Amazon Associates    | Optional regional tags                                                        |
+| `EBAY_AFFILIATE_CAMPAIGN_ID`            | eBay Partner Network | Campaign ID                                                                   |
+| `AFFILIATE_ATTRIBUTION_ID`              | —                    | Optional; defaults to `thinkabell`                                            |
+| `AMAZON_LIST_URLS`                      | Your curation        | JSON array of `{ url, marketplace }` entries (`docs/AMAZON_LIST_CURATION.md`) |
 
 **Optional:**
 
-| Variable | Source | Description |
-|---|---|---|
-| `NEXT_PUBLIC_POSTHOG_KEY` | PostHog console | Analytics (consent-gated) |
-| `NEXT_PUBLIC_POSTHOG_HOST` | — | Defaults to `https://app.posthog.com` |
-| `EXCHANGE_RATE_API_URL` | — | Defaults to `https://api.frankfurter.app/latest` |
-| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | Sentry console | Error tracking (consent-gated) |
+| Variable                                | Source          | Description                                      |
+| --------------------------------------- | --------------- | ------------------------------------------------ |
+| `NEXT_PUBLIC_POSTHOG_KEY`               | PostHog console | Analytics (consent-gated)                        |
+| `NEXT_PUBLIC_POSTHOG_HOST`              | —               | Defaults to `https://app.posthog.com`            |
+| `EXCHANGE_RATE_API_URL`                 | —               | Defaults to `https://api.frankfurter.app/latest` |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | Sentry console  | Error tracking (consent-gated)                   |
 
 **GitHub Actions secrets** (repo Settings → Secrets and variables → Actions) are separate from the above: only `CRON_SECRET` (same value as above) is used by the CI smoke test. The five `HOSTINGER_*` deploy secrets are **no longer needed** — the SCP deploy workflow was removed; deploys run through Hostinger's native GitHub integration (Step 2). Delete any `HOSTINGER_*` secrets you added earlier.
 
@@ -153,6 +153,7 @@ The database starts empty — products are populated by the discovery job.
 4. Verify: `GET /api/deals` lists products; `GET /api/deals?category=software` lists software deals.
 
 **Recurring runs:** the `vercel.json` cron schedules only run on Vercel. On Hostinger, add an hPanel **Cron Job** (Advanced → Cron Jobs) on the same 6-hour schedule (`0 */6 * * *`) that POSTs the endpoint with the Bearer token:
+
 ```
 curl -s -X POST https://thinkabell.click/api/cron/product-discovery -H "Authorization: Bearer <CRON_SECRET>"
 ```
@@ -224,7 +225,7 @@ Two mechanisms in this repository prevent it:
 
 As a safety net, the root `build` and `build:standalone` scripts run `scripts/verify-build-env.js` first: it reads the pin from `package.json` and exits non-zero with the exact hPanel settings when the active pnpm version does not match, instead of failing mid-build.
 
-A mismatch that is merely *warned about* is still dangerous: pnpm 10 and pnpm 11 lay out `node_modules` differently, so installing with one and building with the other leaves a broken mixed layout. Do not silence it with `pmOnFail: warn`.
+A mismatch that is merely _warned about_ is still dangerous: pnpm 10 and pnpm 11 lay out `node_modules` differently, so installing with one and building with the other leaves a broken mixed layout. Do not silence it with `pmOnFail: warn`.
 
 ### Approving dependency build scripts
 

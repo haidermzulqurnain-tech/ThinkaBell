@@ -6,7 +6,13 @@ export interface ProgramStabilityResult {
   notes: string[];
 }
 
-const HIGH_STABILITY_KEYWORDS = ["established", "fortune 500", "public", "years in business", "accredited"];
+const HIGH_STABILITY_KEYWORDS = [
+  "established",
+  "fortune 500",
+  "public",
+  "years in business",
+  "accredited",
+];
 const MEDIUM_STABILITY_KEYWORDS = ["growing", "profitable", "funded", "b2b", "enterprise"];
 const LOW_STABILITY_KEYWORDS = ["startup", "pre-revenue", "seed", "new", "unproven"];
 
@@ -44,10 +50,22 @@ export function calculateProgramStability(notes?: string | null): ProgramStabili
   }
 
   if (score >= 75) {
-    return { level: "high", score, notes: notesList.length > 0 ? notesList : ["Program appears stable."] };
+    return {
+      level: "high",
+      score,
+      notes: notesList.length > 0 ? notesList : ["Program appears stable."],
+    };
   }
   if (score >= 50) {
-    return { level: "medium", score, notes: notesList.length > 0 ? notesList : ["Program stability is moderate."] };
+    return {
+      level: "medium",
+      score,
+      notes: notesList.length > 0 ? notesList : ["Program stability is moderate."],
+    };
   }
-  return { level: "low", score, notes: notesList.length > 0 ? notesList : ["Program appears to have stability concerns."] };
+  return {
+    level: "low",
+    score,
+    notes: notesList.length > 0 ? notesList : ["Program appears to have stability concerns."],
+  };
 }

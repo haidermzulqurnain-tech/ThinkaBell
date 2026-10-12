@@ -26,10 +26,16 @@ export async function GET(request: NextRequest) {
     if (rawSlugs) {
       const hasValidSlug = rawSlugs.split(",").some((s) => s.trim());
       if (!hasValidSlug) {
-        return NextResponse.json({ error: "slugs query param must contain at least one slug" }, { status: 400 });
+        return NextResponse.json(
+          { error: "slugs query param must contain at least one slug" },
+          { status: 400 },
+        );
       }
     } else if (!category) {
-      return NextResponse.json({ error: "category or slugs query param is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "category or slugs query param is required" },
+        { status: 400 },
+      );
     }
 
     const products = await getCompareProducts({

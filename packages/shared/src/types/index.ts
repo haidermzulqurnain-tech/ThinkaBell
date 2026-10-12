@@ -1,4 +1,9 @@
-import type { ProductCategory, SubscriptionTier, DigestFrequency, RetailerType } from "@thinkabell/database";
+import type {
+  ProductCategory,
+  SubscriptionTier,
+  DigestFrequency,
+  RetailerType,
+} from "@thinkabell/database";
 
 export type { ProductCategory, SubscriptionTier, DigestFrequency, RetailerType };
 

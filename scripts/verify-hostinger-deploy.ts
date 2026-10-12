@@ -80,10 +80,7 @@ const standaloneStatic = join(
   "static",
 );
 if (existsSync(standaloneStatic)) {
-  pass(
-    "Standalone client assets",
-    "apps/web/.next/standalone/apps/web/.next/static",
-  );
+  pass("Standalone client assets", "apps/web/.next/standalone/apps/web/.next/static");
 } else {
   fail(
     "Standalone client assets missing",
@@ -147,8 +144,7 @@ if (missingEnv.length === 0) {
 } else {
   warn(
     "Runtime environment",
-    "configure on the Hostinger Node.js panel (Environment): " +
-      missingEnv.join(", "),
+    "configure on the Hostinger Node.js panel (Environment): " + missingEnv.join(", "),
   );
 }
 

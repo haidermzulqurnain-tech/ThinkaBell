@@ -2,13 +2,14 @@
 
 **Date:** 2026-09-12  
 **Review Scope:** Current codebase state, Sprint 0 completion, MVP readiness, and deployment viability  
-**Reviewers:** CEO, CFO, CTO, CISO, Legal/Compliance Director, Product Strategist, Platform Architect  
+**Reviewers:** CEO, CFO, CTO, CISO, Legal/Compliance Director, Product Strategist, Platform Architect
 
 ---
 
 ## 1. Executive Summary
 
 ThinkaBell has completed a **foundation Sprint 0** that delivers a working monorepo with:
+
 - **6 packages** (config, database, shared, edge-worker, web, jobs)
 - **198 passing tests** across 11 test files
 - **Full type-check** across all packages
@@ -27,36 +28,36 @@ ThinkaBell has completed a **foundation Sprint 0** that delivers a working monor
 
 ### 2.1 What's Actually Built
 
-| Component | Status | Evidence |
-|---|---|---|
-| **Monorepo** | ✅ Complete | pnpm workspaces, Turborepo, 6 packages |
-| **Database Schema** | ✅ Complete | 10+ tables, RLS, indexes, seed data |
-| **Repositories** | ✅ Complete | 5 repositories with full test coverage |
-| **API Clients** | ✅ Complete | Amazon, eBay, Walmart, AffiliateNetwork, Notification, RetailerLink |
-| **Utilities** | ✅ Complete | retry, circuitBreaker, rateLimit, redis, logger — all tested |
-| **Web App** | ✅ Partial | Homepage, deal page, subscribe, legal pages, 5 API routes, 10 tests |
-| **Jobs** | ✅ Partial | fetchPrices, sendAlerts runners with circuit breakers, DND, dead-letter |
-| **Cron Endpoints** | ✅ Partial | Bearer-token-protected `/api/cron/*` routes |
-| **Edge Worker** | ✅ Partial | Geo-routing, header injection, 1 smoke test |
-| **Docs** | ✅ Partial | README, 4 package READMEs, deployment guides |
-| **CI/CD** | ✅ Complete | GitHub Actions deploy workflow |
+| Component           | Status      | Evidence                                                                |
+| ------------------- | ----------- | ----------------------------------------------------------------------- |
+| **Monorepo**        | ✅ Complete | pnpm workspaces, Turborepo, 6 packages                                  |
+| **Database Schema** | ✅ Complete | 10+ tables, RLS, indexes, seed data                                     |
+| **Repositories**    | ✅ Complete | 5 repositories with full test coverage                                  |
+| **API Clients**     | ✅ Complete | Amazon, eBay, Walmart, AffiliateNetwork, Notification, RetailerLink     |
+| **Utilities**       | ✅ Complete | retry, circuitBreaker, rateLimit, redis, logger — all tested            |
+| **Web App**         | ✅ Partial  | Homepage, deal page, subscribe, legal pages, 5 API routes, 10 tests     |
+| **Jobs**            | ✅ Partial  | fetchPrices, sendAlerts runners with circuit breakers, DND, dead-letter |
+| **Cron Endpoints**  | ✅ Partial  | Bearer-token-protected `/api/cron/*` routes                             |
+| **Edge Worker**     | ✅ Partial  | Geo-routing, header injection, 1 smoke test                             |
+| **Docs**            | ✅ Partial  | README, 4 package READMEs, deployment guides                            |
+| **CI/CD**           | ✅ Complete | GitHub Actions deploy workflow                                          |
 
 ### 2.2 What's Missing for Production
 
-| Critical Gap | Risk Level | Blocker |
-|---|---|---|
-| **Compliance CI gates** | 🔴 Critical | No automated checks for `rel="sponsored"`, FTC disclosure, Brevo unsubscribe header |
-| **Search API** | 🟠 High | No full-text search endpoint; users cannot discover deals |
-| **SaaS data sources** | 🟠 High | PartnerStack/AppSumo/Impact in simulation mode only |
-| **Alert quality scoring** | 🟠 High | Scoring logic exists but UI explainer missing |
-| **True cost calculator** | 🟠 High | Page scaffold missing |
-| **Subscribe flow** | 🟠 High | Page exists but not modal/stepper UX |
-| **Trust badges** | 🟠 High | Visual indicators for SaaS vs physical missing |
-| **Sentry/PostHog** | 🟡 Medium | SDK referenced but not initialized in app |
-| **Cookie consent enforcement** | 🔴 Critical | Banner exists but no tracker-blocking logic |
-| **DPA documentation** | 🔴 Critical | No signed DPAs for Brevo, OneSignal, Redis |
-| **Business case** | 🔴 Critical | No unit economics, CAC/LTV model, or Go/No-Go checkpoints |
-| **12-month P&L** | 🔴 Critical | No financial model for infra budget decisions |
+| Critical Gap                   | Risk Level  | Blocker                                                                             |
+| ------------------------------ | ----------- | ----------------------------------------------------------------------------------- |
+| **Compliance CI gates**        | 🔴 Critical | No automated checks for `rel="sponsored"`, FTC disclosure, Brevo unsubscribe header |
+| **Search API**                 | 🟠 High     | No full-text search endpoint; users cannot discover deals                           |
+| **SaaS data sources**          | 🟠 High     | PartnerStack/AppSumo/Impact in simulation mode only                                 |
+| **Alert quality scoring**      | 🟠 High     | Scoring logic exists but UI explainer missing                                       |
+| **True cost calculator**       | 🟠 High     | Page scaffold missing                                                               |
+| **Subscribe flow**             | 🟠 High     | Page exists but not modal/stepper UX                                                |
+| **Trust badges**               | 🟠 High     | Visual indicators for SaaS vs physical missing                                      |
+| **Sentry/PostHog**             | 🟡 Medium   | SDK referenced but not initialized in app                                           |
+| **Cookie consent enforcement** | 🔴 Critical | Banner exists but no tracker-blocking logic                                         |
+| **DPA documentation**          | 🔴 Critical | No signed DPAs for Brevo, OneSignal, Redis                                          |
+| **Business case**              | 🔴 Critical | No unit economics, CAC/LTV model, or Go/No-Go checkpoints                           |
+| **12-month P&L**               | 🔴 Critical | No financial model for infra budget decisions                                       |
 
 ---
 
@@ -67,17 +68,20 @@ ThinkaBell has completed a **foundation Sprint 0** that delivers a working monor
 **Finding:** Sprint 0 delivered technically sound infrastructure, but the business validation gate is missing. We have 198 tests but zero paying users, no conversion data, and no validated unit economics.
 
 **Critical Recommendations:**
+
 1. **Hard 2-week MVP gate:** Stop all feature work immediately. Deploy current codebase to production on Hostinger with 50 manually curated products.
 2. **Beta cohort:** Invite 50 users via waitlist. Measure: CAC, store-to-alert conversion, alert-to-store CTR.
 3. **Go/No-Go checkpoint:** At Week 3, if conversion < 10% or CAC > $5/user, pivot or pause.
 4. **Defer everything else:** No new features until beta metrics validate the thesis.
 
 **Pitfalls:**
+
 - Building more automation before validating manual curation ROI
 - Scaling infrastructure before proving revenue model
 - Ignoring physical-product revenue projections despite CFO guidance
 
 **Timeline:**
+
 - **Week 1-2:** Production deploy, cookie consent enforcement, legal pages live
 - **Week 3:** Beta launch to 50 users
 - **Week 4:** Board review of beta metrics
@@ -89,17 +93,20 @@ ThinkaBell has completed a **foundation Sprint 0** that delivers a working monor
 **Finding:** The project has $0 paid notification/infra budget until MRR hits $500, but no path to MRR exists yet. The 12-month P&L and business case are missing.
 
 **Critical Recommendations:**
+
 1. **Free-tier ceiling:** Enforce hard limit: Brevo 9,000 emails/month, OneSignal 10,000 web push, Supabase free tier, Redis cloud free tier.
 2. **P&L mandate:** Before any paid spend, produce 3-scenario P&L (conservative/base/aggressive).
 3. **MRR gate:** $0 paid budget until MRR ≥ $500. This is non-negotiable.
 4. **Physical-product deferral:** Year-one physical revenue = $0. Do not allocate engineering hours to physical UI/data sources until Sprint 3+.
 
 **Pitfalls:**
+
 - Hidden costs: Cloudflare bandwidth, Supabase compute, Redis memory
 - Notification cost ceiling breach: Uncontrolled email volume could exceed Brevo free tier
 - False revenue projection: Physical commissions 1–4% are negligible at low volume
 
 **Timeline:**
+
 - **Week 1:** P&L draft with 3 scenarios
 - **Week 2:** Board approval of P&L and MRR gates
 - **Week 3:** MRR tracking dashboard live
@@ -111,6 +118,7 @@ ThinkaBell has completed a **foundation Sprint 0** that delivers a working monor
 **Finding:** The codebase is well-structured, typed, and tested. However, production hardening gaps exist.
 
 **Critical Recommendations:**
+
 1. **Security hardening:**
    - Add CSP headers to `next.config.js`
    - Implement `Idempotency-Key` header support on `/api/subscribe`
@@ -129,11 +137,13 @@ ThinkaBell has completed a **foundation Sprint 0** that delivers a working monor
    - Add Vercel Cron configuration for `fetch-prices` (15m) and `send-alerts` (5m)
 
 **Pitfalls:**
+
 - Missing `api/health` endpoint blocks UptimeRobot monitoring
 - No error boundaries causes white-screen failures
 - Unbounded alert queue growth without archival job
 
 **Timeline:**
+
 - **Week 1:** Security headers, health endpoint, error boundaries
 - **Week 2:** Observability, rate limiting, pagination
 - **Week 3:** Performance budgets, Cloudflare rules
@@ -145,6 +155,7 @@ ThinkaBell has completed a **foundation Sprint 0** that delivers a working monor
 **Finding:** No formal security audit has been performed. Several gaps exist in authentication, authorization, and data protection.
 
 **Critical Recommendations:**
+
 1. **Authentication:**
    - `/api/cron/*` endpoints use Bearer token auth — verify token rotation policy
    - `/api/subscribe` has no rate limiting — implement sliding-window limit
@@ -163,11 +174,13 @@ ThinkaBell has completed a **foundation Sprint 0** that delivers a working monor
    - Verify Brevo `List-Unsubscribe` header in all emails
 
 **Pitfalls:**
+
 - Exposed service-role key allows full DB access
 - Missing RLS on new tables (`click_tracking`, `alert_dead_letter`)
 - Cookie consent banner without enforcement is non-compliant
 
 **Timeline:**
+
 - **Week 1:** RLS audit, secrets rotation, cron auth hardening
 - **Week 2:** Cookie consent enforcement, geo-IP routing
 - **Week 3:** Compliance CI gates, DPA review completion
@@ -179,6 +192,7 @@ ThinkaBell has completed a **foundation Sprint 0** that delivers a working monor
 **Finding:** Legal pre-work is partially complete but not enforced in CI or production.
 
 **Critical Recommendations:**
+
 1. **Pre-launch blockers:**
    - Privacy policy and ToS are live ✅
    - Cookie-consent banner exists but lacks tracker-blocking ❌
@@ -196,11 +210,13 @@ ThinkaBell has completed a **foundation Sprint 0** that delivers a working monor
    - Document retention schedule and obtain legal sign-off
 
 **Pitfalls:**
+
 - Cookie consent without tracker blocking violates GDPR
 - Missing DPAs blocks EU/UK expansion
 - No automated compliance checks means human error in production
 
 **Timeline:**
+
 - **Week 1:** Cookie consent enforcement, DPA initiation
 - **Week 2:** Compliance CI gates implementation
 - **Week 3:** Automated archival/deletion jobs
@@ -212,6 +228,7 @@ ThinkaBell has completed a **foundation Sprint 0** that delivers a working monor
 **Finding:** The dual-track approach (SaaS + physical) is sound, but the MVP is trying to do too much.
 
 **Critical Recommendations:**
+
 1. **MVP Slice:**
    - **ONLY:** eBay Browse API as data source
    - **ONLY:** Email alerts (Brevo) + web push (OneSignal)
@@ -226,11 +243,13 @@ ThinkaBell has completed a **foundation Sprint 0** that delivers a working monor
    - Tertiary: CAC ≤ $5/user
 
 **Pitfalls:**
+
 - Feature creep delays validation
 - Physical-product UI complexity distracts from core loop
 - Search without content is empty and disappointing
 
 **Timeline:**
+
 - **Week 1-2:** Remove all non-essential features, keep only core loop
 - **Week 3:** Beta launch with 50 users, measure core metrics
 
@@ -241,6 +260,7 @@ ThinkaBell has completed a **foundation Sprint 0** that delivers a working monor
 **Finding:** The current Hostinger + Cloudflare stack is functional but fragile for scale.
 
 **Critical Recommendations:**
+
 1. **Immediate (Week 1):**
    - Set Cloudflare cache rules: static 1 day, HTML 5 min, API 1 min
    - Add `/api/health` endpoint with DB + Redis checks
@@ -255,11 +275,13 @@ ThinkaBell has completed a **foundation Sprint 0** that delivers a working monor
    - Implement queue-based processing for alert spikes
 
 **Pitfalls:**
+
 - Hostinger CPU throttling >2x/week triggers migration
 - No job monitoring means silent failures
 - Unbounded alert queue without archival crashes database
 
 **Timeline:**
+
 - **Week 1:** Cloudflare rules, health endpoint, UptimeRobot
 - **Week 2:** Sentry, job alerts
 - **Post-MVP:** Frontend migration, connection pooling
@@ -310,6 +332,7 @@ Week 3:
 ### 4.2 MVP Feature Freeze List
 
 **KEEP:**
+
 - Homepage with deal cards
 - Deal detail page with affiliate routing
 - Subscribe flow (email + push)
@@ -320,6 +343,7 @@ Week 3:
 - Alert queue with dead-letter handling
 
 **REMOVE/DEFER:**
+
 - Amazon PA-API integration
 - Walmart API integration
 - SaaS data sources (PartnerStack, AppSumo, Impact)
@@ -341,25 +365,25 @@ Week 3:
 
 ### 5.1 Realistic MVP Timeline
 
-| Week | Milestone | Owner | Dependencies |
-|---|---|---|---|
-| **Week 1** | Security hardening + compliance enforcement | CISO, Legal | DPA initiation |
-| **Week 1** | Production deploy to Hostinger | CTO | Cloudflare setup |
-| **Week 2** | CI compliance gates + feature freeze | CTO, Legal | None |
-| **Week 2** | Manual curation of 50 products | Product | eBay API access |
-| **Week 3** | Beta launch to 50 users | CEO | Legal pages live |
-| **Week 4** | Beta metrics review + Go/No-Go | Board | Conversion data |
+| Week       | Milestone                                   | Owner       | Dependencies     |
+| ---------- | ------------------------------------------- | ----------- | ---------------- |
+| **Week 1** | Security hardening + compliance enforcement | CISO, Legal | DPA initiation   |
+| **Week 1** | Production deploy to Hostinger              | CTO         | Cloudflare setup |
+| **Week 2** | CI compliance gates + feature freeze        | CTO, Legal  | None             |
+| **Week 2** | Manual curation of 50 products              | Product     | eBay API access  |
+| **Week 3** | Beta launch to 50 users                     | CEO         | Legal pages live |
+| **Week 4** | Beta metrics review + Go/No-Go              | Board       | Conversion data  |
 
 **Total: 4 weeks to MVP launch** (not 6 weeks as originally planned)
 
 ### 5.2 Post-MVP Timeline (Conditional on Go)
 
-| Sprint | Focus | Duration |
-|---|---|---|
-| **Sprint 1** | Search API, categories, trust badges | 2 weeks |
-| **Sprint 2** | Alert quality scoring, daily digest, dead-letter UI | 2 weeks |
-| **Sprint 3** | SaaS data sources (PartnerStack, AppSumo) | 2 weeks |
-| **Sprint 4** | Comparison tables, sentiment, visual QA | 2 weeks |
+| Sprint       | Focus                                               | Duration |
+| ------------ | --------------------------------------------------- | -------- |
+| **Sprint 1** | Search API, categories, trust badges                | 2 weeks  |
+| **Sprint 2** | Alert quality scoring, daily digest, dead-letter UI | 2 weeks  |
+| **Sprint 3** | SaaS data sources (PartnerStack, AppSumo)           | 2 weeks  |
+| **Sprint 4** | Comparison tables, sentiment, visual QA             | 2 weeks  |
 
 ---
 
@@ -402,62 +426,64 @@ Week 3:
 
 ### 7.1 Code Quality Audit
 
-| Metric | Current | Target | Status |
-|---|---|---|---|
-| **TypeScript strict** | ✅ Yes | Yes | ✅ Pass |
-| **ESLint clean** | ✅ Yes | Yes | ✅ Pass |
-| **Test coverage** | 198 tests | 200+ tests | ⚠️ Close |
-| **Vitest configs** | ✅ All packages | All packages | ✅ Pass |
-| **Alias resolution** | ✅ Fixed | Fixed | ✅ Pass |
-| **No placeholders** | ⚠️ 1 stub | 0 stubs | ⚠️ Minor |
+| Metric                | Current         | Target       | Status   |
+| --------------------- | --------------- | ------------ | -------- |
+| **TypeScript strict** | ✅ Yes          | Yes          | ✅ Pass  |
+| **ESLint clean**      | ✅ Yes          | Yes          | ✅ Pass  |
+| **Test coverage**     | 198 tests       | 200+ tests   | ⚠️ Close |
+| **Vitest configs**    | ✅ All packages | All packages | ✅ Pass  |
+| **Alias resolution**  | ✅ Fixed        | Fixed        | ✅ Pass  |
+| **No placeholders**   | ⚠️ 1 stub       | 0 stubs      | ⚠️ Minor |
 
 **Action:** Replace `notificationClient.test.ts` placeholder with real tests ✅ Done.
 
 ### 7.2 Architecture Audit
 
-| Principle | Status | Notes |
-|---|---|---|
-| **Separation of concerns** | ✅ Yes | Config, database, shared, web, jobs |
-| **Repository pattern** | ✅ Yes | All DB access via repositories |
-| **Service layer** | ⚠️ Partial | Notification client exists, but no service layer for business logic |
-| **Error handling** | ✅ Yes | Try/catch + logging in all repositories |
-| **Retry/backoff** | ✅ Yes | `retryWithBackoff` wraps external calls |
-| **Circuit breaker** | ✅ Yes | CircuitBreaker utility exists |
-| **Rate limiting** | ✅ Yes | `rateLimit` utility exists |
-| **Logging** | ✅ Yes | Structured logger with levels |
+| Principle                  | Status     | Notes                                                               |
+| -------------------------- | ---------- | ------------------------------------------------------------------- |
+| **Separation of concerns** | ✅ Yes     | Config, database, shared, web, jobs                                 |
+| **Repository pattern**     | ✅ Yes     | All DB access via repositories                                      |
+| **Service layer**          | ⚠️ Partial | Notification client exists, but no service layer for business logic |
+| **Error handling**         | ✅ Yes     | Try/catch + logging in all repositories                             |
+| **Retry/backoff**          | ✅ Yes     | `retryWithBackoff` wraps external calls                             |
+| **Circuit breaker**        | ✅ Yes     | CircuitBreaker utility exists                                       |
+| **Rate limiting**          | ✅ Yes     | `rateLimit` utility exists                                          |
+| **Logging**                | ✅ Yes     | Structured logger with levels                                       |
 
 **Action:** Add service layer for `fetchPrices` and `sendAlerts` to decouple job runners from repositories.
 
 ### 7.3 Security Audit
 
-| Check | Status | Evidence |
-|---|---|---|
-| **RLS enabled** | ✅ Yes | Schema.sql has policies |
+| Check                       | Status     | Evidence                                                 |
+| --------------------------- | ---------- | -------------------------------------------------------- |
+| **RLS enabled**             | ✅ Yes     | Schema.sql has policies                                  |
 | **Service-role protection** | ⚠️ Partial | Used in jobs/repositories, but verify no client exposure |
-| **Cron auth** | ✅ Yes | Bearer token on `/api/cron/*` |
-| **Rate limiting** | ⚠️ Partial | Utility exists, not enforced on all routes |
-| **CSP headers** | ❌ No | Missing from `next.config.js` |
-| **Secrets management** | ⚠️ Partial | `.env.example` updated, verify `.env.local` gitignored |
-| **Input validation** | ⚠️ Partial | Zod schema for env, but API route validation minimal |
+| **Cron auth**               | ✅ Yes     | Bearer token on `/api/cron/*`                            |
+| **Rate limiting**           | ⚠️ Partial | Utility exists, not enforced on all routes               |
+| **CSP headers**             | ❌ No      | Missing from `next.config.js`                            |
+| **Secrets management**      | ⚠️ Partial | `.env.example` updated, verify `.env.local` gitignored   |
+| **Input validation**        | ⚠️ Partial | Zod schema for env, but API route validation minimal     |
 
-**Action:** 
+**Action:**
+
 1. Add CSP headers
 2. Enforce rate limiting on `/api/subscribe`, `/api/search`, `/api/cron/*`
 3. Add input validation to all API routes
 
 ### 7.4 Compliance Audit
 
-| Requirement | Status | Evidence |
-|---|---|---|
-| **Privacy policy** | ✅ Yes | `/legal/privacy-policy` page exists |
-| **Terms of service** | ✅ Yes | `/legal/terms-of-service` page exists |
-| **Cookie consent** | ⚠️ Partial | Component exists, no tracker blocking |
-| **Affiliate disclosure** | ⚠️ Partial | Not verified in deal page templates |
-| **Brevo unsubscribe** | ✅ Yes | `List-Unsubscribe` header in email template |
-| **Data retention** | ⚠️ Partial | Docs exist, no automated jobs |
-| **DPA signatures** | ❌ No | Not initiated |
+| Requirement              | Status     | Evidence                                    |
+| ------------------------ | ---------- | ------------------------------------------- |
+| **Privacy policy**       | ✅ Yes     | `/legal/privacy-policy` page exists         |
+| **Terms of service**     | ✅ Yes     | `/legal/terms-of-service` page exists       |
+| **Cookie consent**       | ⚠️ Partial | Component exists, no tracker blocking       |
+| **Affiliate disclosure** | ⚠️ Partial | Not verified in deal page templates         |
+| **Brevo unsubscribe**    | ✅ Yes     | `List-Unsubscribe` header in email template |
+| **Data retention**       | ⚠️ Partial | Docs exist, no automated jobs               |
+| **DPA signatures**       | ❌ No      | Not initiated                               |
 
-**Action:** 
+**Action:**
+
 1. Implement cookie-consent tracker blocking
 2. Add automated data retention jobs
 3. Initiate DPA reviews
@@ -466,18 +492,18 @@ Week 3:
 
 ## 8. Risk Register
 
-| Risk | Probability | Impact | Mitigation | Owner |
-|---|---|---|---|---|
-| **Brevo free tier exceeded** | Medium | High | Implement email volume monitoring + hard cap at 9,000/month | CTO |
-| **OneSignal free tier exceeded** | Medium | Medium | Implement push subscription limit + Telegram/Discord backup | CTO |
-| **Hostinger CPU throttling** | Medium | High | Set Cloudflare cache rules, monitor p95 response time | Platform |
-| **Supabase free tier exceeded** | Medium | High | Implement connection pooling, archive old data | CTO |
-| **EBay API rate limit** | Low | Medium | Implement request throttling, monitor 429 responses | Backend |
-| **Conversion < 10%** | Medium | High | Pivot to manual curation + direct sales | CEO |
-| **CAC > $5/user** | Medium | High | Pause paid acquisition, focus organic | CEO |
-| **Cookie consent non-compliance** | High | Critical | Implement tracker blocking before launch | Legal |
-| **Missing DPA signatures** | Medium | Critical | Initiate before EU/UK launch | Legal |
-| **Security breach** | Low | Critical | Security audit, secrets rotation, RLS verification | CISO |
+| Risk                              | Probability | Impact   | Mitigation                                                  | Owner    |
+| --------------------------------- | ----------- | -------- | ----------------------------------------------------------- | -------- |
+| **Brevo free tier exceeded**      | Medium      | High     | Implement email volume monitoring + hard cap at 9,000/month | CTO      |
+| **OneSignal free tier exceeded**  | Medium      | Medium   | Implement push subscription limit + Telegram/Discord backup | CTO      |
+| **Hostinger CPU throttling**      | Medium      | High     | Set Cloudflare cache rules, monitor p95 response time       | Platform |
+| **Supabase free tier exceeded**   | Medium      | High     | Implement connection pooling, archive old data              | CTO      |
+| **EBay API rate limit**           | Low         | Medium   | Implement request throttling, monitor 429 responses         | Backend  |
+| **Conversion < 10%**              | Medium      | High     | Pivot to manual curation + direct sales                     | CEO      |
+| **CAC > $5/user**                 | Medium      | High     | Pause paid acquisition, focus organic                       | CEO      |
+| **Cookie consent non-compliance** | High        | Critical | Implement tracker blocking before launch                    | Legal    |
+| **Missing DPA signatures**        | Medium      | Critical | Initiate before EU/UK launch                                | Legal    |
+| **Security breach**               | Low         | Critical | Security audit, secrets rotation, RLS verification          | CISO     |
 
 ---
 
@@ -524,6 +550,7 @@ The ThinkaBell codebase is **technically sound** and **MVP-ready** from an engin
 3. **Business validation** (no P&L, no conversion data, no Go/No-Go gates)
 
 **Board Recommendation:**
+
 - **Approve** 4-week MVP launch with 50-user beta
 - **Mandate** security and compliance fixes before public launch
 - **Require** weekly metrics review during beta
@@ -533,5 +560,5 @@ The ThinkaBell codebase is **technically sound** and **MVP-ready** from an engin
 
 ---
 
-*Signed: Board of Directors*  
-*Date: 2026-09-12*
+_Signed: Board of Directors_  
+_Date: 2026-09-12_

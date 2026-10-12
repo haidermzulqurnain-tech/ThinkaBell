@@ -31,7 +31,9 @@ export async function generateMetadata({ searchParams }: DealsPageProps): Promis
 
   const data = await fetchDeals(params);
   const category = sp?.category;
-  const title = category ? `${category.charAt(0).toUpperCase() + category.slice(1)} Deals | ThinkaBell` : "All Deals | ThinkaBell";
+  const title = category
+    ? `${category.charAt(0).toUpperCase() + category.slice(1)} Deals | ThinkaBell`
+    : "All Deals | ThinkaBell";
   const description = category
     ? `Browse the best ${category} deals and discounts. Track prices and get alerts on ${category} products.`
     : "Browse all deals across AI hardware, smart gadgets, and software tools. Find the best discounts and track price drops.";
@@ -164,7 +166,9 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
           Browse all active price drops across AI hardware, smart gadgets, and software tools.
         </p>
         <p className="mt-2 text-xs text-gray-500">
-          <strong>Affiliate Disclosure:</strong> ThinkaBell participates in affiliate programs and may earn a commission from qualifying purchases made through our links at no additional cost to you.
+          <strong>Affiliate Disclosure:</strong> ThinkaBell participates in affiliate programs and
+          may earn a commission from qualifying purchases made through our links at no additional
+          cost to you.
         </p>
       </div>
 
@@ -193,10 +197,7 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
       )}
 
       <div className="mt-8">
-        <Link
-          href="/"
-          className="text-sm font-semibold text-blue-600 hover:text-blue-700"
-        >
+        <Link href="/" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
           ← Back to homepage
         </Link>
       </div>

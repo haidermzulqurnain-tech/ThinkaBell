@@ -16,12 +16,8 @@ export default function Error({ reset }: ErrorProps) {
         <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
           <AlertTriangle className="w-6 h-6 text-gray-600" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Something went wrong
-        </h1>
-        <p className="text-gray-600 mb-6">
-          An unexpected error occurred. Please try again.
-        </p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h1>
+        <p className="text-gray-600 mb-6">An unexpected error occurred. Please try again.</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={reset}

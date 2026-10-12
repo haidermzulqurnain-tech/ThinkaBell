@@ -14,6 +14,7 @@ console.log(config.SUPABASE_URL);
 ## Environment Variables
 
 See `src/env.ts` for the full Zod schema. Key variables:
+
 - `NODE_ENV`, `PORT`
 - `NEXT_PUBLIC_APP_URL`
 - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`

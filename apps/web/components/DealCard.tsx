@@ -84,13 +84,9 @@ export function DealCard({ product }: DealCardProps) {
         <div className="mt-auto pt-4 flex items-end justify-between border-t border-gray-100">
           <div>
             {hasDiscount && (
-              <p className="text-xs text-gray-500 line-through">
-                ${previousPrice.toFixed(2)}
-              </p>
+              <p className="text-xs text-gray-500 line-through">${previousPrice.toFixed(2)}</p>
             )}
-            <p className="text-xl font-extrabold text-gray-900">
-              ${currentPrice.toFixed(2)}
-            </p>
+            <p className="text-xl font-extrabold text-gray-900">${currentPrice.toFixed(2)}</p>
           </div>
 
           <div className="flex items-center gap-2">

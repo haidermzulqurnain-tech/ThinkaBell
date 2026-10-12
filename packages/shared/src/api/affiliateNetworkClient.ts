@@ -7,7 +7,11 @@ import {
 export interface IAffiliateNetworkClient {
   generateAmazonLink(asin: string, country?: string): string;
   generateEbayLink(epid: string): string;
-  buildAffiliateUrl(baseUrl: string, network: "amazon" | "ebay" | "impact" | "cj" | "shareasale" | "direct", clickId?: string): string;
+  buildAffiliateUrl(
+    baseUrl: string,
+    network: "amazon" | "ebay" | "impact" | "cj" | "shareasale" | "direct",
+    clickId?: string,
+  ): string;
 }
 
 class AffiliateNetworkClient implements IAffiliateNetworkClient {
@@ -20,9 +24,7 @@ class AffiliateNetworkClient implements IAffiliateNetworkClient {
 
   generateEbayLink(epid: string): string {
     if (!env.EBAY_AFFILIATE_CAMPAIGN_ID) {
-      throw new AmazonAffiliateLinkError(
-        "eBay affiliate campaign ID is not configured",
-      );
+      throw new AmazonAffiliateLinkError("eBay affiliate campaign ID is not configured");
     }
 
     return `https://www.ebay.com/itm/${encodeURIComponent(epid)}?campid=${env.EBAY_AFFILIATE_CAMPAIGN_ID}&customid=${env.AFFILIATE_ATTRIBUTION_ID}`;
@@ -39,18 +41,14 @@ class AffiliateNetworkClient implements IAffiliateNetworkClient {
       switch (network) {
         case "amazon":
           if (!env.AMAZON_PARTNER_TAG) {
-            throw new AmazonAffiliateLinkError(
-              "Amazon partner tag is not configured",
-            );
+            throw new AmazonAffiliateLinkError("Amazon partner tag is not configured");
           }
           url.searchParams.set("tag", env.AMAZON_PARTNER_TAG);
           url.searchParams.set("ascsubtag", clickId);
           break;
         case "ebay":
           if (!env.EBAY_AFFILIATE_CAMPAIGN_ID) {
-            throw new AmazonAffiliateLinkError(
-              "eBay affiliate campaign ID is not configured",
-            );
+            throw new AmazonAffiliateLinkError("eBay affiliate campaign ID is not configured");
           }
           url.searchParams.set("campid", env.EBAY_AFFILIATE_CAMPAIGN_ID);
           url.searchParams.set("customid", clickId);

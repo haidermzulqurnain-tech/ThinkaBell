@@ -9,7 +9,10 @@ import { retryWithBackoff } from "../utils/retry";
 
 export interface IWalmartClient {
   getItemPrice(itemId: string): Promise<number | null>;
-  searchItems(query: string, limit?: number): Promise<Array<{ id: string; name: string; price: number; imageUrl?: string }>>;
+  searchItems(
+    query: string,
+    limit?: number,
+  ): Promise<Array<{ id: string; name: string; price: number; imageUrl?: string }>>;
   getItemDetails(itemId: string): Promise<{
     id: string;
     name: string;
@@ -46,15 +49,12 @@ class WalmartApiClient implements IWalmartClient {
     try {
       const response = await retryWithBackoff(
         () =>
-          fetch(
-            `https://api.walmart.com/api/v1/item/${encodeURIComponent(itemId)}`,
-            {
-              headers: {
-                "X-RapidAPI-Key": this.apiKey,
-                "Content-Type": "application/json",
-              },
+          fetch(`https://api.walmart.com/api/v1/item/${encodeURIComponent(itemId)}`, {
+            headers: {
+              "X-RapidAPI-Key": this.apiKey,
+              "Content-Type": "application/json",
             },
-          ).then(async (res) => {
+          }).then(async (res) => {
             if (!res.ok) {
               const err = new Error(`HTTP ${res.status}`) as Error & { status: number };
               err.status = res.status;
@@ -97,14 +97,11 @@ class WalmartApiClient implements IWalmartClient {
 
       const response = await retryWithBackoff(
         () =>
-          fetch(
-            `https://api.walmart.com/api/v1/search?${params}`,
-            {
-              headers: {
-                "X-RapidAPI-Key": this.apiKey,
-              },
+          fetch(`https://api.walmart.com/api/v1/search?${params}`, {
+            headers: {
+              "X-RapidAPI-Key": this.apiKey,
             },
-          ).then(async (res) => {
+          }).then(async (res) => {
             if (!res.ok) {
               const err = new Error(`HTTP ${res.status}`) as Error & { status: number };
               err.status = res.status;
@@ -134,9 +131,7 @@ class WalmartApiClient implements IWalmartClient {
     }
   }
 
-  async getItemDetails(
-    itemId: string,
-  ): Promise<{
+  async getItemDetails(itemId: string): Promise<{
     id: string;
     name: string;
     price: number;

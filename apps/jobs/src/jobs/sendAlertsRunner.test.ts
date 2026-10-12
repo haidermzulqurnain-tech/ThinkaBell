@@ -6,16 +6,24 @@ const mockSupabase = {
       eq: vi.fn(() => ({
         maybeSingle: vi.fn(),
         in: vi.fn(() => ({
-          then: vi.fn((onFulfilled) => Promise.resolve({ data: null, error: null }).then(onFulfilled)),
+          then: vi.fn((onFulfilled) =>
+            Promise.resolve({ data: null, error: null }).then(onFulfilled),
+          ),
         })),
         limit: vi.fn(() => ({
-          then: vi.fn((onFulfilled) => Promise.resolve({ data: null, error: null }).then(onFulfilled)),
+          then: vi.fn((onFulfilled) =>
+            Promise.resolve({ data: null, error: null }).then(onFulfilled),
+          ),
         })),
-        then: vi.fn((onFulfilled) => Promise.resolve({ data: null, error: null }).then(onFulfilled)),
+        then: vi.fn((onFulfilled) =>
+          Promise.resolve({ data: null, error: null }).then(onFulfilled),
+        ),
       })),
       order: vi.fn(() => ({
         limit: vi.fn(() => ({
-          then: vi.fn((onFulfilled) => Promise.resolve({ data: [], error: null }).then(onFulfilled)),
+          then: vi.fn((onFulfilled) =>
+            Promise.resolve({ data: [], error: null }).then(onFulfilled),
+          ),
         })),
       })),
       then: vi.fn((onFulfilled) => Promise.resolve({ data: [], error: null }).then(onFulfilled)),
@@ -139,7 +147,9 @@ describe("sendAlertsRunner", () => {
     const result = await runSendAlerts();
 
     expect(result).toEqual({ processed: 0, notificationsSent: 0 });
-    expect(mockLogger.info).toHaveBeenCalledWith("[sendAlerts] Checking alert queue for pending dispatches");
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      "[sendAlerts] Checking alert queue for pending dispatches",
+    );
   });
 
   it("should skip alerts with missing product", async () => {
@@ -428,7 +438,10 @@ describe("sendAlertsRunner", () => {
       "plain@example.com",
       expect.objectContaining({ subject: expect.stringContaining("Test Product") }),
     );
-    expect(mockNotificationClient.sendPush).toHaveBeenCalledWith("plain-push-id", expect.anything());
+    expect(mockNotificationClient.sendPush).toHaveBeenCalledWith(
+      "plain-push-id",
+      expect.anything(),
+    );
     expect(result.notificationsSent).toBe(2);
   });
 

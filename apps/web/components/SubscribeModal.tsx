@@ -18,9 +18,7 @@ export function SubscribeModal({ isOpen, onClose, productSlug }: SubscribeModalP
   const [step, setStep] = useState<1 | 2>(1);
 
   const toggleCategory = (cat: string) => {
-    setCategories((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
-    );
+    setCategories((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,7 +103,7 @@ export function SubscribeModal({ isOpen, onClose, productSlug }: SubscribeModalP
 
   useEffect(() => {
     if (!isOpen) return;
-    const modal = document.querySelector("[role=\"dialog\"]");
+    const modal = document.querySelector('[role="dialog"]');
     if (!modal) return;
     const focusable = modal.querySelectorAll<HTMLElement>(
       'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
@@ -172,32 +170,50 @@ export function SubscribeModal({ isOpen, onClose, productSlug }: SubscribeModalP
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
                   <Bell className="h-5 w-5" />
                 </div>
-                  <div>
-                    <h2 id="modal-title" className="text-xl font-bold text-gray-900">Get Deal Alerts</h2>
-                    <p className="text-xs text-gray-500">
-                      {productSlug ? "Get notified when this deal changes" : "Track prices and never miss a drop"}
-                    </p>
-                  </div>
+                <div>
+                  <h2 id="modal-title" className="text-xl font-bold text-gray-900">
+                    Get Deal Alerts
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    {productSlug
+                      ? "Get notified when this deal changes"
+                      : "Track prices and never miss a drop"}
+                  </p>
+                </div>
               </div>
               <button
                 onClick={handleClose}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
 
             {/* Progress indicator */}
             <div className="flex items-center gap-2 mb-6">
-              <div className={`h-1.5 flex-1 rounded-full ${step === 1 ? "bg-blue-600" : "bg-blue-600"}`} />
-              <div className={`h-1.5 flex-1 rounded-full ${step === 2 ? "bg-blue-600" : "bg-gray-200"}`} />
+              <div
+                className={`h-1.5 flex-1 rounded-full ${step === 1 ? "bg-blue-600" : "bg-blue-600"}`}
+              />
+              <div
+                className={`h-1.5 flex-1 rounded-full ${step === 2 ? "bg-blue-600" : "bg-gray-200"}`}
+              />
               <span className="text-[11px] text-gray-500 ml-2">Step {step} of 2</span>
             </div>
 
             {step === 1 ? (
-              <form onSubmit={(e) => { e.preventDefault(); handleNext(); }}>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleNext();
+                }}
+              >
                 {errorMessage && (
                   <div className="rounded-xl bg-red-50 p-4 text-xs font-medium text-red-700 border border-red-200 mb-4">
                     {errorMessage}
@@ -206,7 +222,10 @@ export function SubscribeModal({ isOpen, onClose, productSlug }: SubscribeModalP
 
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
+                    <label
+                      htmlFor="email"
+                      className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5"
+                    >
                       Email Address <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -234,7 +253,9 @@ export function SubscribeModal({ isOpen, onClose, productSlug }: SubscribeModalP
                             : "border-gray-200 hover:bg-gray-50 text-gray-600"
                         }`}
                       >
-                        <div className={`p-2 rounded-lg ${categories.includes("physical") ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}>
+                        <div
+                          className={`p-2 rounded-lg ${categories.includes("physical") ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}
+                        >
                           <Bell className="h-4 w-4" />
                         </div>
                         <span className="text-xs font-bold">Physical</span>
@@ -249,7 +270,9 @@ export function SubscribeModal({ isOpen, onClose, productSlug }: SubscribeModalP
                             : "border-gray-200 hover:bg-gray-50 text-gray-600"
                         }`}
                       >
-                        <div className={`p-2 rounded-lg ${categories.includes("software") ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}>
+                        <div
+                          className={`p-2 rounded-lg ${categories.includes("software") ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}
+                        >
                           <Sparkles className="h-4 w-4" />
                         </div>
                         <span className="text-xs font-bold">Software</span>
@@ -304,7 +327,9 @@ export function SubscribeModal({ isOpen, onClose, productSlug }: SubscribeModalP
                     <div className="flex items-start gap-3">
                       <ShieldCheck className="h-5 w-5 text-blue-600 mt-0.5" />
                       <div>
-                        <p className="text-xs font-bold text-blue-900 mb-1">We respect your inbox</p>
+                        <p className="text-xs font-bold text-blue-900 mb-1">
+                          We respect your inbox
+                        </p>
                         <p className="text-[11px] text-blue-700">
                           Unsubscribe with one click anytime. No spam, just deals.
                         </p>

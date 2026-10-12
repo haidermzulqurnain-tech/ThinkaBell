@@ -93,9 +93,7 @@ describe("AmazonListClient", () => {
 
     it("returns an empty list for unknown page layouts", async () => {
       const { parseAmazonListHtml } = await import("./amazonListClient");
-      expect(parseAmazonListHtml("<html><body>No products here</body></html>")).toEqual(
-        [],
-      );
+      expect(parseAmazonListHtml("<html><body>No products here</body></html>")).toEqual([]);
     });
 
     it("skips items without a detectable title", async () => {
@@ -139,18 +137,14 @@ describe("AmazonListClient", () => {
 
     it("throws on malformed JSON", async () => {
       mockConfig.AMAZON_LIST_URLS = "{not-json";
-      const { getAmazonListConfigs, AmazonListConfigError } = await import(
-        "./amazonListClient"
-      );
+      const { getAmazonListConfigs, AmazonListConfigError } = await import("./amazonListClient");
 
       expect(() => getAmazonListConfigs()).toThrow(AmazonListConfigError);
     });
 
     it("throws when the value is not an array", async () => {
       mockConfig.AMAZON_LIST_URLS = JSON.stringify({ url: "https://example.com" });
-      const { getAmazonListConfigs, AmazonListConfigError } = await import(
-        "./amazonListClient"
-      );
+      const { getAmazonListConfigs, AmazonListConfigError } = await import("./amazonListClient");
 
       expect(() => getAmazonListConfigs()).toThrow(AmazonListConfigError);
     });

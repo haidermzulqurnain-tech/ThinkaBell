@@ -159,8 +159,8 @@ describe("Config: Environment Validation", () => {
       expect(env).toHaveProperty("AMAZON_REGION");
       expect(env).toHaveProperty("EBAY_CLIENT_ID");
       expect(env).toHaveProperty("EBAY_CLIENT_SECRET");
-        expect(env).toHaveProperty("EBAY_AFFILIATE_CAMPAIGN_ID");
-        expect(env).toHaveProperty("AFFILIATE_ATTRIBUTION_ID");
+      expect(env).toHaveProperty("EBAY_AFFILIATE_CAMPAIGN_ID");
+      expect(env).toHaveProperty("AFFILIATE_ATTRIBUTION_ID");
       expect(env).toHaveProperty("ONESIGNAL_APP_ID");
       expect(env).toHaveProperty("ONESIGNAL_REST_API_KEY");
       expect(env).toHaveProperty("BREVO_API_KEY");

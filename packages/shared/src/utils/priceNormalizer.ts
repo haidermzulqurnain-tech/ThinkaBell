@@ -15,10 +15,7 @@ export interface NormalizedPrice {
   exchangeRate: number;
 }
 
-export async function normalizePrice(
-  amount: number,
-  currency: string,
-): Promise<NormalizedPrice> {
+export async function normalizePrice(amount: number, currency: string): Promise<NormalizedPrice> {
   const normalizedCurrency = currency.trim().toUpperCase() as SupportedCurrency;
   const originalCurrency = SUPPORTED_CURRENCIES.includes(normalizedCurrency)
     ? normalizedCurrency

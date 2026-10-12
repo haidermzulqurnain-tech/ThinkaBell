@@ -9,9 +9,7 @@ describe("SubscribeModal", () => {
   });
 
   it("does not render when closed", () => {
-    const { container } = render(
-      <SubscribeModal isOpen={false} onClose={() => {}} />,
-    );
+    const { container } = render(<SubscribeModal isOpen={false} onClose={() => {}} />);
     expect(container.innerHTML).toBe("");
   });
 

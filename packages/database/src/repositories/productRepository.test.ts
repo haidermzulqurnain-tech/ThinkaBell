@@ -9,11 +9,27 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 // Supabase chain: from() -> select() -> [not/order/eq/limit] -> maybeSingle/single/limit returns data
 function createChainableMock(terminalReturn: any) {
   const chain: any = {};
-  const methods = ["select", "not", "order", "limit", "eq", "update", "insert", "upsert", "maybeSingle", "single", "or", "then"];
+  const methods = [
+    "select",
+    "not",
+    "order",
+    "limit",
+    "eq",
+    "update",
+    "insert",
+    "upsert",
+    "maybeSingle",
+    "single",
+    "or",
+    "then",
+  ];
   for (const method of methods) {
     if (method === "then") {
       chain[method] = (onFulfilled: any) => {
-        return Promise.resolve({ data: terminalReturn.data ?? terminalReturn, error: terminalReturn.error ?? null }).then(onFulfilled);
+        return Promise.resolve({
+          data: terminalReturn.data ?? terminalReturn,
+          error: terminalReturn.error ?? null,
+        }).then(onFulfilled);
       };
     } else {
       chain[method] = vi.fn(() => {
@@ -89,7 +105,10 @@ describe("ProductRepository", () => {
     });
 
     it("should return empty array on database error", async () => {
-      const chain = createChainableMock({ data: null, error: { message: "DB error", code: "500" } });
+      const chain = createChainableMock({
+        data: null,
+        error: { message: "DB error", code: "500" },
+      });
       mockAnonClient.from.mockReturnValue(chain);
 
       const { ProductRepository } = await import("./productRepository");
@@ -132,7 +151,10 @@ describe("ProductRepository", () => {
     });
 
     it("should return null on database error", async () => {
-      const chain = createChainableMock({ data: null, error: { message: "Query failed", code: "PGRST116" } });
+      const chain = createChainableMock({
+        data: null,
+        error: { message: "Query failed", code: "PGRST116" },
+      });
       mockAnonClient.from.mockReturnValue(chain);
 
       const { ProductRepository } = await import("./productRepository");
@@ -151,14 +173,15 @@ describe("ProductRepository", () => {
 
       expect(mockServiceClient.from).toHaveBeenCalledWith("products");
       expect(chain.select).toHaveBeenCalledWith("*");
-      expect(chain.or).toHaveBeenCalledWith(
-        "amazon_asin.not.is.null,ebay_epid.not.is.null",
-      );
+      expect(chain.or).toHaveBeenCalledWith("amazon_asin.not.is.null,ebay_epid.not.is.null");
       expect(result).toEqual([mockProduct]);
     });
 
     it("should throw error on database failure", async () => {
-      const chain = createChainableMock({ data: null, error: { message: "Query failed", code: "500" } });
+      const chain = createChainableMock({
+        data: null,
+        error: { message: "Query failed", code: "500" },
+      });
       mockServiceClient.from.mockReturnValue(chain);
 
       const { ProductRepository } = await import("./productRepository");
@@ -191,9 +214,10 @@ describe("ProductRepository", () => {
       mockServiceClient.from.mockReturnValue(chain);
 
       const { ProductRepository } = await import("./productRepository");
-      await expect(
-        ProductRepository.updateProductPrice(1, 89.99, 99.99),
-      ).rejects.toEqual({ message: "Update failed", code: "23505" });
+      await expect(ProductRepository.updateProductPrice(1, 89.99, 99.99)).rejects.toEqual({
+        message: "Update failed",
+        code: "23505",
+      });
     });
 
     it("should handle null previous price", async () => {

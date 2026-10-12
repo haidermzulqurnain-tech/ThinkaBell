@@ -5,17 +5,18 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-const { mockRedisGet, mockRedisSet, mockRedisDel, mockRedisIncr, mockRedisExpire, mockConfig } = vi.hoisted(() => ({
-  mockRedisGet: vi.fn(),
-  mockRedisSet: vi.fn(),
-  mockRedisDel: vi.fn(),
-  mockRedisIncr: vi.fn(),
-  mockRedisExpire: vi.fn(),
-  mockConfig: {
-    UPSTASH_REDIS_REST_URL: "",
-    UPSTASH_REDIS_REST_TOKEN: "",
-  },
-}));
+const { mockRedisGet, mockRedisSet, mockRedisDel, mockRedisIncr, mockRedisExpire, mockConfig } =
+  vi.hoisted(() => ({
+    mockRedisGet: vi.fn(),
+    mockRedisSet: vi.fn(),
+    mockRedisDel: vi.fn(),
+    mockRedisIncr: vi.fn(),
+    mockRedisExpire: vi.fn(),
+    mockConfig: {
+      UPSTASH_REDIS_REST_URL: "",
+      UPSTASH_REDIS_REST_TOKEN: "",
+    },
+  }));
 
 vi.mock("@upstash/redis", () => ({
   Redis: class {

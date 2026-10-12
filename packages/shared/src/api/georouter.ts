@@ -44,9 +44,7 @@ export function isEdgeProxyTrusted(): boolean {
  * Resolves the visitor's country from trusted geo headers only.
  * Returns undefined when no trusted header is present.
  */
-export function resolveVisitorCountry(
-  headers: Headers | undefined,
-): string | undefined {
+export function resolveVisitorCountry(headers: Headers | undefined): string | undefined {
   if (!headers) {
     return undefined;
   }
@@ -87,9 +85,7 @@ export function extractAsinFromAmazonUrl(url: string): string | null {
     return null;
   }
 
-  const match = parsed.pathname.match(
-    /\/(?:dp|gp\/product|gp\/aw\/d)\/([A-Z0-9]{10})(?:[/?]|$)/i,
-  );
+  const match = parsed.pathname.match(/\/(?:dp|gp\/product|gp\/aw\/d)\/([A-Z0-9]{10})(?:[/?]|$)/i);
   return match ? match[1]!.toUpperCase() : null;
 }
 
@@ -116,9 +112,7 @@ export interface AmazonCtaResult {
  * when the visitor's marketplace has no partner tag configured —
  * callers must fall back to the stored affiliate URL in that case.
  */
-export function buildAmazonCtaLink(
-  input: AmazonCtaInput,
-): AmazonCtaResult | null {
+export function buildAmazonCtaLink(input: AmazonCtaInput): AmazonCtaResult | null {
   const asin =
     input.asin && isValidAsin(input.asin)
       ? input.asin.toUpperCase()
@@ -129,9 +123,7 @@ export function buildAmazonCtaLink(
   }
 
   try {
-    const marketplace = resolveAmazonMarketplace(
-      resolveVisitorCountry(input.headers),
-    );
+    const marketplace = resolveAmazonMarketplace(resolveVisitorCountry(input.headers));
     return {
       href: `${EDGE_GO_PATH_PREFIX}/${asin}`,
       marketplace: marketplace.code,

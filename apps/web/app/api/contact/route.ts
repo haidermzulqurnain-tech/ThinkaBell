@@ -50,12 +50,10 @@ export async function POST(request: NextRequest) {
     const safeSubject = escapeHtml(subject);
     const safeMessage = escapeHtml(message);
 
-    const sent = await notificationClient.sendEmail(
-      env.CONTACT_EMAIL || env.BREVO_SENDER_EMAIL,
-      {
-        subject: `ThinkaBell Contact: ${safeSubject}`,
-        body: `New contact form submission:\n\nName: ${safeName}\nEmail: ${safeEmail}\nSubject: ${safeSubject}\n\nMessage:\n${safeMessage}`,
-        html: `
+    const sent = await notificationClient.sendEmail(env.CONTACT_EMAIL || env.BREVO_SENDER_EMAIL, {
+      subject: `ThinkaBell Contact: ${safeSubject}`,
+      body: `New contact form submission:\n\nName: ${safeName}\nEmail: ${safeEmail}\nSubject: ${safeSubject}\n\nMessage:\n${safeMessage}`,
+      html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
             <h2 style="color: #2563eb; margin-bottom: 8px;">New Contact Form Submission</h2>
             <p style="font-size: 14px; color: #374151; margin-bottom: 4px;"><strong>Name:</strong> ${safeName}</p>
@@ -66,9 +64,8 @@ export async function POST(request: NextRequest) {
             </div>
           </div>
         `,
-        recipientEmail: email,
-      },
-    );
+      recipientEmail: email,
+    });
 
     if (!sent) {
       return NextResponse.json(

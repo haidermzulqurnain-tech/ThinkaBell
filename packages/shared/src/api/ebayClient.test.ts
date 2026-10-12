@@ -45,8 +45,14 @@ describe("EbayClient", () => {
 
   describe("getPrice without credentials", () => {
     it("should throw error when credentials are missing", async () => {
-      const client = new EbayBrowseApiClient(mockConfig.EBAY_CLIENT_ID, mockConfig.EBAY_CLIENT_SECRET, mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID);
-      await expect(client.getPrice("EPID-12345")).rejects.toThrow("eBay OAuth credentials are not configured");
+      const client = new EbayBrowseApiClient(
+        mockConfig.EBAY_CLIENT_ID,
+        mockConfig.EBAY_CLIENT_SECRET,
+        mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID,
+      );
+      await expect(client.getPrice("EPID-12345")).rejects.toThrow(
+        "eBay OAuth credentials are not configured",
+      );
     });
   });
 
@@ -67,7 +73,11 @@ describe("EbayClient", () => {
           json: async () => ({ price: { value: "149.99" } }),
         } as unknown as Response);
 
-      const client = new EbayBrowseApiClient(mockConfig.EBAY_CLIENT_ID, mockConfig.EBAY_CLIENT_SECRET, mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID);
+      const client = new EbayBrowseApiClient(
+        mockConfig.EBAY_CLIENT_ID,
+        mockConfig.EBAY_CLIENT_SECRET,
+        mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID,
+      );
       const price = await client.getPrice("EPID-TEST123");
 
       expect(price).toBe(149.99);
@@ -89,7 +99,11 @@ describe("EbayClient", () => {
           json: async () => ({ price: { value: "89.99" } }),
         } as unknown as Response);
 
-      const client = new EbayBrowseApiClient(mockConfig.EBAY_CLIENT_ID, mockConfig.EBAY_CLIENT_SECRET, mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID);
+      const client = new EbayBrowseApiClient(
+        mockConfig.EBAY_CLIENT_ID,
+        mockConfig.EBAY_CLIENT_SECRET,
+        mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID,
+      );
       await client.getPrice("EPID-FIRST");
       const price = await client.getPrice("EPID-SECOND");
       expect(price).toBe(89.99);
@@ -103,7 +117,11 @@ describe("EbayClient", () => {
         text: async () => "Unauthorized",
       } as unknown as Response);
 
-      const client = new EbayBrowseApiClient(mockConfig.EBAY_CLIENT_ID, mockConfig.EBAY_CLIENT_SECRET, mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID);
+      const client = new EbayBrowseApiClient(
+        mockConfig.EBAY_CLIENT_ID,
+        mockConfig.EBAY_CLIENT_SECRET,
+        mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID,
+      );
       await expect(client.getPrice("EPID-FAIL")).rejects.toThrow("HTTP 401");
     });
 
@@ -118,7 +136,11 @@ describe("EbayClient", () => {
           status: 404,
         } as unknown as Response);
 
-      const client = new EbayBrowseApiClient(mockConfig.EBAY_CLIENT_ID, mockConfig.EBAY_CLIENT_SECRET, mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID);
+      const client = new EbayBrowseApiClient(
+        mockConfig.EBAY_CLIENT_ID,
+        mockConfig.EBAY_CLIENT_SECRET,
+        mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID,
+      );
       await expect(client.getPrice("EPID-NOTFOUND")).rejects.toThrow("HTTP 404");
     });
 
@@ -133,7 +155,11 @@ describe("EbayClient", () => {
           json: async () => ({}),
         } as unknown as Response);
 
-      const client = new EbayBrowseApiClient(mockConfig.EBAY_CLIENT_ID, mockConfig.EBAY_CLIENT_SECRET, mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID);
+      const client = new EbayBrowseApiClient(
+        mockConfig.EBAY_CLIENT_ID,
+        mockConfig.EBAY_CLIENT_SECRET,
+        mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID,
+      );
       const price = await client.getPrice("EPID-PRICE-MISSING");
       expect(price).toBeNull();
     });
@@ -150,7 +176,11 @@ describe("EbayClient", () => {
           json: async () => ({ price: { value: "199.99" } }),
         } as unknown as Response);
 
-      const client = new EbayBrowseApiClient(mockConfig.EBAY_CLIENT_ID, mockConfig.EBAY_CLIENT_SECRET, mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID);
+      const client = new EbayBrowseApiClient(
+        mockConfig.EBAY_CLIENT_ID,
+        mockConfig.EBAY_CLIENT_SECRET,
+        mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID,
+      );
       await client.getPrice("EPID-AFF");
 
       const itemCall = mockFetch.mock.calls[1]!;
@@ -168,7 +198,11 @@ describe("EbayClient", () => {
         } as unknown as Response)
         .mockRejectedValueOnce(new Error("Network error"));
 
-      const client = new EbayBrowseApiClient(mockConfig.EBAY_CLIENT_ID, mockConfig.EBAY_CLIENT_SECRET, mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID);
+      const client = new EbayBrowseApiClient(
+        mockConfig.EBAY_CLIENT_ID,
+        mockConfig.EBAY_CLIENT_SECRET,
+        mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID,
+      );
       await expect(client.getPrice("EPID-NETWORK")).rejects.toThrow("Network error");
     });
 
@@ -183,7 +217,11 @@ describe("EbayClient", () => {
           json: async () => ({ price: { value: "50.00" } }),
         } as unknown as Response);
 
-      const client = new EbayBrowseApiClient(mockConfig.EBAY_CLIENT_ID, mockConfig.EBAY_CLIENT_SECRET, mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID);
+      const client = new EbayBrowseApiClient(
+        mockConfig.EBAY_CLIENT_ID,
+        mockConfig.EBAY_CLIENT_SECRET,
+        mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID,
+      );
       await client.getPrice("test item/123");
 
       const url = mockFetch.mock.calls[1]![0] as string;
@@ -193,7 +231,11 @@ describe("EbayClient", () => {
 
   describe("IEbayClient interface", () => {
     it("should implement IEbayClient interface", async () => {
-      const client = new EbayBrowseApiClient(mockConfig.EBAY_CLIENT_ID, mockConfig.EBAY_CLIENT_SECRET, mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID);
+      const client = new EbayBrowseApiClient(
+        mockConfig.EBAY_CLIENT_ID,
+        mockConfig.EBAY_CLIENT_SECRET,
+        mockConfig.EBAY_AFFILIATE_CAMPAIGN_ID,
+      );
       expect(typeof client.getPrice).toBe("function");
     });
   });

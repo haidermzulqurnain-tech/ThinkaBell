@@ -15,7 +15,10 @@ export class PriceHistoryRepository {
       .limit(limit);
 
     if (error) {
-      console.error(`[PriceHistoryRepository] Error fetching history for product ${productId}:`, error.message);
+      console.error(
+        `[PriceHistoryRepository] Error fetching history for product ${productId}:`,
+        error.message,
+      );
       return [];
     }
 
@@ -39,7 +42,10 @@ export class PriceHistoryRepository {
     });
 
     if (error) {
-      console.error(`[PriceHistoryRepository] Failed to record price for product ${productId}:`, error.message);
+      console.error(
+        `[PriceHistoryRepository] Failed to record price for product ${productId}:`,
+        error.message,
+      );
       throw error;
     }
   }

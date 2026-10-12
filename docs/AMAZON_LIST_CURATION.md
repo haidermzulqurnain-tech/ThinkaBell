@@ -42,13 +42,13 @@ codebase, and no Amazon API is called by the hunting module.
 
 ## Configuration
 
-| Variable | Purpose | Default |
-| --- | --- | --- |
-| `AMAZON_LIST_URLS` | JSON array of `{ url, marketplace }` entries (public list URLs) | `""` (source disabled) |
-| `AMAZON_LIST_MARKETPLACE` | Marketplace for items without an explicit one | `US` |
-| `AMAZON_LIST_MAX_ITEMS` | Maximum items harvested per list | `100` |
-| `AMAZON_LIST_FETCH_DELAY_MS` | Delay between consecutive list fetches | `1000` |
-| `AMAZON_PARTNER_TAG` / `_UK` / `_DE` / `_CA` | Associates partner tags per marketplace | `""` (fail closed) |
+| Variable                                     | Purpose                                                         | Default                |
+| -------------------------------------------- | --------------------------------------------------------------- | ---------------------- |
+| `AMAZON_LIST_URLS`                           | JSON array of `{ url, marketplace }` entries (public list URLs) | `""` (source disabled) |
+| `AMAZON_LIST_MARKETPLACE`                    | Marketplace for items without an explicit one                   | `US`                   |
+| `AMAZON_LIST_MAX_ITEMS`                      | Maximum items harvested per list                                | `100`                  |
+| `AMAZON_LIST_FETCH_DELAY_MS`                 | Delay between consecutive list fetches                          | `1000`                 |
+| `AMAZON_PARTNER_TAG` / `_UK` / `_DE` / `_CA` | Associates partner tags per marketplace                         | `""` (fail closed)     |
 
 Example:
 
@@ -90,9 +90,9 @@ when omitted, every harvested item is kept.
 
 ## Module map
 
-| Module | Responsibility |
-| --- | --- |
-| `packages/shared/src/api/amazonListClient.ts` | List config parsing, HTML parsing, list fetching |
-| `packages/shared/src/api/amazonListSource.ts` | `ProductSource` implementation (search/price/details, dedupe, rate limiting) |
-| `packages/shared/src/api/amazonAffiliateLinkGenerator.ts` | Modular, env-driven affiliate link generation (fail closed) |
-| `apps/jobs/src/jobs/productDiscoveryRunner.ts` | Discovery orchestration (circuit breaker, advisory lock, job run tracking) |
+| Module                                                    | Responsibility                                                               |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `packages/shared/src/api/amazonListClient.ts`             | List config parsing, HTML parsing, list fetching                             |
+| `packages/shared/src/api/amazonListSource.ts`             | `ProductSource` implementation (search/price/details, dedupe, rate limiting) |
+| `packages/shared/src/api/amazonAffiliateLinkGenerator.ts` | Modular, env-driven affiliate link generation (fail closed)                  |
+| `apps/jobs/src/jobs/productDiscoveryRunner.ts`            | Discovery orchestration (circuit breaker, advisory lock, job run tracking)   |

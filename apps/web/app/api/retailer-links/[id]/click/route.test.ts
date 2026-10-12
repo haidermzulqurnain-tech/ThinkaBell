@@ -45,7 +45,9 @@ describe("Click Tracking API", () => {
     it("should handle database errors gracefully", async () => {
       mockSupabase.from.mockReturnValue({
         insert: vi.fn(() => ({
-          then: vi.fn((onFulfilled) => Promise.resolve({ error: { message: "DB error" } }).then(onFulfilled)),
+          then: vi.fn((onFulfilled) =>
+            Promise.resolve({ error: { message: "DB error" } }).then(onFulfilled),
+          ),
         })),
       });
 

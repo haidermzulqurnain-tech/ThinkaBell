@@ -8,11 +8,26 @@ import { RetailerLinkRepository } from "./retailerLinkRepository";
 
 function createChainableMock(returnValue: any) {
   const chain: any = {};
-  const methods = ["select", "eq", "update", "insert", "upsert", "order", "limit", "single", "rpc", "then", "in"];
+  const methods = [
+    "select",
+    "eq",
+    "update",
+    "insert",
+    "upsert",
+    "order",
+    "limit",
+    "single",
+    "rpc",
+    "then",
+    "in",
+  ];
   for (const method of methods) {
     if (method === "then") {
       chain[method] = (onFulfilled: any) => {
-        return Promise.resolve({ data: returnValue.data ?? returnValue, error: returnValue.error ?? null }).then(onFulfilled);
+        return Promise.resolve({
+          data: returnValue.data ?? returnValue,
+          error: returnValue.error ?? null,
+        }).then(onFulfilled);
       };
     } else {
       chain[method] = vi.fn(() => {
@@ -64,7 +79,10 @@ describe("RetailerLinkRepository", () => {
     });
 
     it("should return empty array on database error", async () => {
-      const chain = createChainableMock({ data: null, error: { message: "DB error", code: "500" } });
+      const chain = createChainableMock({
+        data: null,
+        error: { message: "DB error", code: "500" },
+      });
       mockAnonClient.from.mockReturnValue(chain);
 
       const result = await RetailerLinkRepository.getLinksForProduct(999);
@@ -77,7 +95,12 @@ describe("RetailerLinkRepository", () => {
       const chain = createChainableMock({ data: mockLink, error: null });
       mockServiceClient.from.mockReturnValue(chain);
 
-      const result = await RetailerLinkRepository.upsertLink(1, "amazon", "https://amazon.com/dp/B0TEST", true);
+      const result = await RetailerLinkRepository.upsertLink(
+        1,
+        "amazon",
+        "https://amazon.com/dp/B0TEST",
+        true,
+      );
 
       expect(mockServiceClient.from).toHaveBeenCalledWith("retailer_links");
       expect(chain.upsert).toHaveBeenCalledWith(
@@ -95,7 +118,10 @@ describe("RetailerLinkRepository", () => {
     });
 
     it("should throw on upsert failure", async () => {
-      const chain = createChainableMock({ data: null, error: { message: "Upsert failed", code: "23505" } });
+      const chain = createChainableMock({
+        data: null,
+        error: { message: "Upsert failed", code: "23505" },
+      });
       mockServiceClient.from.mockReturnValue(chain);
 
       await expect(
@@ -111,7 +137,9 @@ describe("RetailerLinkRepository", () => {
 
       await RetailerLinkRepository.incrementClickCount(1);
 
-      expect(mockServiceClient.rpc).toHaveBeenCalledWith("increment_retailer_click", { link_id: 1 });
+      expect(mockServiceClient.rpc).toHaveBeenCalledWith("increment_retailer_click", {
+        link_id: 1,
+      });
     });
 
     it("should fallback to manual increment when RPC is missing", async () => {
@@ -133,7 +161,10 @@ describe("RetailerLinkRepository", () => {
       mockServiceClient.rpc.mockResolvedValue({ error: { message: "RPC missing", code: "42883" } });
 
       const selectChain = createChainableMock({ data: { click_count: 10 }, error: null });
-      const updateChain = createChainableMock({ data: null, error: { message: "Update failed", code: "500" } });
+      const updateChain = createChainableMock({
+        data: null,
+        error: { message: "Update failed", code: "500" },
+      });
       mockServiceClient.from.mockReturnValueOnce(selectChain).mockReturnValueOnce(updateChain);
 
       await expect(RetailerLinkRepository.incrementClickCount(1)).rejects.toEqual({
@@ -158,7 +189,10 @@ describe("RetailerLinkRepository", () => {
     });
 
     it("should return empty array on database error", async () => {
-      const chain = createChainableMock({ data: null, error: { message: "DB error", code: "500" } });
+      const chain = createChainableMock({
+        data: null,
+        error: { message: "DB error", code: "500" },
+      });
       mockAnonClient.from.mockReturnValue(chain);
 
       const result = await RetailerLinkRepository.getSponsoredLinksForProducts([1]);

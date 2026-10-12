@@ -9,7 +9,9 @@ describe("calculateProgramStability", () => {
   });
 
   it("should return high stability for established programs", () => {
-    const result = calculateProgramStability("This is an established public company with years in business and accredited status.");
+    const result = calculateProgramStability(
+      "This is an established public company with years in business and accredited status.",
+    );
     expect(result.level).toBe("high");
     expect(result.score).toBeGreaterThanOrEqual(75);
   });
@@ -21,7 +23,9 @@ describe("calculateProgramStability", () => {
   });
 
   it("should cap score at 100", () => {
-    const result = calculateProgramStability("Established public company with years in business, accredited, growing, profitable, funded, b2b, enterprise.");
+    const result = calculateProgramStability(
+      "Established public company with years in business, accredited, growing, profitable, funded, b2b, enterprise.",
+    );
     expect(result.score).toBeLessThanOrEqual(100);
   });
 });

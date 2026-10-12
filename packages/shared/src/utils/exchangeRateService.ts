@@ -53,20 +53,14 @@ function isValidRateMap(value: unknown): value is Record<SupportedCurrency, numb
 // USD-per-unit convention used by FALLBACK_RATES so both sources share
 // one conversion direction. Returns null when any supported currency is
 // missing or non-positive — the caller then fails closed to fallback.
-function toUsdPerUnit(
-  rates: Record<string, unknown>,
-): Record<SupportedCurrency, number> | null {
+function toUsdPerUnit(rates: Record<string, unknown>): Record<SupportedCurrency, number> | null {
   const converted: Partial<Record<SupportedCurrency, number>> = { USD: 1 };
 
   for (const currency of SUPPORTED_CURRENCIES) {
     if (currency === "USD") continue;
 
     const unitsPerUsd = rates[currency];
-    if (
-      typeof unitsPerUsd !== "number" ||
-      !Number.isFinite(unitsPerUsd) ||
-      unitsPerUsd <= 0
-    ) {
+    if (typeof unitsPerUsd !== "number" || !Number.isFinite(unitsPerUsd) || unitsPerUsd <= 0) {
       return null;
     }
 
@@ -101,10 +95,9 @@ async function fetchLiveRates(): Promise<Record<SupportedCurrency, number> | nul
 
     return toUsdPerUnit(data.rates);
   } catch (error) {
-    logger.warn(
-      "[ExchangeRateService] Live exchange rate fetch failed; using fallback rates",
-      { error: error instanceof Error ? error.message : String(error) },
-    );
+    logger.warn("[ExchangeRateService] Live exchange rate fetch failed; using fallback rates", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
 }

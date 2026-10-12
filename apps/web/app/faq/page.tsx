@@ -37,7 +37,8 @@ const faqs = [
 
 export const metadata = {
   title: "Frequently Asked Questions | ThinkaBell",
-  description: "Answers to common questions about ThinkaBell price tracking, alerts, and affiliate links.",
+  description:
+    "Answers to common questions about ThinkaBell price tracking, alerts, and affiliate links.",
 };
 
 export default async function FAQPage() {
@@ -75,10 +76,7 @@ export default async function FAQPage() {
 
       <div className="space-y-4">
         {faqs.map((faq, index) => (
-          <div
-            key={index}
-            className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
-          >
+          <div key={index} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="text-base font-bold text-gray-900 mb-2">{faq.question}</h2>
             <p className="text-sm text-gray-600 leading-relaxed">{faq.answer}</p>
           </div>

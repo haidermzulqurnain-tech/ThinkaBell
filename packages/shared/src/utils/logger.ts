@@ -1,7 +1,11 @@
 type LogLevel = "debug" | "info" | "warn" | "error";
 
 class Logger {
-  private formatMessage(level: LogLevel, message: string, context?: Record<string, unknown>): string {
+  private formatMessage(
+    level: LogLevel,
+    message: string,
+    context?: Record<string, unknown>,
+  ): string {
     const timestamp = new Date().toISOString();
     const meta = context ? ` ${JSON.stringify(context)}` : "";
     return `[${timestamp}] [${level.toUpperCase()}] ${message}${meta}`;
@@ -22,7 +26,8 @@ class Logger {
   }
 
   error(message: string, error?: unknown, context?: Record<string, unknown>): void {
-    const errObj = error instanceof Error ? { error: error.message, stack: error.stack } : { error };
+    const errObj =
+      error instanceof Error ? { error: error.message, stack: error.stack } : { error };
     console.error(this.formatMessage("error", message, { ...context, ...errObj }));
   }
 }

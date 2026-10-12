@@ -17,10 +17,6 @@ export function SubscribeModalClient({ productSlug }: SubscribeModalClientProps)
   }, []);
 
   return (
-    <SubscribeModal
-      isOpen={isOpen}
-      onClose={() => setIsOpen(false)}
-      productSlug={productSlug}
-    />
+    <SubscribeModal isOpen={isOpen} onClose={() => setIsOpen(false)} productSlug={productSlug} />
   );
 }

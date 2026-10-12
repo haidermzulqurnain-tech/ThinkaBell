@@ -26,10 +26,7 @@ function requireCredentials(
   clientType: "anon" | "service",
 ): void {
   if (!url || !key) {
-    const keyVar =
-      clientType === "service"
-        ? "SUPABASE_SERVICE_ROLE_KEY"
-        : "SUPABASE_ANON_KEY";
+    const keyVar = clientType === "service" ? "SUPABASE_SERVICE_ROLE_KEY" : "SUPABASE_ANON_KEY";
     throw new Error(
       `[Database] ${clientType} Supabase client is not configured. ` +
         `Set the SUPABASE_URL and ${keyVar} environment variables.`,

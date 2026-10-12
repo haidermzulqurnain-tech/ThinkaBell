@@ -15,9 +15,7 @@ const MAX_COMPARE_SLUGS = 20;
 export function normalizeCategory(value: string | null): "physical" | "software" | null {
   if (!value) return null;
   const lower = value.toLowerCase();
-  return lower === "physical" || lower === "software"
-    ? (lower as "physical" | "software")
-    : null;
+  return lower === "physical" || lower === "software" ? (lower as "physical" | "software") : null;
 }
 
 export interface CompareSearchParams {
@@ -25,9 +23,7 @@ export interface CompareSearchParams {
   category?: string;
 }
 
-export async function getCompareProducts(
-  searchParams: CompareSearchParams,
-): Promise<Product[]> {
+export async function getCompareProducts(searchParams: CompareSearchParams): Promise<Product[]> {
   const category = normalizeCategory(searchParams?.category ?? null);
   const rawSlugs = searchParams?.slugs;
 

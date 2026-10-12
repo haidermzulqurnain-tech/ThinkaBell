@@ -20,19 +20,31 @@ export function Navbar() {
             </span>
           </Link>
           <nav className="hidden md:flex items-center gap-5 text-sm font-medium text-gray-600">
-            <Link href="/" className="hover:text-blue-600 flex items-center gap-1.5 transition-colors">
+            <Link
+              href="/"
+              className="hover:text-blue-600 flex items-center gap-1.5 transition-colors"
+            >
               <Flame className="h-4 w-4 text-orange-500" />
               Top Deals
             </Link>
-            <Link href="/?category=physical" className="hover:text-blue-600 flex items-center gap-1.5 transition-colors">
+            <Link
+              href="/?category=physical"
+              className="hover:text-blue-600 flex items-center gap-1.5 transition-colors"
+            >
               <Laptop className="h-4 w-4 text-blue-500" />
               Physical Gadgets
             </Link>
-            <Link href="/?category=software" className="hover:text-blue-600 flex items-center gap-1.5 transition-colors">
+            <Link
+              href="/?category=software"
+              className="hover:text-blue-600 flex items-center gap-1.5 transition-colors"
+            >
               <Zap className="h-4 w-4 text-amber-500" />
               Software & SaaS
             </Link>
-            <Link href="/compare" className="hover:text-blue-600 flex items-center gap-1.5 transition-colors">
+            <Link
+              href="/compare"
+              className="hover:text-blue-600 flex items-center gap-1.5 transition-colors"
+            >
               <Scale className="h-4 w-4 text-purple-500" />
               Compare
             </Link>
@@ -77,19 +89,39 @@ export function Navbar() {
       {mobileOpen && (
         <div className="border-t border-gray-200 bg-white md:hidden">
           <nav className="flex flex-col gap-1 px-4 py-3">
-            <Link href="/" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
+            <Link
+              href="/"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => setMobileOpen(false)}
+            >
               Top Deals
             </Link>
-            <Link href="/?category=physical" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
+            <Link
+              href="/?category=physical"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => setMobileOpen(false)}
+            >
               Physical Gadgets
             </Link>
-            <Link href="/?category=software" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
+            <Link
+              href="/?category=software"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => setMobileOpen(false)}
+            >
               Software & SaaS
             </Link>
-            <Link href="/compare" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
+            <Link
+              href="/compare"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => setMobileOpen(false)}
+            >
               Compare
             </Link>
-            <Link href="/subscribe" className="rounded-lg px-3 py-2 text-sm font-medium text-blue-600 hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
+            <Link
+              href="/subscribe"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-blue-600 hover:bg-gray-50"
+              onClick={() => setMobileOpen(false)}
+            >
               Get Price Alerts
             </Link>
             <form action="/search" method="get" className="mt-2">
