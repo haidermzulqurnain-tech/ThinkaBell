@@ -21,7 +21,7 @@ This operational playbook details the pre-launch checklist, content marketing te
   - [ ] Brotli and Always Online toggled ON.
 - [x] **Hostinger Deployment Tested**:
   - [ ] Application running on Node 22.
-  - [ ] Application type `Other`; build command `pnpm run build:standalone`; entry file `apps/web/hostinger-server.js`; root directory `./`; output directory empty.
+  - [ ] Application type `Other`; **package manager `pnpm`** (not the npm default — npm does not read `pnpm-workspace.yaml` and the build fails with `next: command not found`); build command `pnpm run build:standalone`; entry file `apps/web/hostinger-server.js`; root directory `./`; output directory empty.
   - [ ] Health check responds `200 OK` at `https://thinkabell.click/api/health`.
 - [x] **Vercel Cron / pg_cron Jobs Active**:
   - [x] `vercel.json` configured with cron schedules for `/api/cron/product-discovery`, `/api/cron/fetch-prices`, and `/api/cron/send-alerts` (all every 6 hours).

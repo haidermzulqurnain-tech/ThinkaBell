@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "turbo run dev",
-    "build": "turbo run build",
+    "build": "node scripts/verify-build-env.js && turbo run build",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "test": "turbo run test",
@@ -18,7 +18,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
     "prepare:hostinger": "node scripts/prepare-hostinger.js",
-    "build:standalone": "node scripts/build-standalone.js",
+    "build:standalone": "node scripts/verify-build-env.js && node scripts/build-standalone.js",
     "package:hostinger": "pnpm build:standalone && node scripts/prepare-hostinger.js",
     "verify:hostinger": "tsx scripts/verify-hostinger-deploy.ts",
     "db:apply": "tsx scripts/apply-schema.ts",

@@ -41,7 +41,7 @@ Hostinger auto-detects the framework as **Next.js** — **override it to `Other`
 | **Node version** | `22.x` | Matches the `engines.node` field in `package.json` and the CI runners. |
 | **Root directory** | `./` | Must stay the repository root: the automatic `pnpm install` needs the workspace root (`pnpm-workspace.yaml`) to resolve the `workspace:*` dependencies. Hostinger's monorepo auto-detection would pick `apps/web` and build only that subdirectory, which breaks the workspace install. |
 | **Build command** | `pnpm run build:standalone` | Injects `OUTPUT=standalone` cross-platform and copies `.next/static` + `public/` into the standalone output. A plain `pnpm run build` (turbo) does **not** emit `.next/standalone`. |
-| **Package manager** | `pnpm` | Auto-detected from `pnpm-lock.yaml`. |
+| **Package manager** | `pnpm` | **Set this explicitly in hPanel — it is not auto-detected.** If it is left on the default (`npm`), the automatic install runs `npm install`, which does not read `pnpm-workspace.yaml`: only the root devDependencies are installed and every workspace package (including `apps/web`) is left without `node_modules`, so the build fails with `next: command not found`. |
 | **Output directory** | *(leave empty)* | Ignored for `Other` when an entry file is set. |
 | **Entry file** | `apps/web/hostinger-server.js` | Relative to the root directory. Resolves the standalone server at `apps/web/.next/standalone/apps/web/server.js`, binds the `PORT` Hostinger assigns, and falls back to `next start` when no standalone build exists. |
 
@@ -172,6 +172,12 @@ SUPABASE_DB_URL="postgresql://postgres:<password>@db.<ref>.supabase.co:5432/post
 ```
 
 Or paste `packages/database/schema.sql` into the Supabase SQL editor and run it. PostgREST reloads its schema cache automatically on DDL, so no further restart is needed.
+
+### Build fails with `next: command not found`
+
+`sh: line 1: next: command not found` — usually with `WARN Local package.json exists, but node_modules missing` — means the dependency install ran with **npm** instead of pnpm. npm does not read `pnpm-workspace.yaml`, so a root `npm install` installs only the root devDependencies and leaves every workspace package without its dependencies.
+
+Fix the hPanel → Node.js → Build settings (**Package manager: `pnpm`**, **Build command: `pnpm run build:standalone`**) and redeploy. As a safety net, the root `build` and `build:standalone` scripts run `scripts/verify-build-env.js` first, which fails fast with the exact settings above when the wrong package manager or an incomplete install is detected — so a misconfigured build reports the fix instead of failing deep inside the pipeline.
 
 ### Build fails on `pnpm install` (Corepack `MODULE_NOT_FOUND`)
 
