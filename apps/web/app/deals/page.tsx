@@ -1,36 +1,33 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { env } from "@thinkabell/config";
-import Image from "next/image";
 import { DealCard } from "@/components/DealCard";
 import { DealFilters } from "@/components/DealFilters";
 import { getNonce } from "@/lib/csp";
-import { fetchDeals as fetchDealsData, normalizeCategory, type DealsQuery } from "@/lib/catalog";
+import { parseDealsSearchParams, type SearchParamsRecord } from "@/lib/listing-params";
+import { fetchDeals as fetchDealsData, type DealsQuery } from "@/lib/catalog";
 import { Search } from "lucide-react";
 import type { Metadata } from "next";
 
 interface DealsPageProps {
-  searchParams?: Promise<{
-    category?: string;
-    deal_type?: string;
-    min_discount?: string;
-    sort?: string;
-    cursor?: string;
-  }>;
+  searchParams?: Promise<SearchParamsRecord>;
+}
+
+/** Deals matching the current filters, or an empty page when the query fails. */
+async function fetchDeals(params: DealsQuery) {
+  try {
+    return await fetchDealsData(params);
+  } catch {
+    return { results: [], count: 0, nextCursor: null, hasMore: false };
+  }
 }
 
 export async function generateMetadata({ searchParams }: DealsPageProps): Promise<Metadata> {
   const sp = await searchParams;
-  const params = {
-    category: sp?.category,
-    deal_type: sp?.deal_type,
-    min_discount: sp?.min_discount,
-    sort: sp?.sort,
-    cursor: sp?.cursor,
-  };
+  const params = parseDealsSearchParams(sp);
 
   const data = await fetchDeals(params);
-  const category = sp?.category;
+  const category = params.category;
   const title = category
     ? `${category.charAt(0).toUpperCase() + category.slice(1)} Deals | ThinkaBell`
     : "All Deals | ThinkaBell";
@@ -44,20 +41,6 @@ export async function generateMetadata({ searchParams }: DealsPageProps): Promis
     alternates: { canonical: "/deals" },
     robots: data.count > 0 ? undefined : { index: false, follow: true },
   };
-}
-
-async function fetchDeals(params: Record<string, string | undefined>) {
-  try {
-    return await fetchDealsData({
-      category: normalizeCategory(params.category),
-      deal_type: params.deal_type,
-      min_discount: params.min_discount ? Number(params.min_discount) : undefined,
-      sort: (params.sort as DealsQuery["sort"]) || undefined,
-      cursor: params.cursor,
-    });
-  } catch {
-    return { results: [], count: 0, nextCursor: null, hasMore: false };
-  }
 }
 
 function DealsGrid({ deals }: { deals: any[] }) {
@@ -112,13 +95,7 @@ function DealsSkeleton() {
 export default async function DealsPage({ searchParams }: DealsPageProps) {
   const nonce = await getNonce();
   const sp = await searchParams;
-  const params = {
-    category: sp?.category,
-    deal_type: sp?.deal_type,
-    min_discount: sp?.min_discount,
-    sort: sp?.sort,
-    cursor: sp?.cursor,
-  };
+  const params = parseDealsSearchParams(sp);
 
   const data = await fetchDeals(params);
 
@@ -126,7 +103,7 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
     const sp = new URLSearchParams();
     if (params.category) sp.set("category", params.category);
     if (params.deal_type) sp.set("deal_type", params.deal_type);
-    if (params.min_discount) sp.set("min_discount", params.min_discount);
+    if (params.min_discount) sp.set("min_discount", String(params.min_discount));
     if (params.sort) sp.set("sort", params.sort);
     sp.set("cursor", cursor);
     return `/deals?${sp.toString()}`;
@@ -175,7 +152,7 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
       <DealFilters
         selectedCategory={params.category}
         selectedDealType={params.deal_type}
-        minDiscount={params.min_discount ? Number(params.min_discount) : undefined}
+        minDiscount={params.min_discount}
         sort={params.sort}
       />
 

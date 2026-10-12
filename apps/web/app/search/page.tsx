@@ -1,22 +1,21 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Search } from "lucide-react";
 import type { Metadata } from "next";
 import { DealCard } from "@/components/DealCard";
-import { searchProducts, normalizeCategory } from "@/lib/catalog";
+import { searchProducts, type SearchQuery } from "@/lib/catalog";
+import { parseSearchSearchParams, type SearchParamsRecord } from "@/lib/listing-params";
+
+/** The category a /search query can carry once parseSearchSearchParams has run. */
+type SearchCategory = NonNullable<SearchQuery["category"]>;
 
 interface SearchPageProps {
-  searchParams?: Promise<{
-    q?: string;
-    category?: string;
-    cursor?: string;
-  }>;
+  searchParams?: Promise<SearchParamsRecord>;
 }
 
 export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
   const sp = await searchParams;
-  const query = sp?.q;
+  const query = parseSearchSearchParams(sp).q;
   const title = query ? `Search results for "${query}" | ThinkaBell` : "Search Deals | ThinkaBell";
   const description = query
     ? `Find the best deals on "${query}". Track prices and get alerts.`
@@ -30,16 +29,25 @@ export async function generateMetadata({ searchParams }: SearchPageProps): Promi
   };
 }
 
-async function searchDeals(query: string, category?: string, cursor?: string) {
+async function searchDeals(query: string, category: SearchCategory | undefined, cursor?: string) {
   try {
     return await searchProducts({
       q: query || undefined,
-      category: normalizeCategory(category),
+      category,
       cursor: cursor || undefined,
     });
   } catch {
     return { results: [], count: 0, nextCursor: null };
   }
+}
+
+/** Builds a /search cursor link that keeps the current query filters applied. */
+function buildCursorHref(query: string, category: string | undefined, cursor: string) {
+  const sp = new URLSearchParams();
+  sp.set("q", query);
+  if (category) sp.set("category", category);
+  sp.set("cursor", cursor);
+  return `/search?${sp.toString()}`;
 }
 
 function SearchResults({
@@ -48,11 +56,9 @@ function SearchResults({
   cursor,
 }: {
   query: string;
-  category?: string;
+  category?: SearchCategory;
   cursor?: string;
 }) {
-  const data = searchDeals(query, category, cursor);
-
   if (!query) {
     return (
       <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
@@ -78,7 +84,7 @@ async function SearchResultsInner({
   cursor,
 }: {
   query: string;
-  category?: string;
+  category?: SearchCategory;
   cursor?: string;
 }) {
   const data = await searchDeals(query, category, cursor);
@@ -108,7 +114,7 @@ async function SearchResultsInner({
       {data.nextCursor && (
         <div className="flex justify-center">
           <Link
-            href={`/search?q=${encodeURIComponent(query)}${category ? `&category=${category}` : ""}&cursor=${data.nextCursor}`}
+            href={buildCursorHref(query, category, data.nextCursor)}
             className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
           >
             Load More
@@ -142,8 +148,9 @@ function SearchSkeleton() {
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const sp = await searchParams;
-  const query = sp?.q || "";
-  const category = sp?.category;
+  const { q, category, cursor } = parseSearchSearchParams(sp);
+  const query = q ?? "";
+  const selectedCategory = category;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -155,7 +162,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       </div>
 
       <Suspense fallback={<SearchSkeleton />}>
-        <SearchResults query={query} category={category} cursor={sp?.cursor} />
+        <SearchResults query={query} category={selectedCategory} cursor={cursor} />
       </Suspense>
 
       <div className="mt-8">
