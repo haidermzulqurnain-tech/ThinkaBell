@@ -38,6 +38,70 @@ const sentryDsn = z
     message: "not a valid Sentry DSN (expected https://<key>@<host>/<projectId>)",
   });
 
+/**
+ * A Supabase-managed project host is `<project-ref>.supabase.co` (also `.in`
+ * and `.red`), where the ref is a lowercase alphanumeric token. A custom
+ * domain fronting the Supabase API gateway is also legitimate, so anything
+ * that is not a `*.supabase.*` host is accepted as-is.
+ *
+ * This is a shape rule, not a denylist: the placeholder Hostname shipped in
+ * .env.example (`your-project.supabase.co`) fails because its label contains a
+ * hyphen and is too short to be a ref, so a copied placeholder is reported
+ * instead of silently being pointed at a host that does not exist.
+ */
+function isSupabaseHostValue(value: string): boolean {
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return false;
+  }
+  // TLS remotely; plain http only for a local Supabase CLI instance.
+  if (parsed.protocol === "http:") {
+    return parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+  }
+  if (parsed.protocol !== "https:") return false;
+
+  const managed = /^([a-z0-9-]+)\.supabase\.(co|in|red)$/i.exec(parsed.hostname);
+  if (!managed) return true; // custom domain — cannot be validated by shape
+  return /^[a-z0-9]{10,}$/i.test(managed[1] ?? "");
+}
+
+/**
+ * Supabase issues either a JWT (`header.payload.signature`, the legacy anon
+ * and service-role keys) or a new-style `sb_publishable_…` / `sb_secret_…`
+ * key. Both are recognisable from shape, so a copied placeholder such as
+ * `your-supabase-anon-key` is caught without naming it.
+ */
+function isSupabaseKeyShape(value: string): boolean {
+  return (
+    /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(value) ||
+    /^sb_(publishable|secret)_[A-Za-z0-9_-]+$/.test(value)
+  );
+}
+
+/** A Supabase URL where one is present. Empty stays "not configured". */
+const supabaseUrl = z
+  .string()
+  .optional()
+  .transform((value) => (value === undefined || value === "" ? "" : value.trim()))
+  .refine((value) => value === "" || isSupabaseHostValue(value), {
+    message: "not a Supabase project URL (expected https://<project-ref>.supabase.co)",
+  });
+
+/**
+ * A Supabase key where one is present. Unlike the URL this fails closed: a
+ * value that is not a JWT or an `sb_` key cannot authenticate against Supabase,
+ * so it is dropped rather than used, and reported by variable name.
+ */
+const supabaseKey = z
+  .string()
+  .optional()
+  .transform((value) => (value === undefined || value === "" ? "" : value.trim()))
+  .refine((value) => value === "" || isSupabaseKeyShape(value), {
+    message: "not a Supabase key (expected a JWT or an sb_publishable_/sb_secret_ key)",
+  });
+
 export const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().default(3000),
@@ -46,19 +110,14 @@ export const envSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().default("https://thinkabell.click"),
 
   // Supabase (empty when unconfigured — the database client fails closed).
-  // The URL is validated so a typo reports the variable by name instead of
-  // surfacing later as an opaque fetch failure; the transform keeps the
-  // unconfigured state an empty string rather than undefined, and the default
-  // is applied *after* validation so "" remains a legal unconfigured value.
-  SUPABASE_URL: z
-    .string()
-    .url()
-    .optional()
-    .transform((value) => value ?? ""),
-  SUPABASE_ANON_KEY: z.string().default(""),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().default(""),
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
+  // Both are validated for shape so a placeholder copied from .env.example is
+  // reported by name instead of pointing the client at a host that does not
+  // exist, which leaves Supabase showing no connections at all.
+  SUPABASE_URL: supabaseUrl,
+  SUPABASE_ANON_KEY: supabaseKey,
+  SUPABASE_SERVICE_ROLE_KEY: supabaseKey,
+  NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: supabaseKey,
 
   // Amazon PA-API
   AMAZON_ACCESS_KEY: z.string().default(""),
@@ -254,10 +313,21 @@ function reportIssues(issues: EnvIssue[]): void {
     const state = issue.delivered ? "invalid value" : "unset";
     console.error(`   - ${issue.variable} (${state}): ${issue.reason}`);
   }
-  console.error(
-    "   Values are deliberately not logged. Fix the variables listed above; " +
-      "the credentials the host did deliver keep working.",
-  );
+  // Name the consequence, which differs by what was rejected: variables that
+  // were merely unset keep their default, while a value the host delivered and
+  // that was rejected is inert until the host is corrected.
+  const affected = issues.filter((issue) => issue.delivered);
+  if (affected.length > 0) {
+    console.error(
+      `   Values are deliberately not logged. ${affected.length} delivered value(s) were dropped, ` +
+        `so anything depending on ${affected.map((issue) => issue.variable).join(", ")} is inactive ` +
+        "until the host is corrected.",
+    );
+  } else {
+    console.error(
+      "   Values are deliberately not logged. These were unset, so their defaults apply.",
+    );
+  }
 }
 
 export function getEnv(): Env {

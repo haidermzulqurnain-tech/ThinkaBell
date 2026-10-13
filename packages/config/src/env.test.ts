@@ -144,6 +144,13 @@ describe("Config: Environment Validation", () => {
 
   describe("field isolation", () => {
     /**
+     * A project ref and key shaped like the real thing, so these fixtures pass
+     * the shape validation that the placeholder values they replace would not.
+     */
+    const REAL_URL = "https://abcdefghijklmnopqrst.supabase.co";
+    const REAL_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYW5vbiJ9.signature";
+
+    /**
      * Regression: getEnv() used to parse the whole object at once and, on any
      * failure, fall back to envSchema.parse({}) — which replaced every value
      * the host delivered with its default. One malformed variable (an app URL
@@ -153,36 +160,36 @@ describe("Config: Environment Validation", () => {
      */
     it("keeps Supabase credentials when a sibling variable is invalid", async () => {
       process.env = {
-        SUPABASE_URL: "https://project.supabase.co",
-        SUPABASE_ANON_KEY: "anon-key",
-        SUPABASE_SERVICE_ROLE_KEY: "service-key",
+        SUPABASE_URL: REAL_URL,
+        SUPABASE_ANON_KEY: REAL_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: REAL_KEY.replace("anon", "service"),
         NEXT_PUBLIC_APP_URL: "thinkabell.click",
       };
       const { getEnv } = await import("./env");
 
-      expect(getEnv().SUPABASE_URL).toBe("https://project.supabase.co");
-      expect(getEnv().SUPABASE_ANON_KEY).toBe("anon-key");
-      expect(getEnv().SUPABASE_SERVICE_ROLE_KEY).toBe("service-key");
+      expect(getEnv().SUPABASE_URL).toBe(REAL_URL);
+      expect(getEnv().SUPABASE_ANON_KEY).toBe(REAL_KEY);
+      expect(getEnv().SUPABASE_SERVICE_ROLE_KEY).toBe(REAL_KEY.replace("anon", "service"));
       // The invalid field falls back to its own default.
       expect(getEnv().NEXT_PUBLIC_APP_URL).toBe("https://thinkabell.click");
     });
 
     it("keeps valid credentials when an unrelated variable is not a number", async () => {
       process.env = {
-        SUPABASE_URL: "https://project.supabase.co",
-        SUPABASE_ANON_KEY: "anon-key",
+        SUPABASE_URL: REAL_URL,
+        SUPABASE_ANON_KEY: REAL_KEY,
         PORT: "not-a-port",
       };
       const { getEnv } = await import("./env");
 
-      expect(getEnv().SUPABASE_URL).toBe("https://project.supabase.co");
+      expect(getEnv().SUPABASE_URL).toBe(REAL_URL);
       expect(getEnv().PORT).toBe(3000);
     });
 
     it("reports the rejected variable by name without logging its value", async () => {
       process.env = {
-        SUPABASE_URL: "https://project.supabase.co",
-        SUPABASE_ANON_KEY: "super-secret-value",
+        SUPABASE_URL: REAL_URL,
+        SUPABASE_ANON_KEY: REAL_KEY,
         NEXT_PUBLIC_APP_URL: "thinkabell.click",
       };
       const { getEnvIssues } = await import("./env");
@@ -195,7 +202,7 @@ describe("Config: Environment Validation", () => {
       expect(issue?.delivered).toBe(true);
       // The reason must never carry the delivered value.
       expect(issue?.reason).not.toContain("thinkabell.click");
-      expect(issue?.reason).not.toContain("super-secret-value");
+      expect(issue?.reason).not.toContain(REAL_KEY);
     });
 
     it("treats a blank value as unset instead of coercing it", async () => {
@@ -217,8 +224,8 @@ describe("Config: Environment Validation", () => {
 
     it("has no issues for a fully valid environment", async () => {
       process.env = {
-        SUPABASE_URL: "https://project.supabase.co",
-        SUPABASE_ANON_KEY: "anon-key",
+        SUPABASE_URL: REAL_URL,
+        SUPABASE_ANON_KEY: REAL_KEY,
         NEXT_PUBLIC_APP_URL: "https://thinkabell.click",
       };
       const { getEnvIssues } = await import("./env");
@@ -235,6 +242,79 @@ describe("Config: Environment Validation", () => {
 
       resetEnv();
       expect(getEnvIssues()).toHaveLength(1);
+    });
+  });
+
+  describe("Supabase credential shape", () => {
+    /**
+     * The values .env.example used to ship. They are non-empty, so the
+     * fail-closed guard in packages/database passed them through, and the URL
+     * is syntactically valid — so the client was built and pointed at a host
+     * that does not exist. Hostinger then showed the connection as configured
+     * while Supabase received no requests at all.
+     */
+    const PLACEHOLDER_URL = "https://your-project.supabase.co";
+    const PLACEHOLDER_KEY = "your-supabase-anon-key";
+
+    it("rejects the placeholder URL instead of pointing the client at it", async () => {
+      process.env = { SUPABASE_URL: PLACEHOLDER_URL };
+      const { getEnv, getEnvIssues } = await import("./env");
+
+      expect(getEnv().SUPABASE_URL).toBe("");
+      const issue = getEnvIssues().find((i) => i.variable === "SUPABASE_URL");
+      expect(issue?.delivered).toBe(true);
+    });
+
+    it("rejects the placeholder key instead of sending it to Supabase", async () => {
+      process.env = { SUPABASE_ANON_KEY: PLACEHOLDER_KEY };
+      const { getEnv, getEnvIssues } = await import("./env");
+
+      expect(getEnv().SUPABASE_ANON_KEY).toBe("");
+      expect(getEnvIssues().map((i) => i.variable)).toContain("SUPABASE_ANON_KEY");
+    });
+
+    it("fails closed for the client-facing pair too", async () => {
+      process.env = {
+        NEXT_PUBLIC_SUPABASE_URL: PLACEHOLDER_URL,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: PLACEHOLDER_KEY,
+      };
+      const { getEnv, getEnvIssues } = await import("./env");
+
+      expect(getEnv().NEXT_PUBLIC_SUPABASE_URL).toBe("");
+      expect(getEnv().NEXT_PUBLIC_SUPABASE_ANON_KEY).toBe("");
+      expect(
+        getEnvIssues()
+          .map((i) => i.variable)
+          .sort(),
+      ).toEqual(["NEXT_PUBLIC_SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_URL"]);
+    });
+
+    it("accepts the new-style sb_ publishable key", async () => {
+      process.env = { SUPABASE_ANON_KEY: "sb_publishable_AbCdEf123456" };
+      const { getEnv } = await import("./env");
+
+      expect(getEnv().SUPABASE_ANON_KEY).toBe("sb_publishable_AbCdEf123456");
+    });
+
+    it("accepts a local Supabase CLI instance over http", async () => {
+      process.env = { SUPABASE_URL: "http://127.0.0.1:54321" };
+      const { getEnv } = await import("./env");
+
+      expect(getEnv().SUPABASE_URL).toBe("http://127.0.0.1:54321");
+    });
+
+    it("accepts a custom domain fronting the Supabase gateway", async () => {
+      process.env = { SUPABASE_URL: "https://api.example.com" };
+      const { getEnv } = await import("./env");
+
+      expect(getEnv().SUPABASE_URL).toBe("https://api.example.com");
+    });
+
+    it("rejects a remote http URL", async () => {
+      process.env = { SUPABASE_URL: "http://abcdefghijklmnopqrst.supabase.co" };
+      const { getEnv } = await import("./env");
+
+      expect(getEnv().SUPABASE_URL).toBe("");
     });
   });
 
