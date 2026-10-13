@@ -218,7 +218,8 @@ pnpm run type-check        # TypeScript (6/6 packages)
 pnpm run lint              # see note below
 pnpm run test              # Vitest (507 tests, 82 files)
 pnpm run format:check      # Prettier (repo-wide)
-pnpm tsx scripts/compliance-check.ts   # FTC/sponsored/privacy/unsubscribe scan
+  pnpm tsx scripts/compliance-check.ts   # FTC/sponsored/privacy/unsubscribe scan
+  pnpm run check:supabase                # Supabase reachability, stage by stage
 ```
 
 > **Note on `lint`:** only `@thinkabell/web` runs real ESLint. `@thinkabell/jobs`,

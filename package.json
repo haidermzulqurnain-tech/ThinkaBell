@@ -8,6 +8,10 @@
     "node": ">=22",
     "pnpm": ">=10"
   },
+  "dependencies": {
+    "@thinkabell/config": "workspace:*",
+    "@thinkabell/database": "workspace:*"
+  },
   "scripts": {
     "dev": "turbo run dev",
     "build": "node scripts/verify-build-env.js && turbo run build",
@@ -22,6 +26,7 @@
     "package:hostinger": "pnpm build:standalone && node scripts/prepare-hostinger.js",
     "verify:hostinger": "tsx scripts/verify-hostinger-deploy.ts",
     "db:apply": "tsx scripts/apply-schema.ts",
+    "check:supabase": "tsx scripts/check-supabase-connection.ts",
     "simulate": "tsx scripts/simulate-pipeline.ts",
     "clean": "turbo run clean"
   },
@@ -30,8 +35,6 @@
     "@types/node": "^22.13.4",
     "@types/pg": "^8.15.6",
     "@vitest/coverage-v8": "^4.1.11",
-    "happy-dom": "^20.0.0",
-    "jsdom": "^25.0.1",
     "pg": "^8.15.6",
     "prettier": "^3.5.1",
     "turbo": "^2.10.8",

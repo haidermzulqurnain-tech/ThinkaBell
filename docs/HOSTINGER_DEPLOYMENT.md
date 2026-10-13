@@ -327,6 +327,47 @@ placeholder like `https://your-redis.upstash.io` is a valid URL pointing at
 nothing), and `NEXT_PUBLIC_POSTHOG_KEY`. `.env.example` ships empty values
 with instructions for all of them.
 
+#### Verify the connection from the host
+
+`/api/health` answers the question from inside the app. For a stage-by-stage
+answer, including which of the four possible causes it is, run:
+
+```bash
+pnpm run check:supabase            # or: pnpm tsx scripts/check-supabase-connection.ts
+pnpm run check:supabase -- --json  # machine-readable, for monitoring
+```
+
+The script reports each stage separately, because they need different fixes and
+collapsing them into one error is what makes the symptom hard to diagnose:
+
+| Stage  | Meaning when it fails                                                                      |
+| ------ | ------------------------------------------------------------------------------------------ |
+| config | A variable is unset or malformed in this environment (the placeholder case).               |
+| node   | The runtime Node is older than the `node: >=22.0.0` that `@supabase/supabase-js` requires. |
+| reach  | The project host is unreachable — DNS, TLS, egress, or a URL that does not resolve.        |
+| auth   | The host answered but rejected the key (401/403).                                          |
+| data   | The request **reached** Supabase; the failure is RLS or schema, not the connection.        |
+
+Exit code is 0 only when a real query through the app's own client succeeds, so
+it can gate a deploy. No secret is ever printed — only the last four characters
+of a key, so you can confirm which value is loaded.
+
+`--table` probes a specific table (default `products`): pass a table you know
+exists to separate an RLS problem from a missing table.
+
+On the `node` stage: `@supabase/supabase-js` declares `engines.node >=22.0.0`,
+so Node 20 is a genuine version shortfall rather than a cosmetic warning. The
+host currently runs Node 20 while the repo pins `>=22` and CI uses 22 — correct
+the hPanel Node version, not the code.
+
+> **Do not add a standalone `db.js`.** A root- or app-level script that calls
+> `createClient()` with `process.env.SUPABASE_API_KEY` duplicates
+> `packages/database/src/client.ts` with two defects: `SUPABASE_API_KEY` is not a
+> variable this repo reads (it uses `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`),
+> so it would connect as `undefined`, and the table name is a placeholder. Such a
+> file is never imported, so it silently does nothing while looking like the
+> connection path.
+
 `packages/database` logs the project ref on first client construction — e.g.
 `[Database] Supabase anon client connected to project "abcdefghij…" (key …1234)`
 — so the runtime log names the project it connected to. Key presence only is
