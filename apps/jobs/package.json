@@ -10,7 +10,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@thinkabell/config": "workspace:*",
     "@thinkabell/database": "workspace:*",
     "@thinkabell/shared": "workspace:*",
     "p-limit": "^6.2.0"

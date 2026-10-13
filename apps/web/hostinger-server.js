@@ -15,6 +15,22 @@ const HOSTNAME = process.env.HOSTNAME || "0.0.0.0";
 process.env.PORT = String(PORT);
 process.env.HOSTNAME = HOSTNAME;
 
+// Next.js warns about a "non-standard NODE_ENV" and then behaves
+// inconsistently, because several code paths branch on it. Some hosts set it to
+// a value outside the documented set. This entrypoint is the production server,
+// so normalize anything non-standard to "production" rather than inheriting it,
+// while leaving an already-standard value (including "development", so the same
+// file still works for a local run) untouched.
+const STANDARD_NODE_ENVS = ["development", "production", "test"];
+if (!STANDARD_NODE_ENVS.includes(process.env.NODE_ENV)) {
+  if (process.env.NODE_ENV) {
+    console.warn(
+      `[Hostinger] Non-standard NODE_ENV "${process.env.NODE_ENV}" — normalizing to "production".`,
+    );
+  }
+  process.env.NODE_ENV = "production";
+}
+
 console.log(`[Hostinger] Starting ThinkaBell server on http://${HOSTNAME}:${PORT}`);
 
 // Path to standalone server created by Next.js.
@@ -42,11 +58,12 @@ if (serverEntry) {
   console.log(`[Hostinger] Loading server bundle from: ${serverEntry}`);
   require(serverEntry);
 } else {
-  // Fallback: no standalone build is present (a plain `next build`
-  // was run). Start the standard Next.js production server from the
-  // app directory so Next.js finds next.config.js and the .next
-  // build output. PORT is already set above from the environment.
-  console.log("[Hostinger] Standalone server not found. Falling back to `next start`.");
+  // No standalone build is present: a plain `next build` was run (or OUTPUT was
+  // not "standalone"). This is the supported Hostinger path — deploy the full
+  // project and run `next start`. Start the standard Next.js production server
+  // from the app directory so Next.js finds next.config.js and the .next build
+  // output. PORT is already set above from the environment.
+  console.log("[Hostinger] Using `next start` (no standalone output; full-project deploy).");
   process.chdir(__dirname);
   process.argv = [
     process.argv[0],

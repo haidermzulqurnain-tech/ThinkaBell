@@ -53,3 +53,18 @@ allowBuilds:
 # Added in pnpm 11, so only a pnpm 11+ host reads this; the pinned 10.34.6 used
 # by CI and local dev matches the pin and never reaches this path.
 pmOnFail: warn
+
+# What `pnpm run` / `pnpm exec` do when node_modules is out of date.
+#
+# The default is `install`, which means any mismatched pnpm that decides the
+# tree is stale will try to remove and rebuild node_modules. That is not a
+# hypothetical: running a pnpm that differs from the one that installed
+# destroyed node_modules here (ERR_PNPM_PACKAGE_MANAGER_REMOVE_MODULES_DIR),
+# and on a host with an empty store or no network the same attempt fails the
+# build outright.
+#
+# `warn` makes the run read-only with respect to node_modules: it reports the
+# staleness and proceeds. Installs are then only performed deliberately, by
+# `pnpm install`, which is what CI, the Hostinger pipeline, and the
+# dependency-refresh commits already do.
+verifyDepsBeforeRun: warn

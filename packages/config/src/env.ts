@@ -7,6 +7,37 @@ import dotenv from "dotenv";
 // value the host delivers — Hostinger's environment variables included — wins.
 dotenv.config();
 
+/**
+ * A Sentry DSN is `https://<publicKey>@<host>/<projectId>`.
+ *
+ * The public key is an opaque token, so shape is all that can be validated.
+ * The rules below come from the DSN grammar rather than a denylist: the key
+ * must be a single alphanumeric token and the project id a positive integer.
+ * The example value shipped in .env.example
+ * (`https://your-sentry-dsn@ingest.sentry.io/0`) fails both — its key contains
+ * hyphens and its project id is 0 — so a placeholder copied from that file is
+ * reported as an invalid value instead of being sent to Sentry, which rejects
+ * it and logs `Invalid Sentry Dsn` on every boot.
+ */
+function isSentryDsnShape(value: string): boolean {
+  const match = /^https?:\/\/([^@/]+)@[^/]+\/(\d+)$/.exec(value.trim());
+  if (!match) return false;
+  const key = match[1] ?? "";
+  return /^[0-9A-Za-z]+$/.test(key) && Number(match[2]) > 0;
+}
+
+/**
+ * Validates a Sentry DSN where one is present. An empty or absent value means
+ * "not configured" and passes, so the unconfigured state stays legal.
+ */
+const sentryDsn = z
+  .string()
+  .optional()
+  .transform((value) => (value === undefined || value === "" ? "" : value.trim()))
+  .refine((value) => value === "" || isSentryDsnShape(value), {
+    message: "not a valid Sentry DSN (expected https://<key>@<host>/<projectId>)",
+  });
+
 export const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().default(3000),
@@ -101,9 +132,7 @@ export const envSchema = z.object({
 
   // Analytics & Monitoring
   NEXT_PUBLIC_POSTHOG_KEY: z.string().default(""),
-  NEXT_PUBLIC_POSTHOG_HOST: z.string().default("https://app.posthog.com"),
-  SENTRY_DSN: z.string().default(""),
-  NEXT_PUBLIC_SENTRY_DSN: z.string().default(""),
+  NEXT_PUBLIC_POSTHOG_HOST: z.string().url().default("https://app.posthog.com"),
 
   // Vercel Cron / Job Security
   CRON_SECRET: z.string().default(""),
@@ -128,6 +157,16 @@ export const envSchema = z.object({
   // AppSumo needs no credentials: it publishes no
   // public deals API, so its client harvests the
   // server-rendered browse and product pages.
+
+  // Error reporting. Both are empty until configured, and the Sentry init
+  // sites skip initialization when unset — see isSentryDsnConfigured() below.
+  // A value that is present but malformed (for example the placeholder shipped
+  // in .env.example) is reported through getEnvIssues() rather than forwarded
+  // to Sentry, which rejects it at boot.
+  SENTRY_DSN: sentryDsn,
+  NEXT_PUBLIC_SENTRY_DSN: sentryDsn,
+  SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
+  NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
 });
 
 export type Env = z.infer<typeof envSchema>;

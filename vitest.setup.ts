@@ -19,13 +19,10 @@ vi.mock("next/navigation", () => ({
 
 // Mock Next Image
 vi.mock("next/image", () => ({
-  default: ({ alt, src, ...props }: any) => {
-    const { toHaveAttribute } = require("@testing-library/jest-dom");
-    return {
-      type: "img",
-      props: { alt, src, ...props },
-    };
-  },
+  default: ({ alt, src, ...props }: any) => ({
+    type: "img",
+    props: { alt, src, ...props },
+  }),
 }));
 
 // Mock Next Script
