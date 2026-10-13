@@ -357,6 +357,23 @@ Before deploying for production, set the secrets (`wrangler secret put <NAME>`):
 
 Vercel cron jobs send `POST` by default, which matches the route handlers. A `401` response means the header's `CRON_SECRET` does not match the server's — fix the mismatch (see [10.4](#104-authentication--authorization)); a `429` means the endpoint is being called too frequently. The discovery endpoint invokes `runProductDiscovery()` from `@thinkabell/jobs`, which acquires advisory lock `1004` — overlapping invocations exit immediately instead of running concurrently.
 
+### 9.4 Cron jobs on Hostinger
+
+`vercel.json` only applies on Vercel. On a Hostinger deployment nothing schedules the jobs, so prices never refresh and alerts never send. Schedule them inside Supabase instead — `pg_cron` fires the schedule and `pg_net` makes the HTTP call, which keeps the app stateless and puts the schedule in the repository:
+
+1. Enable `pg_cron` and `pg_net` (Supabase → Database → Extensions).
+2. `pnpm db:apply` — applies `packages/database/schema.sql` and then every not-yet-applied file in `packages/database/migrations/`, tracked in `public.schema_migrations`.
+3. Insert the two settings rows (nothing is hardcoded in the migration; `cron_secret` must equal the app's `CRON_SECRET`):
+   ```sql
+   insert into public.cron_settings (key, value) values
+     ('site_url', 'https://thinkabell.click'),
+     ('cron_secret', '<CRON_SECRET>')
+   on conflict (key) do update set value = excluded.value, updated_at = now();
+   ```
+4. `select public.schedule_thinkabell_crons();`
+
+The same three schedules apply (`0 */6 * * *`). Full walkthrough, including how to change the schedule and how to verify a run, is in `docs/HOSTINGER_DEPLOYMENT.md` Step 6.5.
+
 ---
 
 ## Phase 10 — Troubleshooting (step by step)

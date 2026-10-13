@@ -1,10 +1,11 @@
 import { z } from "zod";
 import dotenv from "dotenv";
 
-// Load local environment files if not in production
-if (process.env.NODE_ENV !== "production") {
-  dotenv.config();
-}
+// Local .env files are read by dotenv for the runtime entrypoints that Next.js
+// does not load them for (the jobs runner and the Hostinger standalone server).
+// dotenv never overrides a variable already present in the environment, so any
+// value the host delivers — Hostinger's environment variables included — wins.
+dotenv.config();
 
 export const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
@@ -13,11 +14,19 @@ export const envSchema = z.object({
   // Application
   NEXT_PUBLIC_APP_URL: z.string().url().default("https://thinkabell.click"),
 
-  // Supabase (empty when unconfigured — the database client fails closed)
-  SUPABASE_URL: z.string().default(""),
+  // Supabase (empty when unconfigured — the database client fails closed).
+  // The URL is validated so a typo reports the variable by name instead of
+  // surfacing later as an opaque fetch failure; the transform keeps the
+  // unconfigured state an empty string rather than undefined, and the default
+  // is applied *after* validation so "" remains a legal unconfigured value.
+  SUPABASE_URL: z
+    .string()
+    .url()
+    .optional()
+    .transform((value) => value ?? ""),
   SUPABASE_ANON_KEY: z.string().default(""),
   SUPABASE_SERVICE_ROLE_KEY: z.string().default(""),
-  NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
 
   // Amazon PA-API
@@ -123,25 +132,118 @@ export const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
+/** An environment variable the host delivered that failed validation. */
+export interface EnvIssue {
+  /** The environment variable name, e.g. NEXT_PUBLIC_APP_URL. */
+  variable: string;
+  /** Why the delivered value was rejected. Never contains the value itself. */
+  reason: string;
+  /** True when a value was delivered and rejected; false when it was unset/empty. */
+  delivered: boolean;
+}
+
 let _env: Env | null = null;
+let _issues: EnvIssue[] = [];
+
+/**
+ * A blank value is treated as unset. Hosts commonly deliver an empty string
+ * for a field left untouched, and `z.coerce.number()` would otherwise turn
+ * `PORT=""` into 0.
+ */
+function readSourceValue(raw: string | undefined): string | undefined {
+  return raw === undefined || raw === "" ? undefined : raw;
+}
+
+function firstIssueReason(error: z.ZodError): string {
+  const issue = error.issues[0];
+  if (!issue) return "invalid value";
+  const path = issue.path.join(".") || "value";
+  return issue.message ? `${path}: ${issue.message}` : path;
+}
+
+/**
+ * Validates each field on its own.
+ *
+ * The previous implementation parsed the whole object in one `safeParse` and,
+ * on any failure, fell back to `envSchema.parse({})` — which replaced *every*
+ * value the host delivered with that field's default. A single malformed
+ * variable (an app URL missing its scheme, a non-numeric PORT, a sender email
+ * without a domain) therefore disabled the Supabase credentials too, and the
+ * only signal was a `console.warn` nobody sees on a production host.
+ *
+ * Now a rejected field falls back to its own default and is reported through
+ * {@link getEnvIssues}, so the surviving values keep working and the operator
+ * is told exactly which variable to fix.
+ */
+function parseEnvFields(source: NodeJS.ProcessEnv): { env: Env; issues: EnvIssue[] } {
+  const shape = envSchema.shape as Record<string, z.ZodTypeAny>;
+  const values: Record<string, unknown> = {};
+  const issues: EnvIssue[] = [];
+
+  for (const [variable, schema] of Object.entries(shape)) {
+    const raw = readSourceValue(source[variable]);
+    const parsed = schema.safeParse(raw);
+
+    if (parsed.success) {
+      values[variable] = parsed.data;
+      continue;
+    }
+
+    // Fall back to this field's own default rather than the whole object's.
+    // A field with neither a default nor an optional wrapper cannot be
+    // defaulted, so it stays unset and is still reported.
+    const fallback = schema.safeParse(undefined);
+    if (fallback.success) {
+      values[variable] = fallback.data;
+    }
+
+    issues.push({ variable, reason: firstIssueReason(parsed.error), delivered: raw !== undefined });
+  }
+
+  return { env: values as Env, issues };
+}
+
+function reportIssues(issues: EnvIssue[]): void {
+  if (issues.length === 0) return;
+
+  const rejected = issues.filter((issue) => issue.delivered).length;
+  console.error(
+    `⚠️ [Config] ${issues.length} environment variable(s) rejected (${rejected} invalid, ` +
+      `${issues.length - rejected} unset). Defaults applied; missing credentials are inert.`,
+  );
+  for (const issue of issues) {
+    const state = issue.delivered ? "invalid value" : "unset";
+    console.error(`   - ${issue.variable} (${state}): ${issue.reason}`);
+  }
+  console.error(
+    "   Values are deliberately not logged. Fix the variables listed above; " +
+      "the credentials the host did deliver keep working.",
+  );
+}
 
 export function getEnv(): Env {
   if (_env) return _env;
 
-  const parsed = envSchema.safeParse(process.env);
-  if (!parsed.success) {
-    console.warn("⚠️ [Config] Environment validation warnings:", parsed.error.format());
-    // Fallback with defaults
-    _env = envSchema.parse({});
-  } else {
-    _env = parsed.data;
-  }
+  const { env: parsed, issues } = parseEnvFields(process.env);
+  _env = parsed;
+  _issues = issues;
+  reportIssues(issues);
 
   return _env;
 }
 
+/**
+ * The environment variables that were unset or rejected, for health reporting
+ * and operator diagnostics. Names and reasons only — never values.
+ */
+export function getEnvIssues(): EnvIssue[] {
+  getEnv();
+  return [..._issues];
+}
+
 export function resetEnv() {
   _env = null;
+  _issues = [];
 }
 
 export const env = getEnv();

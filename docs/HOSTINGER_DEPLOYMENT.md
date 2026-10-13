@@ -152,11 +152,54 @@ The database starts empty — products are populated by the discovery job.
    Expect `{"discovered":N,"sources":["appsumo"],"errors":[]}`. The endpoint is rate-limited to 10 requests/minute, and concurrent runs are skipped via a job lock — a `discovered: 0` response with sources configured means another run holds the lock, so wait and retry.
 4. Verify: `GET /api/deals` lists products; `GET /api/deals?category=software` lists software deals.
 
-**Recurring runs:** the `vercel.json` cron schedules only run on Vercel. On Hostinger, add an hPanel **Cron Job** (Advanced → Cron Jobs) on the same 6-hour schedule (`0 */6 * * *`) that POSTs the endpoint with the Bearer token:
+**Recurring runs:** the `vercel.json` cron schedules only run on Vercel, so on Hostinger nothing fires them. Schedule the three endpoints from inside Supabase instead — see **Step 6.5: Schedule the cron jobs** below. A Hostinger hPanel cron job works as a fallback, but it lives outside the repository, so a schedule change is a manual hPanel edit rather than a migration.
 
+---
+
+### Step 6.5: Schedule the cron jobs
+
+Hostinger does not run Vercel's `crons` array, so `vercel.json` is inert on this deployment. Schedule the jobs in Supabase instead: `pg_cron` fires on a 6-hour cadence (`0 */6 * * *`, the same schedule) and `pg_net` makes the HTTP call. The app stays stateless, and the schedule is version-controlled — it survives a redeploy.
+
+1. Enable the extensions: Supabase Dashboard → **Database → Extensions** → enable `pg_cron` and `pg_net`.
+
+2. Apply the migration (it creates the jobs and their settings table):
+
+   ```bash
+   SUPABASE_DB_URL="postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres" pnpm db:apply
+   ```
+
+   `pnpm db:apply` applies `schema.sql` and then every file in `packages/database/migrations/` that is not yet recorded in `public.schema_migrations`, so it is safe to re-run.
+
+3. Supply the two settings rows. **The migration does not hardcode either value**, and both are read from the database at scheduling time:
+
+   ```sql
+   insert into public.cron_settings (key, value) values
+     ('site_url', 'https://thinkabell.click'),
+     ('cron_secret', '<CRON_SECRET from Step 4>')
+   on conflict (key) do update set value = excluded.value, updated_at = now();
+   ```
+
+   `site_url` is the public origin the cron endpoints run on. `cron_secret` **must equal `CRON_SECRET`** exactly, because the routes authorize the request against that environment variable. Rows are protected by RLS: only the `postgres`/`service_role` roles can read them, and the anon key cannot.
+
+4. Re-run the scheduling function to pick the values up:
+
+   ```sql
+   select public.schedule_thinkabell_crons();
+   ```
+
+   Expect a `NOTICE` naming the three scheduled jobs. If `cron_settings` is missing a row the function raises a `NOTICE` and schedules nothing, so a misconfigured deployment stays inert rather than calling the endpoints unauthenticated.
+
+Jobs are created **only if the extension is already enabled** — applying the migration before enabling it fails on the `create extension` line, which is the message telling you to do step 1.
+
+**Changing the schedule or secret** is an edit to the settings rows plus a re-run of `schedule_thinkabell_crons()`, which unschedules the existing jobs before recreating them. Nothing else needs to change.
+
+**Verify a job runs** by checking `cron.job_run_details` for a result, or by triggering the endpoint manually:
+
+```bash
+curl -X POST https://thinkabell.click/api/cron/product-discovery -H "Authorization: Bearer <CRON_SECRET>"
 ```
-curl -s -X POST https://thinkabell.click/api/cron/product-discovery -H "Authorization: Bearer <CRON_SECRET>"
-```
+
+Note that `pg_net` dispatches asynchronously: the job row records the request being _queued_, not its HTTP result. A 401 in the route logs means the `cron_secret` row and the app's `CRON_SECRET` have drifted apart.
 
 ---
 
@@ -199,6 +242,59 @@ SUPABASE_DB_URL="postgresql://postgres:<password>@db.<ref>.supabase.co:5432/post
 ```
 
 Or paste `packages/database/schema.sql` into the Supabase SQL editor and run it. PostgREST reloads its schema cache automatically on DDL, so no further restart is needed.
+
+### App starts but `/api/health` is unhealthy
+
+Start here: `GET /api/health` returns a `checks` object. `database` is the Supabase check and `cache` is Redis.
+
+```
+{"status":"unhealthy","checks":{"config":"ok","database":"ok","cache":"error: ..."}}
+```
+
+- **`database: error: ... not configured ...`** — the app is not connected to Supabase. See the dedicated section below.
+- **`database: degraded: Invalid API key`** — `SUPABASE_URL` reached Supabase but `SUPABASE_ANON_KEY` was rejected. Re-copy both from Dashboard → Project Settings → API. A key copied with a trailing newline or whitespace is the usual cause.
+- **`cache: error`** — `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` are unset or wrong. Rate limiting and circuit breakers fall back to in-memory state, so the app still works but per-instance limits reset on restart.
+
+### App is not connected to Supabase (environment variables are set)
+
+If Hostinger's **Environment** section clearly holds the Supabase credentials but the app still cannot connect, the variables are almost certainly never reaching `process.env` — and the config layer reports exactly which ones. Add this check first:
+
+1. `GET /api/health` now includes a `config` check that lists the **names** of the variables that failed validation, never their values:
+
+   ```
+   "config":"rejected (defaults applied): NEXT_PUBLIC_APP_URL"
+   ```
+
+   Empty `checks` plus a valid `database` means the environment arrived intact.
+
+2. The startup log (Hostinger **Runtime Logs**) prints the same list with a reason per variable:
+   ```
+   ⚠️ [Config] 1 environment variable(s) rejected (1 invalid, 0 unset). Defaults applied; missing credentials are inert.
+      - NEXT_PUBLIC_APP_URL (invalid value): value: Invalid url
+   ```
+
+The common causes, in order of likelihood:
+
+| Symptom in the log / health check         | Cause                                                                                                            |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL (invalid value)`     | The URL is missing its scheme. `https://thinkabell.click` is required; `thinkabell.click` is not a valid URL.    |
+| `PORT (invalid value)`                    | A non-numeric value. Leave `PORT` unset so Hostinger assigns it.                                                 |
+| `SUPABASE_URL (invalid value)`            | Not a URL, or the dashboard URL was pasted into the key field (or vice versa). It must start with `https://`.    |
+| `BREVO_SENDER_EMAIL (invalid value)`      | A sender address without a domain, e.g. `noreply@localhost`. Contact-form sends fail until it is a real address. |
+| No `config` check at all, `database` fine | Nothing is wrong — the rest of the health output is a different problem.                                         |
+
+Why this used to be invisible: the config layer validated the whole environment in one pass and, on **any** failure, discarded every value and fell back to defaults — so one malformed variable silently disabled the Supabase credentials alongside it, with only a `console.warn` on a host that discards stdout. Validation is now per-variable: a rejected variable falls back to _its own_ default, the credentials the host delivered keep working, and the offending name is reported in the logs and in `/api/health`.
+
+Two more environment-specific gotchas:
+
+- **The value is set on the build step, not the runtime.** Hostinger's **Environment** section applies to the running app; a build-time-only value is baked into the build (and `NEXT_PUBLIC_*` values are inlined at build time). Set them under Environment and click **Restart Application** — Hostinger reloads them at process start, so a change without a restart does nothing.
+- **The variable is defined in `.env` instead of the Environment section.** Files are only a fallback: `packages/config` reads `.env` through dotenv, which never overrides a value the host already delivered, so a local `.env` cannot supply a variable that Hostinger also sets — and because `.env*` is gitignored it is not in the deployed bundle at all. Use the Environment section.
+
+If the environment is correct but `database` still fails, verify from a shell on the host:
+
+```bash
+curl -s https://thinkabell.click/api/health | head -c 400
+```
 
 ### Build fails with `next: command not found`
 

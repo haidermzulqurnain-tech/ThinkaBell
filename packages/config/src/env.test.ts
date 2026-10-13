@@ -142,6 +142,102 @@ describe("Config: Environment Validation", () => {
     });
   });
 
+  describe("field isolation", () => {
+    /**
+     * Regression: getEnv() used to parse the whole object at once and, on any
+     * failure, fall back to envSchema.parse({}) — which replaced every value
+     * the host delivered with its default. One malformed variable (an app URL
+     * missing its scheme, a non-numeric PORT, a malformed sender email)
+     * therefore wiped the Supabase credentials, leaving the app silently
+     * disconnected while the host served them.
+     */
+    it("keeps Supabase credentials when a sibling variable is invalid", async () => {
+      process.env = {
+        SUPABASE_URL: "https://project.supabase.co",
+        SUPABASE_ANON_KEY: "anon-key",
+        SUPABASE_SERVICE_ROLE_KEY: "service-key",
+        NEXT_PUBLIC_APP_URL: "thinkabell.click",
+      };
+      const { getEnv } = await import("./env");
+
+      expect(getEnv().SUPABASE_URL).toBe("https://project.supabase.co");
+      expect(getEnv().SUPABASE_ANON_KEY).toBe("anon-key");
+      expect(getEnv().SUPABASE_SERVICE_ROLE_KEY).toBe("service-key");
+      // The invalid field falls back to its own default.
+      expect(getEnv().NEXT_PUBLIC_APP_URL).toBe("https://thinkabell.click");
+    });
+
+    it("keeps valid credentials when an unrelated variable is not a number", async () => {
+      process.env = {
+        SUPABASE_URL: "https://project.supabase.co",
+        SUPABASE_ANON_KEY: "anon-key",
+        PORT: "not-a-port",
+      };
+      const { getEnv } = await import("./env");
+
+      expect(getEnv().SUPABASE_URL).toBe("https://project.supabase.co");
+      expect(getEnv().PORT).toBe(3000);
+    });
+
+    it("reports the rejected variable by name without logging its value", async () => {
+      process.env = {
+        SUPABASE_URL: "https://project.supabase.co",
+        SUPABASE_ANON_KEY: "super-secret-value",
+        NEXT_PUBLIC_APP_URL: "thinkabell.click",
+      };
+      const { getEnvIssues } = await import("./env");
+      const issues = getEnvIssues();
+
+      expect(issues).toHaveLength(1);
+      const issue = issues[0];
+      expect(issue).toBeDefined();
+      expect(issue?.variable).toBe("NEXT_PUBLIC_APP_URL");
+      expect(issue?.delivered).toBe(true);
+      // The reason must never carry the delivered value.
+      expect(issue?.reason).not.toContain("thinkabell.click");
+      expect(issue?.reason).not.toContain("super-secret-value");
+    });
+
+    it("treats a blank value as unset instead of coercing it", async () => {
+      process.env = { PORT: "", SUPABASE_URL: "" };
+      const { getEnv } = await import("./env");
+
+      // z.coerce.number() would otherwise turn "" into 0.
+      expect(getEnv().PORT).toBe(3000);
+      expect(getEnv().SUPABASE_URL).toBe("");
+    });
+
+    it("rejects a malformed Supabase URL so it cannot reach the client", async () => {
+      process.env = { SUPABASE_URL: "project.supabase.co" };
+      const { getEnv, getEnvIssues } = await import("./env");
+
+      expect(getEnv().SUPABASE_URL).toBe("");
+      expect(getEnvIssues().map((issue) => issue.variable)).toContain("SUPABASE_URL");
+    });
+
+    it("has no issues for a fully valid environment", async () => {
+      process.env = {
+        SUPABASE_URL: "https://project.supabase.co",
+        SUPABASE_ANON_KEY: "anon-key",
+        NEXT_PUBLIC_APP_URL: "https://thinkabell.click",
+      };
+      const { getEnvIssues } = await import("./env");
+
+      expect(getEnvIssues()).toEqual([]);
+    });
+
+    it("keeps reporting issues after resetEnv", async () => {
+      process.env = { NEXT_PUBLIC_APP_URL: "not-a-url" };
+      const { getEnv, getEnvIssues, resetEnv } = await import("./env");
+
+      getEnv();
+      expect(getEnvIssues()).toHaveLength(1);
+
+      resetEnv();
+      expect(getEnvIssues()).toHaveLength(1);
+    });
+  });
+
   describe("env singleton", () => {
     it("should be the same instance as getEnv()", async () => {
       const { env, getEnv } = await import("./env");
