@@ -38,10 +38,18 @@ allowBuilds:
   workerd: true
 
 # What to do when the running pnpm differs from the `packageManager` pin in
-# package.json (pnpm@10.34.6). `download` (the default) downloads and runs the
-# declared version, so install, Turbo tasks, and nested scripts all use the
-# same pnpm. This is the setting that fixes the failing build: a pnpm 11.24.0
-# Corepack shim previously hit the version gate mid-build and left node_modules
-# in a mixed 10/11 layout. Added in pnpm 11, so it only engages on a pnpm 11+
-# host; the pinned 10.34.6 matches the pin and never triggers it.
-pmOnFail: download
+# package.json (pnpm@10.34.6).
+#
+# `download` (the default) downloads and re-execs the declared version. On the
+# Hostinger build host that download is unavailable, so `download` aborts the
+# build outright — which is the failure this setting is here to prevent. Corepack
+# also blocks pnpm's own version switch, so the switch cannot succeed there.
+#
+# `warn` logs the mismatch and continues with the pnpm that is actually present
+# (11.24.0 on the host). Both the automatic install and the Turbo build then run
+# under the same pnpm, which keeps node_modules in one layout instead of the
+# mixed 10/11 layout that was breaking the workspace.
+#
+# Added in pnpm 11, so only a pnpm 11+ host reads this; the pinned 10.34.6 used
+# by CI and local dev matches the pin and never reaches this path.
+pmOnFail: warn

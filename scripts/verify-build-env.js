@@ -9,16 +9,22 @@
  * the build fails deep inside the pipeline with
  * "next: command not found".
  *
- * It must also run with the pinned pnpm VERSION. A
- * nested task (Turbo, or a `pnpm --filter ...` shell)
- * can re-resolve `pnpm` through Corepack to a
- * different version (e.g. 11.x) than the one that ran
- * install, which then fails mid-build. This check
- * reads the pinned version from package.json (no
- * hardcoded value) and fails fast with the exact
- * hPanel settings when the wrong package manager, a
- * version mismatch, or an incomplete install is
- * detected.
+ * What is fatal here:
+ *   - the wrong package manager (npm/yarn), because the workspace
+ *     root is not resolvable without pnpm
+ *   - an incomplete install, for the same reason
+ *
+ * What is only advisory:
+ *   - a pnpm version that differs from the `packageManager` pin.
+ *     pnpm-workspace.yaml sets `pmOnFail: warn`, so a host whose
+ *     pnpm is newer than the pin is expected to continue rather
+ *     than abort. Failing here would defeat that policy, so the
+ *     mismatch is logged and the build proceeds. The pin is still
+ *     the single source of truth for local dev and CI, where
+ *     Corepack provides it.
+ *
+ * Both the pin and the actual version are read from the environment
+ * (package.json / npm_config_user_agent) — nothing is hardcoded.
  */
 
 const fs = require("fs");
@@ -30,8 +36,8 @@ const WEB_NEXT_BIN = path.join(ROOT_DIR, "apps", "web", "node_modules", ".bin", 
 /**
  * Expected package manager and pinned version, read from package.json so the
  * check never hardcodes them. `packageManager` ("pnpm@10.34.6") is the single
- * source of truth (Corepack and pnpm's manage-package-manager-versions honor
- * it); `devEngines.packageManager` is accepted as a fallback for hosts that
+ * source of truth (Corepack and pnpm's version management honor it);
+ * `devEngines.packageManager` is accepted as a fallback for hosts that
  * read only that field.
  */
 function readExpected() {
@@ -65,6 +71,7 @@ const actualVersion = uaFirst.split("/")[1] || "";
 const pinnedLabel = `${expected.name}${expected.version ? `@${expected.version}` : ""}`;
 
 const problems = [];
+const warnings = [];
 
 if (actualName !== expected.name) {
   problems.push(
@@ -76,8 +83,10 @@ if (actualName !== expected.name) {
   actualVersion &&
   actualVersion !== expected.version
 ) {
-  problems.push(
-    `${expected.name} version mismatch: running ${expected.name}@${actualVersion} but package.json pins ${expected.raw} — install and build must use the same pinned pnpm so nested tasks cannot pull a different version`,
+  warnings.push(
+    `${expected.name} version mismatch: running ${expected.name}@${actualVersion} ` +
+      `while package.json pins ${expected.raw}. Continuing because pnpm-workspace.yaml ` +
+      `sets "pmOnFail: warn" — the host's pnpm is used for this build.`,
   );
 }
 
@@ -101,10 +110,14 @@ if (problems.length > 0) {
   console.error("   Root directory:   ./");
   console.error("   Application type: Other");
   console.error("");
-  console.error("The pinned version matters: a different pnpm rewrites node_modules");
-  console.error("and fails the nested Corepack version check mid-build. See");
-  console.error("docs/HOSTINGER_DEPLOYMENT.md.");
+  console.error("The package manager choice matters: npm does not read");
+  console.error("pnpm-workspace.yaml, so a workspace install with npm leaves every");
+  console.error("package without its dependencies. See docs/HOSTINGER_DEPLOYMENT.md.");
   process.exit(1);
+}
+
+for (const warning of warnings) {
+  console.warn(`⚠️ ${warning}`);
 }
 
 console.log(`✅ Build environment: ${pinnedLabel} workspace installed`);
