@@ -134,7 +134,7 @@ ThinkaBell has completed a **foundation Sprint 0** that delivers a working monor
    - Define Core Web Vitals budgets in CI
 4. **Infrastructure:**
    - Set Cloudflare cache rules: static 1 day, HTML 5 min, API 1 min
-   - Add Vercel Cron configuration for `fetch-prices` (15m) and `send-alerts` (5m)
+   - Cron for `product-discovery`, `fetch-prices`, and `send-alerts` (all every 6 hours): `vercel.json` on Vercel, `packages/database/migrations/0001_cron_schedule.sql` (`pg_cron`) on Hostinger
 
 **Pitfalls:**
 

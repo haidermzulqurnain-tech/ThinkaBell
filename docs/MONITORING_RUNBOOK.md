@@ -8,8 +8,42 @@ This runbook defines the monitoring strategy, alert thresholds, and incident res
 
 ### Endpoints
 
-- `GET /api/health` — Returns DB + Redis connectivity status
-- `GET /api/health?detailed=true` — Returns detailed component health
+- `GET /api/health` — Returns the status of `database`, `cache`, and `config` checks. Responds `200 OK` when healthy and `503` when a check fails.
+
+The `config` check lists any environment variable the host delivered that failed validation — **names only, never values**, since the endpoint is unauthenticated. A non-empty list is the fastest way to see which integration is inert and why; it is the check that catches a placeholder credential (see the "Hostinger shows connected, Supabase does not" section of `docs/HOSTINGER_DEPLOYMENT.md`).
+
+Example healthy response:
+
+```json
+{
+  "status": "healthy",
+  "checks": {
+    "config": "ok",
+    "database": "ok",
+    "cache": "ok"
+  }
+}
+```
+
+Example with a rejected credential:
+
+```json
+{
+  "status": "unhealthy",
+  "checks": {
+    "config": "rejected (defaults applied): SUPABASE_URL, SUPABASE_ANON_KEY",
+    "database": "error: ...",
+    "cache": "ok"
+  }
+}
+```
+
+There is no `?detailed=true` mode; the checks are always returned.
+
+`packages/database` also logs the connected project ref on first client
+construction — `[Database] Supabase anon client connected to project
+"abcdefghij…" (key …1234)` — once per process per client type, key presence
+only.
 
 ### Monitoring
 

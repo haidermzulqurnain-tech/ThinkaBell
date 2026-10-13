@@ -11,7 +11,7 @@ Monitors prices across **eBay Browse API** and **SaaS Affiliate Networks** (Part
 ```text
 thinkabell/
 ├── apps/
-│   ├── web/               # Next.js 14+ App Router, ISR, Tailwind CSS, OneSignal SDK
+│   ├── web/               # Next.js 15 App Router, Tailwind CSS, OneSignal SDK
 │   └── jobs/              # Scheduled job runners (fetchPrices, sendAlerts, productDiscovery) invoked by /api/cron/*
 ├── packages/
 │   ├── config/            # Zod runtime environment validation & app config
@@ -45,8 +45,8 @@ thinkabell/
 
 ### 1. Prerequisites
 
-- **Node.js**: v20 or v22 (LTS)
-- **pnpm**: v9+ / v12+ (`npm install -g pnpm`)
+- **Node.js**: v22 (LTS) — matches `engines.node` and the CI runners
+- **pnpm**: the version pinned in the root `packageManager` field (currently `pnpm@10.34.6`). Run `corepack enable` so that version is used. Do **not** install pnpm globally with `npm install -g pnpm` — it gives a different version than the pin, and a mismatch between the install and build steps leaves `node_modules` in a mixed layout.
 - **Supabase**: Project created at [supabase.com](https://supabase.com)
 
 ### 2. Install Dependencies
@@ -89,7 +89,7 @@ Required secrets:
 # Start Next.js frontend (http://localhost:3000)
 pnpm --filter @thinkabell/web dev
 
-# Start jobs locally (Vercel Cron / pg_cron in production)
+# Start jobs locally (the endpoints in pnpm dev are what production schedules call)
 pnpm --filter @thinkabell/jobs dev
 ```
 
@@ -125,7 +125,7 @@ The project uses **Vitest** with a comprehensive test suite covering:
 | `@thinkabell/jobs`        | fetchPricesRunner, sendAlertsRunner with circuit breakers, DND, dead-letter handling, job-run monitoring                                                                                                                         | ✅ 31/31 passing   |
 | `@thinkabell/edge-worker` | Edge geo-routing, affiliate localization, origin proxy, anti-spoofing headers                                                                                                                                                    | ✅ 16/16 passing   |
 
-**Total: 482 tests, all passing.**
+**Total: 507 tests across 82 files, all passing.**
 
 ### Running Tests
 
@@ -166,7 +166,7 @@ pnpm --filter @thinkabell/jobs test
 | **Cookie Consent**               | ✅ Complete | Consent banner with tracker-blocking event bus                                                                                                                                                                                     |
 | **Compliance CI Gates**          | ✅ Complete | `rel="sponsored"`, FTC disclosure, privacy-policy link, Brevo unsubscribe header                                                                                                                                                   |
 | **CI/CD**                        | ✅ Complete | GitHub Actions CI with type-check, lint, test, post-deploy smoke test                                                                                                                                                              |
-| **Test Infrastructure**          | ✅ Complete | 482 tests passing across config, database, shared, web, jobs, edge-worker                                                                                                                                                          |
+| **Test Infrastructure**          | ✅ Complete | 507 tests passing across config, database, shared, web, jobs, edge-worker                                                                                                                                                          |
 | **Seed Data**                    | ✅ Complete | 50 placeholder products (unverified ASINs/prices); affiliate links generated from env config, fail-closed to plain URLs                                                                                                            |
 | **Deal Detail Page**             | ✅ Complete | Dual-track SaaS/physical rendering; JSON-LD (Product, BreadcrumbList, SpeakableSpecification)                                                                                                                                      |
 | **Product Comparison**           | ✅ Complete | `/compare` side-by-side table (price, discount, brand, tags) with best-price highlight; localStorage picker (max 4) via `CompareProvider`/`CompareToggle`/`CompareBar`; floating compare bar; rate-limited `/api/compare` endpoint |
@@ -299,7 +299,8 @@ link.
 
 ```bash
 # Discovery runs via the /api/cron/product-discovery endpoint
-# (Vercel Cron, every 6 hours — see vercel.json)
+# Scheduled every 6 hours by Vercel Cron (vercel.json) or, on Hostinger, by
+# Supabase pg_cron — see apps/jobs/README.md
 # The endpoint invokes runProductDiscovery() from @thinkabell/jobs,
 # which uses advisory lock 1004 to prevent concurrent runs
 ```
@@ -311,7 +312,7 @@ link.
 | Metric                | Value                                                                                                                                                                                                                                                                                                                                                               |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Packages**          | 6 (@thinkabell/config, database, shared, edge-worker, @thinkabell/web, @thinkabell/jobs)                                                                                                                                                                                                                                                                            |
-| **Test Coverage**     | 482 tests, all passing                                                                                                                                                                                                                                                                                                                                              |
+| **Test Coverage**     | 507 tests, all passing                                                                                                                                                                                                                                                                                                                                              |
 | **TypeScript**        | Strict mode, all packages passing `tsc --noEmit`                                                                                                                                                                                                                                                                                                                    |
 | **Lint**              | All packages clean                                                                                                                                                                                                                                                                                                                                                  |
 | **Database Tables**   | 10+ tables with RLS, indexes, and seed data                                                                                                                                                                                                                                                                                                                         |
@@ -360,4 +361,4 @@ See `agent.md` for the full implementation plan, expert reviews, board directive
 
 ---
 
-&copy; ThinkaBell (`thinkabell.click`). Built with TypeScript, Next.js, Supabase, Vercel Cron, and Cloudflare.
+&copy; ThinkaBell (`thinkabell.click`). Built with TypeScript, Next.js, Supabase, Cloudflare, and scheduled with Vercel Cron / Supabase `pg_cron`.

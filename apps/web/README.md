@@ -1,24 +1,30 @@
 # @thinkabell/web
 
-Next.js 14+ frontend for ThinkaBell deal alerts and price tracking.
+Next.js 15 (App Router) frontend for ThinkaBell deal alerts and price tracking.
 
 ## Pages
 
 - `/` — Homepage with deal cards and search
+- `/deals`, `/search`, `/compare` — listings (filters via query params)
 - `/deal/[slug]` — Deal detail page with trust metrics and affiliate routing
+- `/true-cost/[slug]` — True-cost breakdown
 - `/subscribe` — Subscribe page for deal alerts
-- `/legal/privacy-policy` — Privacy policy
-- `/legal/terms-of-service` — Terms of service
+- `/unsubscribe/confirmed` — Unsubscribe confirmation
+- `/legal/privacy-policy`, `/legal/terms-of-service` — Legal pages
+- `/go/amazon/[asin]` — Amazon affiliate redirect
 
 ## API Routes
 
-- `GET /api/health` — Health check
+- `GET /api/health` — Health check (database, cache, and env-config diagnostics)
 - `POST /api/subscribe` — Create/update subscriber
 - `GET /api/retailer-links` — Get retailer links for a product
 - `GET /api/retailer-links/sponsored` — Get sponsored retailer for a product
 - `POST /api/retailer-links/[id]/click` — Record affiliate click
-- `GET /api/cron/fetch-prices` — Vercel Cron endpoint for price fetching
-- `GET /api/cron/send-alerts` — Vercel Cron endpoint for alert dispatch
+- `POST /api/cron/product-discovery` — populate products (cron, bearer auth)
+- `POST /api/cron/fetch-prices` — price fetching (cron, bearer auth)
+- `POST /api/cron/send-alerts` — alert dispatch (cron, bearer auth)
+
+`/api/cron/*` endpoints are invoked by Vercel Cron or Supabase `pg_cron` — see `apps/jobs/README.md` for the schedules.
 
 ## Scripts
 
@@ -35,3 +41,7 @@ pnpm --filter @thinkabell/web test
 ```bash
 pnpm --filter @thinkabell/web test
 ```
+
+Tests run under `vitest` with the `jsdom` environment and the shared
+`vitest.setup.ts` at the repository root. `@testing-library/*` and `jsdom`
+are declared in this package's devDependencies.

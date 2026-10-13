@@ -4,9 +4,26 @@
 
 This document outlines the testing strategy, patterns, and best practices for the ThinkaBell codebase.
 
+**Current totals: 507 tests across 82 files, all passing.**
+
+| Package                   | Test files | Tests   |
+| ------------------------- | ---------- | ------- |
+| `@thinkabell/edge-worker` | 1          | 16      |
+| `@thinkabell/config`      | 1          | 28      |
+| `@thinkabell/database`    | 7          | 67      |
+| `@thinkabell/jobs`        | 5          | 31      |
+| `@thinkabell/shared`      | 24         | 247     |
+| `@thinkabell/web`         | 24         | 118     |
+| **Total**                 | **82**     | **507** |
+
 ## Test Structure
 
-The project uses **Vitest** as the test runner across all packages. Tests are colocated with source files using the `.test.ts` extension.
+The project uses **Vitest 4** as the test runner across all packages. Tests are colocated with source files using the `.test.ts` extension.
+
+> **Vitest 4 note:** a `vi.fn()` used as a constructor must be given a `class` or
+> `function` implementation. An arrow function is not constructible and throws
+> `TypeError: … is not a constructor`. This is why the `CircuitBreaker` and
+> `AmazonListSource` mocks in `apps/jobs` are classes rather than arrow functions.
 
 ```
 packages/
@@ -31,15 +48,19 @@ packages/
       rateLimit.test.ts
       redis.test.ts
       logger.test.ts
+  edge-worker/src/      # Cloudflare edge worker tests
 
 apps/
   jobs/src/jobs/        # Background job tests
     fetchPricesRunner.test.ts
     sendAlertsRunner.test.ts
+    productDiscoveryRunner.test.ts
   web/app/api/          # API route tests
     retailer-links/route.test.ts
     retailer-links/sponsored/route.test.ts
     retailer-links/[id]/click/route.test.ts
+  web/app/              # Page-level tests (AlertsPage, Search)
+  web/components/       # Component tests (DeleteAccountCard)
 ```
 
 ## Running Tests
@@ -57,6 +78,56 @@ pnpm run test --filter=@thinkabell/jobs
 cd apps/jobs && npx vitest run
 cd apps/web && npx vitest run
 ```
+
+`apps/web` runs its component and page tests under the `jsdom` environment with
+the shared `vitest.setup.ts` at the repository root. `@testing-library/*` and
+`jsdom` are declared in `apps/web`'s own `devDependencies`, not the root's.
+
+### Test-environment configuration
+
+The `vitest.config.ts` at the repository root declares the shared coverage
+thresholds (70% across lines, functions, branches, statements), the shared
+`setupFiles: ["./vitest.setup.ts"]`, `isolate: true`, `pool: "forks"`, and the
+`@thinkabell/*` path aliases. Its own environment is `node`.
+
+Each package's `vitest.config.ts` declares its own environment and include
+globs, so **the root's `node` environment is not inherited** — `apps/web`
+declares `jsdom` (needed for its component and page tests), while the other
+packages run under `node`. Never rely on the root config for the environment;
+add it to the package's own config.
+
+`apps/web` and `apps/jobs` point `setupFiles` at the shared
+`../../vitest.setup.ts` at the repository root, which is where jest-dom
+matchers and the `next/*` mocks are registered.
+
+### Concurrent runs
+
+Running the suite through `pnpm run test` executes all six packages in
+parallel. If a package fails there but passes in isolation
+(`pnpm --filter <pkg> test`), treat it as an environment contention issue
+first — both `@thinkabell/jobs` and `@thinkabell/web` have failed under
+turbo while passing standalone, with no code change between the two results.
+A clean full run is the authoritative signal.
+
+## Verification gates
+
+```bash
+pnpm run type-check                     # 6/6 packages
+pnpm run lint                           # see the note below
+pnpm run test                           # 507 tests
+pnpm run format:check                   # Prettier, repo-wide
+pnpm tsx scripts/compliance-check.ts    # FTC/sponsored/privacy/unsubscribe
+```
+
+> **`lint` is not a real check for most packages.** Only `@thinkabell/web` runs
+> ESLint. `@thinkabell/jobs`, `@thinkabell/config`, `@thinkabell/database`, and
+> `@thinkabell/shared` have `lint` scripts that only echo a message, and
+> `@thinkabell/edge-worker` has no `lint` script at all. `pnpm run lint` exits
+> successfully for those packages without checking them, so it is not evidence
+> that they are lint-clean.
+>
+> `pnpm run format:check` is the real signal for those packages: it runs Prettier
+> over the whole repo, and currently passes for every file.
 
 ## Test Patterns
 

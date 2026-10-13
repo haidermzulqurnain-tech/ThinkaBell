@@ -8,13 +8,17 @@ This operational playbook details the pre-launch checklist, content marketing te
 
 - [x] **Supabase Database Initialized**:
   - [x] Apply `packages/database/schema.sql` — scripted: `SUPABASE_DB_URL="postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres" pnpm db:apply` (idempotent, safe to re-run), or paste it into the Supabase SQL editor.
+  - [x] `pnpm db:apply` also runs every not-yet-applied file in `packages/database/migrations/`, tracked in `public.schema_migrations` — currently the cron schedule. This is what keeps the cron jobs in version control.
   - [x] Verify tables: `products`, `price_history`, `subscribers`, `alert_queue`, `retailer_links`, `click_tracking`, `alert_dead_letter`, `job_runs`.
   - [x] Confirm Row Level Security (RLS) is active on all tables.
   - [x] Confirm `subscribers.email_hash` exists with unique index `idx_subscribers_email_hash` (blind index for PII lookups; re-run `schema.sql` on existing databases to add it).
   - [x] Run `pnpm tsx scripts/seed-50-products.ts` or run `packages/database/seed.sql` to populate 50 starter deals. **Note:** both seed **synthetic placeholder data** (randomized ASINs/ePIDs, static prices) for local pipeline testing only — replace with real curated products (`docs/AMAZON_LIST_CURATION.md`) before any public launch. Seeding requires `SUPABASE_SERVICE_ROLE_KEY` (products RLS is anon read-only).
 - [ ] **PII Keys Configured (production)**:
-  - [ ] Generate `ENCRYPTION_KEY` and `BLIND_INDEX_KEY` (`openssl rand -hex 32` — two different values) and set them as Vercel/Hostinger secrets. Until set, PII is stored in plaintext with lower-case lookup indexes (dev fallback).
-- [x] **DNS & Cloudflare Configured**:
+  - [ ] Generate `ENCRYPTION_KEY` and `BLIND_INDEX_KEY` (`openssl rand -hex 32` — two different values) and set them as Hostinger environment variables. Until set, PII is stored in plaintext with lower-case lookup indexes (dev fallback).
+- [ ] **Supabase Credentials Configured (production)**:
+  - [ ] Set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` and the `NEXT_PUBLIC_` equivalents in Hostinger's Environment section. Real values only — a placeholder is a syntactically valid URL, so it passes a presence check while pointing the client at a host that does not exist. The values are shape-validated; `/api/health` reports any rejected variable by name under `config`.
+  - [ ] The two `NEXT_PUBLIC_*` values must also be present at **build** time, since Next.js inlines them into the browser bundle.
+- [ ] **DNS & Cloudflare Configured**:
   - [ ] Domain `thinkabell.click` pointed to Cloudflare nameservers.
   - [ ] SSL/TLS set to **Full (strict)**.
   - [ ] Page Rule enabled for caching HTML (Cache Everything, 5 min TTL).
@@ -22,11 +26,14 @@ This operational playbook details the pre-launch checklist, content marketing te
 - [x] **Hostinger Deployment Tested**:
   - [ ] Application running on Node 22.
   - [ ] Application type `Other`; **package manager `pnpm`** (not the npm default — npm does not read `pnpm-workspace.yaml` and the build fails with `next: command not found`); build command `pnpm run build:standalone`; entry file `apps/web/hostinger-server.js`; root directory `./`; output directory empty.
-  - [ ] Health check responds `200 OK` at `https://thinkabell.click/api/health`.
-- [x] **Vercel Cron / pg_cron Jobs Active**:
-  - [x] `vercel.json` configured with cron schedules for `/api/cron/product-discovery`, `/api/cron/fetch-prices`, and `/api/cron/send-alerts` (all every 6 hours).
-  - [x] Confirm `/api/cron/fetch-prices` and `/api/cron/send-alerts` return `200 OK` with valid `CRON_SECRET`.
-  - [ ] Supabase `pg_cron` scheduled if not using Vercel Cron.
+  - [ ] The pnpm _version_ is pinned in `packageManager` (currently `pnpm@10.34.6`), and `pnpm-workspace.yaml` sets `pmOnFail: warn` plus `verifyDepsBeforeRun: warn`, so a host running a different pnpm logs the mismatch and continues instead of aborting the build. The preflight `scripts/verify-build-env.js` treats a version mismatch as advisory; only the wrong package manager or a missing install is fatal.
+  - [ ] Health check responds `200 OK` at `https://thinkabell.click/api/health`, with `config: "ok"` and `database: "ok"`.
+- [x] **Cron Jobs Active (Hostinger: Supabase `pg_cron`)**:
+  - [x] `vercel.json` defines the three cron jobs for `/api/cron/product-discovery`, `/api/cron/fetch-prices`, and `/api/cron/send-alerts` (all `0 */6 * * *`) — used when deployed to Vercel.
+  - [x] `packages/database/migrations/0001_cron_schedule.sql` defines the same three as `pg_cron` jobs, which is what actually fires on Hostinger (Vercel's `crons` array is inert there). Applied by `pnpm db:apply`.
+  - [ ] `pg_cron` and `pg_net` extensions enabled in Supabase (Dashboard → Database → Extensions).
+  - [ ] `public.cron_settings` rows inserted for `site_url` (the public origin) and `cron_secret` (must equal the app's `CRON_SECRET`), then `select public.schedule_thinkabell_crons();` re-run.
+  - [ ] Confirm `/api/cron/fetch-prices` and `/api/cron/send-alerts` return `200 OK` with a valid `CRON_SECRET` bearer token, and that `cron.job_run_details` records a result.
 - [x] **OneSignal & Brevo Configured**:
   - [ ] OneSignal App ID added for Web Push permissions.
   - [ ] Brevo API key configured for email alert delivery.
@@ -156,7 +163,7 @@ Format posts with price in brackets, clean non-promotional tone, and link to the
      Affiliate links fail closed (are skipped) until a partner tag is
      configured. See `docs/AMAZON_LIST_CURATION.md`.
 2. **Verify Discovery Job**:
-   - Trigger discovery via `POST /api/cron/product-discovery` (Vercel Cron, every 6 hours — see `vercel.json`) with the `CRON_SECRET` bearer token, or call `runProductDiscovery()` from `@thinkabell/jobs` directly.
+   - Trigger discovery via `POST /api/cron/product-discovery` with the `CRON_SECRET` bearer token, or call `runProductDiscovery()` from `@thinkabell/jobs` directly. On a schedule, both schedulers fire it every 6 hours — Vercel Cron via `vercel.json`, and on Hostinger the `pg_cron` job (see the Cron section above).
    - Check `job_runs` table for successful completion.
    - Verify `products` table has new entries with `source`, `source_id`, `images`, and `affiliate_links` populated.
 3. **Monitor Media Enrichment**:
@@ -177,21 +184,25 @@ git clone <repository-url> && cd thinkabellclick
 # 2. Install dependencies
 pnpm install
 
-# 3. Copy environment files
+# 3. Copy environment files (empty placeholders — fill in real values)
 cp .env.example apps/web/.env.local
 cp .env.example apps/jobs/.env
 
 # 4. Set required secrets in .env.local and .env
-#    - NEXT_PUBLIC_SUPABASE_URL
-#    - NEXT_PUBLIC_SUPABASE_ANON_KEY
-#    - SUPABASE_SERVICE_ROLE_KEY
-#    - UPSTASH_REDIS_REST_URL
-#    - UPSTASH_REDIS_REST_TOKEN
+#    - SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY
+#    - NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY
+#    - UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN
 #    - ALERTS_API_KEY
 #    - CRON_SECRET
+# Leave a variable EMPTY to mean "not configured". Never paste an example or
+# placeholder value: a placeholder URL is syntactically valid, so it passes a
+# presence check while pointing at a host that does not exist. Values are
+# validated for shape and rejections are reported by variable name in
+# /api/health ("config") and the startup log.
 
-# 5. Run database schema in Supabase SQL Editor
-#    - packages/database/schema.sql
+# 5. Run database schema and migrations in Supabase
+#    - packages/database/schema.sql  (+ packages/database/migrations/*, tracked
+#      in public.schema_migrations — the scripted way is `pnpm db:apply`)
 #    - packages/database/seed.sql
 
 # 6. Start development servers
@@ -203,11 +214,21 @@ pnpm --filter @thinkabell/jobs dev
 
 ```bash
 # Run all checks
-pnpm run type-check    # TypeScript compilation (6/6 packages)
-pnpm run lint          # ESLint (5/5 packages)
-pnpm run test          # Vitest suite (482 tests)
-pnpm run compliance-check  # FTC/sponsored/privacy/unsubscribe scan
+pnpm run type-check        # TypeScript (6/6 packages)
+pnpm run lint              # see note below
+pnpm run test              # Vitest (507 tests, 82 files)
+pnpm run format:check      # Prettier (repo-wide)
+pnpm tsx scripts/compliance-check.ts   # FTC/sponsored/privacy/unsubscribe scan
 ```
+
+> **Note on `lint`:** only `@thinkabell/web` runs real ESLint. `@thinkabell/jobs`,
+> `@thinkabell/config`, `@thinkabell/database`, and `@thinkabell/shared` have
+> `lint` scripts that only echo a message, and `@thinkabell/edge-worker` has no
+> `lint` script at all. `pnpm run lint` therefore reports success for those
+> packages without checking them — it is not evidence that they are lint-clean.
+
+> **Note on `compliance-check`:** there is no `compliance-check` script in
+> `package.json`; invoke it as `pnpm tsx scripts/compliance-check.ts`.
 
 ### Production Deployment
 
@@ -248,10 +269,12 @@ git push origin main
 ## 8. Post-Launch Monitoring
 
 1. **Health Checks**:
-   - Monitor `/api/health` endpoint for DB + Redis connectivity.
+   - Monitor `/api/health` for `database` + `cache` connectivity. The response also carries a `config` check listing any environment variable the host delivered that failed validation (names only, never values) — a non-empty list means the corresponding integration is inert.
+   - `pnpm --filter @thinkabell/database` logs the Supabase project ref on first client construction (key presence only), so the runtime log names the project it connected to.
 2. **Job Monitoring**:
    - Monitor `job_runs` table for failed executions.
    - `monitorJobRuns` job sends email alerts on failures.
+   - On Hostinger, check `cron.job_run_details` in Supabase for whether the `pg_cron` jobs fired. `pg_net` dispatches asynchronously, so a job row records that a request was queued, not its HTTP result.
 3. **Error Tracking**:
    - Sentry integration gated behind consent (post-launch activation).
 4. **Analytics**:
