@@ -105,10 +105,12 @@ class ImpactClient implements IImpactClient {
     // the account has joined; it has no free-text
     // search parameter, so the harvest filters by
     // campaign name, description, and advertiser
-    // client-side.
+    // client-side. The path segment is `MediaPartners` with a capital P:
+    // impact.com's routes are case-sensitive and `Mediapartners` 404s, which
+    // would silently yield no offers for this source.
     const filter = query.trim().toLowerCase();
     const body = await this.request<ImpactCampaignsResponse>(
-      `/Mediapartners/${encodeURIComponent(this.accountSid)}/Campaigns`,
+      `/MediaPartners/${encodeURIComponent(this.accountSid)}/Campaigns`,
     );
 
     return (body.Campaigns ?? [])
@@ -132,7 +134,7 @@ class ImpactClient implements IImpactClient {
 
     try {
       const body = await this.request<ImpactCampaignsResponse | Partial<ImpactCampaign>>(
-        `/Mediapartners/${encodeURIComponent(this.accountSid)}/Campaigns/${encodeURIComponent(campaignId)}`,
+        `/MediaPartners/${encodeURIComponent(this.accountSid)}/Campaigns/${encodeURIComponent(campaignId)}`,
       );
 
       // The list endpoint wraps campaigns in a

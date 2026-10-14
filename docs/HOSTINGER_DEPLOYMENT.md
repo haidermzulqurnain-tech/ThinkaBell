@@ -4,6 +4,8 @@ How to deploy **ThinkaBell** to Hostinger Node.js hosting, in the order the step
 
 The current deployment is: **Hostinger native GitHub integration**, application type `Other`, entry point `apps/web/hostinger-server.js`, and **all secrets served from the Hostinger Environment section**. Vercel's `vercel.json` is inert here — the cron schedule comes from Supabase `pg_cron` instead.
 
+This guide is the **order**. For what each credential is, where it comes from, and the signup/dashboard link for every external service, see **[DEPLOYMENT_REQUIREMENTS.md](./DEPLOYMENT_REQUIREMENTS.md)**.
+
 > **Order matters in two places**, and both are the reason this guide is sequenced the way it is:
 >
 > 1. **Environment variables must be set before the first build.** Every `NEXT_PUBLIC_*` value is inlined into the browser bundle at _build_ time. Setting them after the build ships a bundle with an empty value baked in.

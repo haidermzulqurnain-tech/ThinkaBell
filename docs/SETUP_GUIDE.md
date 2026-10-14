@@ -232,7 +232,7 @@ Variables: `WALMART_API_KEY`, `WALMART_AFFILIATE_ID`, `WALMART_AFFILIATE_TRACK_I
 ### 7.5 SaaS affiliate networks
 
 - **PartnerStack:** `PARTNERSTACK_API_KEY` (Bearer auth; the Partner API lists marketplace programs at `GET /api/v2/marketplace/programs`). Without it: the PartnerStack source is skipped.
-- **Impact:** `IMPACT_ACCOUNT_SID` + `IMPACT_AUTH_TOKEN` (HTTP Basic auth; `GET /Mediapartners/{AccountSID}/Campaigns`). Without them: the Impact source is skipped.
+- **Impact:** `IMPACT_ACCOUNT_SID` + `IMPACT_AUTH_TOKEN` (HTTP Basic auth; `GET /MediaPartners/{AccountSID}/Campaigns` — note the capital `P`, impact.com's routes are case-sensitive). Without them: the Impact source is skipped.
 - **AppSumo:** no credentials — AppSumo publishes no public deals API, so the source harvests the server-rendered browse (`/browse/?query=…`) and product pages. Always available.
 
 ### 7.6 Notifications

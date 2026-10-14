@@ -210,7 +210,7 @@ export const envSchema = z.object({
   // Impact REST API credentials — HTTP Basic
   // auth: Account SID as the username, Auth
   // Token as the password
-  // (GET /Mediapartners/{AccountSID}/Campaigns).
+  // (GET /MediaPartners/{AccountSID}/Campaigns).
   IMPACT_ACCOUNT_SID: z.string().default(""),
   IMPACT_AUTH_TOKEN: z.string().default(""),
   // AppSumo needs no credentials: it publishes no

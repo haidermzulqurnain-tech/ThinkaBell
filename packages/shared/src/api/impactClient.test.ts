@@ -85,7 +85,7 @@ describe("ImpactClient", () => {
     const offers = await impactClient.searchOffers("");
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.impact.com/Mediapartners/account-sid/Campaigns",
+      "https://api.impact.com/MediaPartners/account-sid/Campaigns",
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: `Basic ${btoa("account-sid:auth-token")}`,

@@ -328,7 +328,8 @@ link.
 
 ## 📦 Deployment Guides
 
-- **Hostinger Node.js Hosting**: See [docs/HOSTINGER_DEPLOYMENT.md](docs/HOSTINGER_DEPLOYMENT.md).
+- **Start here — every credential & service link**: See [docs/DEPLOYMENT_REQUIREMENTS.md](docs/DEPLOYMENT_REQUIREMENTS.md).
+- **Hostinger Node.js Hosting (deployment order)**: See [docs/HOSTINGER_DEPLOYMENT.md](docs/HOSTINGER_DEPLOYMENT.md).
 - **Cloudflare CDN & Edge Worker**: See [docs/CLOUDFLARE_SETUP.md](docs/CLOUDFLARE_SETUP.md).
 - **Uptime Monitoring & Health Checks**: See [docs/UPTIME_MONITORING.md](docs/UPTIME_MONITORING.md).
 - **Launch & Marketing Playbook**: See [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md).
