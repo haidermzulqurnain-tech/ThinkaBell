@@ -49,9 +49,9 @@ export async function GET() {
   const unset = getUnsetFailClosedCredentials();
   if (unset.length > 0) {
     const securityCount = unset.filter((entry) => entry.security).length;
-    checks.credentials = `${unset.length} unset (${securityCount} security-critical): ${unset
-      .map((entry) => entry.variable)
-      .join(", ")}`;
+    checks.credentials =
+      `${unset.length} unset (${securityCount} security-critical): ` +
+      unset.map((entry) => `${entry.variable} (${entry.impact})`).join("; ");
   } else {
     checks.credentials = "ok";
   }

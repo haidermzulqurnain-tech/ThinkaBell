@@ -324,12 +324,25 @@ describe("Config: Environment Validation", () => {
         "ENCRYPTION_KEY",
         "BLIND_INDEX_KEY",
         "AMAZON_LIST_URLS",
+        "DISCOVERY_SOURCES",
       ]);
       // Exactly the two PII controls are security-critical.
       expect(unset.filter((entry) => entry.security).map((entry) => entry.variable)).toEqual([
         "ENCRYPTION_KEY",
         "BLIND_INDEX_KEY",
       ]);
+    });
+
+    it("carries a short impact on every entry, so the health line is self-diagnosing", async () => {
+      process.env = {};
+      const { getUnsetFailClosedCredentials } = await import("./env");
+
+      for (const entry of getUnsetFailClosedCredentials()) {
+        // The impact is what makes the one-line health output actionable without
+        // consulting documentation.
+        expect(entry.impact.length).toBeGreaterThan(5);
+        expect(entry.impact.length).toBeLessThan(50);
+      }
     });
 
     it("reports a credential as set once any of its names carries a value", async () => {

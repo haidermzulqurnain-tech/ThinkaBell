@@ -501,6 +501,8 @@ export function getEnv(): Env {
 export const FAIL_CLOSED_CREDENTIALS: ReadonlyArray<{
   variable: string;
   purpose: string;
+  /** Short form for the one-line health output, so the consequence travels with the name. */
+  impact: string;
   security: boolean;
   alternatives: readonly string[];
 }> = [
@@ -508,36 +510,49 @@ export const FAIL_CLOSED_CREDENTIALS: ReadonlyArray<{
     variable: "AMAZON_PARTNER_TAG",
     purpose:
       "Amazon affiliate links fail closed — no link is emitted, so no commission can be attributed",
+    impact: "no Amazon link can be emitted",
     security: false,
     alternatives: [],
   },
   {
     variable: "REVALIDATION_SECRET",
     purpose: "POST /api/revalidate rejects every request — cached pages never purge",
+    impact: "cached pages never purge",
     security: false,
     alternatives: [],
   },
   {
     variable: "RETAILER_LINKS_API_KEY",
     purpose: "POST /api/retailer-links rejects every request",
+    impact: "retailer-link writes rejected",
     security: false,
     alternatives: [],
   },
   {
     variable: "ENCRYPTION_KEY",
     purpose: "subscriber emails and push tokens are stored in plaintext",
+    impact: "PII stored in plaintext",
     security: true,
     alternatives: [],
   },
   {
     variable: "BLIND_INDEX_KEY",
     purpose: "subscriber lookups fall back to lower(email) — not a security control",
+    impact: "subscriber lookup is not a security control",
     security: true,
     alternatives: [],
   },
   {
     variable: "AMAZON_LIST_URLS",
     purpose: "the credential-free discovery source is inert — nothing populates the catalogue",
+    impact: "no amazon-list discovery",
+    security: false,
+    alternatives: [],
+  },
+  {
+    variable: "DISCOVERY_SOURCES",
+    purpose: "nothing is discovered, so the catalogue stays empty",
+    impact: "catalogue stays empty",
     security: false,
     alternatives: [],
   },
@@ -551,6 +566,7 @@ export const FAIL_CLOSED_CREDENTIALS: ReadonlyArray<{
 export function getUnsetFailClosedCredentials(): Array<{
   variable: string;
   purpose: string;
+  impact: string;
   security: boolean;
   alternatives: readonly string[];
 }> {
