@@ -114,6 +114,13 @@ const supabaseKey = z
  * deployment that used any of those would otherwise look completely unconfigured
  * — non-empty on the host, empty to the schema — with no indication of why.
  *
+ * Order matters when more than one is set, so each list runs from the most
+ * specific to the most ambiguous. `SUPABASE_PUBLISHABLE_KEY` is unambiguous — in
+ * Supabase's key model it is by definition the client-side key — whereas
+ * `SUPABASE_API_KEY` is a legacy generic name that has held an anon key, a
+ * service-role key, and a placeholder depending on who set it. Preferring the
+ * one whose meaning is fixed is why the specific spellings come first.
+ *
  * Read in order; the first candidate that is set wins, and a canonical variable
  * that is already set always takes precedence over every alias. Each alias is
  * recorded so the startup log and /api/health can name the exact spelling in
@@ -123,18 +130,39 @@ const supabaseKey = z
 const SUPABASE_CREDENTIAL_ALIASES: Record<string, readonly string[]> = {
   SUPABASE_URL: ["SUPABASE_PROJECT_URL", "NEXT_PUBLIC_SUPABASE_PROJECT_URL"],
   SUPABASE_ANON_KEY: [
-    "SUPABASE_API_KEY",
-    "NEXT_PUBLIC_SUPABASE_API_KEY",
+    // Most specific first: this one is definitionally the anonymous key.
     "SUPABASE_PUBLISHABLE_KEY",
     "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+    // Ambiguous legacy naming — only used when the specific spellings are absent.
+    "SUPABASE_API_KEY",
+    "NEXT_PUBLIC_SUPABASE_API_KEY",
     "NEXT_PUBLIC_SUPABASE_KEY",
     "NEXT_PUBLIC_ANON_KEY",
   ],
   SUPABASE_SERVICE_ROLE_KEY: [
+    // By definition the service-side key in Supabase's key model.
     "SUPABASE_SECRET_KEY",
     "SUPABASE_SECRET_API_KEY",
     "SUPABASE_SERVICE_KEY",
   ],
+};
+
+/**
+ * Alternative names for the remaining credentials. Same mechanism, and reported
+ * the same way, as the Supabase aliases above — these exist because the same
+ * value is named differently in each vendor's dashboard and in each template.
+ * impact.com's UI calls the Account SID the "Account SID", but a deployment
+ * following impact.com's docs may well use IMPACT_ACCOUNT_ID, which is the same
+ * identifier.
+ */
+const OTHER_CREDENTIAL_ALIASES: Record<string, readonly string[]> = {
+  IMPACT_ACCOUNT_SID: ["IMPACT_ACCOUNT_ID"],
+  IMPACT_AUTH_TOKEN: ["IMPACT_API_KEY", "IMPACT_AUTH_TOKEN_ID"],
+};
+
+const CREDENTIAL_ALIASES: Record<string, readonly string[]> = {
+  ...SUPABASE_CREDENTIAL_ALIASES,
+  ...OTHER_CREDENTIAL_ALIASES,
 };
 
 /**
@@ -147,7 +175,7 @@ function resolveCredentialAliases(
 ): Array<{ canonical: string; alias: string }> {
   const applied: Array<{ canonical: string; alias: string }> = [];
 
-  for (const [canonical, aliases] of Object.entries(SUPABASE_CREDENTIAL_ALIASES)) {
+  for (const [canonical, aliases] of Object.entries(CREDENTIAL_ALIASES)) {
     if (readSourceValue(source[canonical]) !== undefined) continue;
     for (const alias of aliases) {
       const value = readSourceValue(source[alias]);
@@ -281,6 +309,7 @@ export const envSchema = z.object({
   // (GET /MediaPartners/{AccountSID}/Campaigns).
   IMPACT_ACCOUNT_SID: z.string().default(""),
   IMPACT_AUTH_TOKEN: z.string().default(""),
+
   // AppSumo needs no credentials: it publishes no
   // public deals API, so its client harvests the
   // server-rendered browse and product pages.
@@ -402,8 +431,8 @@ function reportIssues(issues: EnvIssue[]): void {
 function reportCredentialAliases(aliases: Array<{ canonical: string; alias: string }>): void {
   if (aliases.length === 0) return;
   console.warn(
-    `⚠️ [Config] Using ${aliases.length} Supabase credential(s) under a non-canonical name. ` +
-      "The values resolved and the app will connect, but rename them to the canonical " +
+    `⚠️ [Config] Using ${aliases.length} credential(s) under a non-canonical name. ` +
+      "The values resolved and the integrations will work, but rename them to the canonical " +
       "variable so the setup matches the documentation:",
   );
   for (const { canonical, alias } of aliases) {

@@ -58,26 +58,60 @@ host; the key must be a JWT or an `sb_publishable_`/`sb_secret_` key. Supabase's
 JWT form also works.
 
 **If you already used a different variable name, keep it.** `getEnv()` resolves
-these spellings into the canonical variable, so a deployment configured under an
-alternative name connects instead of appearing unconfigured:
+any of these spellings into the canonical variable, so a deployment configured under an
+alternative name still connects rather than appearing unconfigured:
 
-| Canonical                   | Accepted aliases                                                                                                                                                           |
+| Canonical                   | Accepted aliases (most specific first)                                                                                                                                     |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `SUPABASE_URL`              | `SUPABASE_PROJECT_URL`, `NEXT_PUBLIC_SUPABASE_PROJECT_URL`                                                                                                                 |
-| `SUPABASE_ANON_KEY`         | `SUPABASE_API_KEY`, `NEXT_PUBLIC_SUPABASE_API_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SUPABASE_KEY`, `NEXT_PUBLIC_ANON_KEY` |
+| `SUPABASE_ANON_KEY`         | `SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_API_KEY`, `NEXT_PUBLIC_SUPABASE_API_KEY`, `NEXT_PUBLIC_SUPABASE_KEY`, `NEXT_PUBLIC_ANON_KEY` |
 | `SUPABASE_SERVICE_ROLE_KEY` | `SUPABASE_SECRET_KEY`, `SUPABASE_SECRET_API_KEY`, `SUPABASE_SERVICE_KEY`                                                                                                   |
+| `IMPACT_ACCOUNT_SID`        | `IMPACT_ACCOUNT_ID`                                                                                                                                                        |
+| `IMPACT_AUTH_TOKEN`         | `IMPACT_API_KEY`                                                                                                                                                           |
 
-A canonical variable always takes precedence over an alias. Every alias used is
+A canonical variable always takes precedence over an alias. **When more than one
+alias is set, the more specific one wins** — `SUPABASE_PUBLISHABLE_KEY` beats the
+ambiguous `SUPABASE_API_KEY`, because the former is by definition the anonymous
+key in Supabase's key model while the latter has held an anon key, a
+service-role key, and a placeholder depending on who set it. Every alias used is
 reported — in the startup log and in `/api/health`'s `config` line as
 `ok, via non-canonical name(s): SUPABASE_API_KEY→SUPABASE_ANON_KEY` — so the
-value works **and** you can see which spelling to normalise to. This is what
-makes "Hostinger shows the connection configured while Supabase shows nothing"
-diagnosable: it is almost always a name mismatch, and the health endpoint now
-names the exact spelling in use.
+value works **and** you can see which spelling to normalise to.
 
-Note that `SUPABASE_SECRET_KEY` here is only a **name alias** for whatever value
-you assign; it is not Supabase's new "secret key". Assign it the service-role
-secret.
+> **`SUPABASE_JWKS_URL` and `APPSUMO_API_KEY` are valid to set but unused.** The
+> app does not perform user JWT verification, so the JWKS URL is never read
+> (`@supabase/supabase-js` handles it internally when needed), and AppSumo is
+> harnessed from public pages by design, so it needs no key. Harmless; deleting
+> them is optional.
+
+### 2.2 Auditing an existing Hostinger Environment section
+
+If the app looks unconfigured despite the panel showing values, compare the host's
+variable list against what the code reads. The canonical list is the Zod schema
+in `packages/config/src/env.ts`, plus the handful read directly from
+`process.env` (see §6). The mismatches that actually cost you are:
+
+**Read by the code but not set on the host** — the first three fail closed, so the
+feature is dead rather than degraded:
+
+| Variable                 | Effect while missing                                                                               |
+| ------------------------ | -------------------------------------------------------------------------------------------------- |
+| `AMAZON_PARTNER_TAG`     | Every Amazon affiliate link fails closed — no link is emitted, so no commission can be attributed. |
+| `RETAILER_LINKS_API_KEY` | `POST /api/retailer-links` returns `401`.                                                          |
+| `REVALIDATION_SECRET`    | `POST /api/revalidate` returns `401`, so cached pages never purge.                                 |
+| `DISCOVERY_SOURCES`      | Nothing is ever discovered — an empty catalogue. See the discovery table below.                    |
+| `ENCRYPTION_KEY`         | Subscriber emails and push tokens are stored in plaintext.                                         |
+| `BLIND_INDEX_KEY`        | `email_hash` falls back to `lower(email)`, which is not a security control.                        |
+| `AMAZON_LIST_URLS`       | The `amazon-list` source is inert — this is the only credential-free way to populate a catalogue.  |
+
+**Set on the host but not read anywhere** — harmless, and safe to remove:
+`SUPABASE_JWKS_URL` (the app performs no user JWT verification), and
+`APPSUMO_API_KEY` (the AppSumo source harvests public pages by design).
+
+Note that the environment section is not a checklist of what the code reads — it
+is a checklist of what the _dashboard_ offered. A variable present there with a
+value does not mean anything reads it, and a variable the code reads being absent
+produces exactly the "connected on one side, silent on the other" symptom.
 
 ### 2.2 Upstash Redis — rate limiting, circuit breakers, FX cache
 

@@ -374,6 +374,35 @@ describe("Config: Environment Validation", () => {
       expect(getCredentialAliasesUsed()).toEqual([]);
     });
 
+    it("prefers SUPABASE_PUBLISHABLE_KEY over the ambiguous SUPABASE_API_KEY", async () => {
+      // Both are set on the live host. SUPABASE_PUBLISHABLE_KEY is by definition
+      // the anonymous key in Supabase's key model; SUPABASE_API_KEY is a legacy
+      // generic name that has held an anon key, a service-role key, and a
+      // placeholder depending on who set it. The specific spelling must win.
+      process.env = {
+        SUPABASE_URL: URL,
+        SUPABASE_PUBLISHABLE_KEY: "sb_publishable_theRightOne",
+        SUPABASE_API_KEY: "eyJhbGciOiJIUzI1NiJ9.eyJhIjoxfQ.staleLegacyKey",
+      };
+      const { getEnv, getCredentialAliasesUsed } = await import("./env");
+
+      expect(getEnv().SUPABASE_ANON_KEY).toBe("sb_publishable_theRightOne");
+      expect(getCredentialAliasesUsed()).toEqual([
+        { canonical: "SUPABASE_ANON_KEY", alias: "SUPABASE_PUBLISHABLE_KEY" },
+      ]);
+    });
+
+    it("resolves IMPACT_ACCOUNT_ID into IMPACT_ACCOUNT_SID", async () => {
+      process.env = { IMPACT_ACCOUNT_ID: "12345", IMPACT_API_KEY: "auth-token" };
+      const { getEnv, getCredentialAliasesUsed } = await import("./env");
+
+      expect(getEnv().IMPACT_ACCOUNT_SID).toBe("12345");
+      expect(getCredentialAliasesUsed()).toEqual([
+        { canonical: "IMPACT_ACCOUNT_SID", alias: "IMPACT_ACCOUNT_ID" },
+        { canonical: "IMPACT_AUTH_TOKEN", alias: "IMPACT_API_KEY" },
+      ]);
+    });
+
     it("still rejects a placeholder supplied through an alias", async () => {
       // The alias resolves the name; shape validation still applies to the
       // value, so a placeholder is caught rather than pointed at.
