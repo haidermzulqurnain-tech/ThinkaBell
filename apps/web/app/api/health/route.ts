@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getEnvIssues } from "@thinkabell/config";
+import { getCredentialAliasesUsed, getEnvIssues } from "@thinkabell/config";
 import { getSupabaseAnonClient } from "@thinkabell/database";
 import { redis } from "@thinkabell/shared";
 
@@ -18,6 +18,18 @@ export async function GET() {
     envIssues.length === 0
       ? "ok"
       : `rejected (defaults applied): ${envIssues.map((issue) => issue.variable).join(", ")}`;
+
+  // A credential set under a non-canonical name is resolved by getEnv(), so the
+  // app works — but the operator should see which name is actually in use,
+  // because it differs from the documented one and from .env.example.
+  const aliases = getCredentialAliasesUsed();
+  if (aliases.length > 0) {
+    const detail = aliases.map((entry) => `${entry.alias}→${entry.canonical}`).join(", ");
+    checks.config =
+      checks.config === "ok"
+        ? `ok, via non-canonical name(s): ${detail}`
+        : `${checks.config}; via non-canonical name(s): ${detail}`;
+  }
 
   // 1. Check Supabase DB
   try {

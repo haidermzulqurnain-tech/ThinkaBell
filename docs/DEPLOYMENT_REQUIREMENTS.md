@@ -57,6 +57,28 @@ host; the key must be a JWT or an `sb_publishable_`/`sb_secret_` key. Supabase's
 "Publishable and secret API keys" feature produces the `sb_…` form; the classic
 JWT form also works.
 
+**If you already used a different variable name, keep it.** `getEnv()` resolves
+these spellings into the canonical variable, so a deployment configured under an
+alternative name connects instead of appearing unconfigured:
+
+| Canonical                   | Accepted aliases                                                                                                                                                           |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SUPABASE_URL`              | `SUPABASE_PROJECT_URL`, `NEXT_PUBLIC_SUPABASE_PROJECT_URL`                                                                                                                 |
+| `SUPABASE_ANON_KEY`         | `SUPABASE_API_KEY`, `NEXT_PUBLIC_SUPABASE_API_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SUPABASE_KEY`, `NEXT_PUBLIC_ANON_KEY` |
+| `SUPABASE_SERVICE_ROLE_KEY` | `SUPABASE_SECRET_KEY`, `SUPABASE_SECRET_API_KEY`, `SUPABASE_SERVICE_KEY`                                                                                                   |
+
+A canonical variable always takes precedence over an alias. Every alias used is
+reported — in the startup log and in `/api/health`'s `config` line as
+`ok, via non-canonical name(s): SUPABASE_API_KEY→SUPABASE_ANON_KEY` — so the
+value works **and** you can see which spelling to normalise to. This is what
+makes "Hostinger shows the connection configured while Supabase shows nothing"
+diagnosable: it is almost always a name mismatch, and the health endpoint now
+names the exact spelling in use.
+
+Note that `SUPABASE_SECRET_KEY` here is only a **name alias** for whatever value
+you assign; it is not Supabase's new "secret key". Assign it the service-role
+secret.
+
 ### 2.2 Upstash Redis — rate limiting, circuit breakers, FX cache
 
 | What              | Link                                              |

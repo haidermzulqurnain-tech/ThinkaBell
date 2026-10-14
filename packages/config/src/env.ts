@@ -102,6 +102,74 @@ const supabaseKey = z
     message: "not a Supabase key (expected a JWT or an sb_publishable_/sb_secret_ key)",
   });
 
+/**
+ * Alternative names an operator or another integration may have used for the
+ * Supabase credentials.
+ *
+ * The canonical names are the five above. These aliases exist because the same
+ * value has several widely-used spellings: Supabase's own dashboard labels the
+ * pair "Publishable key" / "Secret key" (yielding `*_PUBLISHABLE_KEY` /
+ * `*_SECRET_KEY`), Next.js' own env naming produces `NEXT_PUBLIC_SUPABASE_KEY`,
+ * and Vite/Supabase templates use `SUPABASE_API_KEY` and a `VITE_` prefix. A
+ * deployment that used any of those would otherwise look completely unconfigured
+ * — non-empty on the host, empty to the schema — with no indication of why.
+ *
+ * Read in order; the first candidate that is set wins, and a canonical variable
+ * that is already set always takes precedence over every alias. Each alias is
+ * recorded so the startup log and /api/health can name the exact spelling in
+ * use instead of silently accepting it: resolving the value fixes the
+ * deployment, reporting the spelling tells the operator how to normalise it.
+ */
+const SUPABASE_CREDENTIAL_ALIASES: Record<string, readonly string[]> = {
+  SUPABASE_URL: ["SUPABASE_PROJECT_URL", "NEXT_PUBLIC_SUPABASE_PROJECT_URL"],
+  SUPABASE_ANON_KEY: [
+    "SUPABASE_API_KEY",
+    "NEXT_PUBLIC_SUPABASE_API_KEY",
+    "SUPABASE_PUBLISHABLE_KEY",
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+    "NEXT_PUBLIC_SUPABASE_KEY",
+    "NEXT_PUBLIC_ANON_KEY",
+  ],
+  SUPABASE_SERVICE_ROLE_KEY: [
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_SECRET_API_KEY",
+    "SUPABASE_SERVICE_KEY",
+  ],
+};
+
+/**
+ * Copies an alias into its canonical variable when the canonical one is not
+ * set. Mutates `source` so the rest of parsing is unchanged. Returns which
+ * substitutions were made so they can be reported.
+ */
+function resolveCredentialAliases(
+  source: NodeJS.ProcessEnv,
+): Array<{ canonical: string; alias: string }> {
+  const applied: Array<{ canonical: string; alias: string }> = [];
+
+  for (const [canonical, aliases] of Object.entries(SUPABASE_CREDENTIAL_ALIASES)) {
+    if (readSourceValue(source[canonical]) !== undefined) continue;
+    for (const alias of aliases) {
+      const value = readSourceValue(source[alias]);
+      if (value !== undefined) {
+        source[canonical] = source[alias];
+        applied.push({ canonical, alias });
+        break;
+      }
+    }
+  }
+
+  return applied;
+}
+
+let _aliasNotes: Array<{ canonical: string; alias: string }> = [];
+
+/** The aliases resolved into canonical variables on the last `getEnv()` call. */
+export function getCredentialAliasesUsed(): Array<{ canonical: string; alias: string }> {
+  getEnv();
+  return [..._aliasNotes];
+}
+
 export const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().default(3000),
@@ -330,13 +398,31 @@ function reportIssues(issues: EnvIssue[]): void {
   }
 }
 
+/** Reports which non-canonical credential names were resolved, and how to normalise them. */
+function reportCredentialAliases(aliases: Array<{ canonical: string; alias: string }>): void {
+  if (aliases.length === 0) return;
+  console.warn(
+    `⚠️ [Config] Using ${aliases.length} Supabase credential(s) under a non-canonical name. ` +
+      "The values resolved and the app will connect, but rename them to the canonical " +
+      "variable so the setup matches the documentation:",
+  );
+  for (const { canonical, alias } of aliases) {
+    console.warn(`   - ${alias} → ${canonical}`);
+  }
+}
+
 export function getEnv(): Env {
   if (_env) return _env;
 
+  // Resolve aliases before validation, so an operator who used a different
+  // spelling still gets a connected deployment rather than a silent
+  // "unconfigured".
+  _aliasNotes = resolveCredentialAliases(process.env);
   const { env: parsed, issues } = parseEnvFields(process.env);
   _env = parsed;
   _issues = issues;
   reportIssues(issues);
+  reportCredentialAliases(_aliasNotes);
 
   return _env;
 }
@@ -353,6 +439,7 @@ export function getEnvIssues(): EnvIssue[] {
 export function resetEnv() {
   _env = null;
   _issues = [];
+  _aliasNotes = [];
 }
 
 export const env = getEnv();

@@ -302,18 +302,99 @@ describe("Config: Environment Validation", () => {
 
       expect(getEnv().SUPABASE_URL).toBe("http://127.0.0.1:54321");
     });
+  });
 
+  describe("credential name aliases", () => {
+    /**
+     * The canonical names are the only ones the code and .env.example use, but
+     * the same value has several widely-used spellings. A deployment using one
+     * of those is indistinguishable from an unconfigured one, which is the
+     * failure this resolves: non-empty on the host, empty to the schema.
+     */
+    const URL = "https://abcdefghijklmnopqrst.supabase.co";
+    const KEY = "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYW5vbiJ9.signature";
+
+    it.each([
+      ["SUPABASE_API_KEY", "SUPABASE_ANON_KEY"],
+      ["NEXT_PUBLIC_SUPABASE_API_KEY", "SUPABASE_ANON_KEY"],
+      ["SUPABASE_PUBLISHABLE_KEY", "SUPABASE_ANON_KEY"],
+      ["NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "SUPABASE_ANON_KEY"],
+      ["NEXT_PUBLIC_SUPABASE_KEY", "SUPABASE_ANON_KEY"],
+      ["NEXT_PUBLIC_ANON_KEY", "SUPABASE_ANON_KEY"],
+      ["SUPABASE_SECRET_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+      ["SUPABASE_SECRET_API_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+      ["SUPABASE_SERVICE_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+    ])("resolves %s into %s", async (alias, canonical) => {
+      process.env = { SUPABASE_URL: URL, [alias]: KEY };
+      const { getEnv, getCredentialAliasesUsed } = await import("./env");
+
+      expect(getEnv()[canonical as "SUPABASE_ANON_KEY"]).toBe(KEY);
+      // Reported, not silently accepted, so the operator can normalise the name.
+      expect(getCredentialAliasesUsed()).toEqual([{ canonical, alias }]);
+    });
+
+    it("resolves SUPABASE_PROJECT_URL into SUPABASE_URL", async () => {
+      process.env = { SUPABASE_PROJECT_URL: URL, SUPABASE_ANON_KEY: KEY };
+      const { getEnv, getCredentialAliasesUsed } = await import("./env");
+
+      expect(getEnv().SUPABASE_URL).toBe(URL);
+      expect(getCredentialAliasesUsed()).toEqual([
+        { canonical: "SUPABASE_URL", alias: "SUPABASE_PROJECT_URL" },
+      ]);
+    });
+
+    it("prefers a canonical variable over an alias of the same variable", async () => {
+      process.env = {
+        SUPABASE_URL: URL,
+        SUPABASE_ANON_KEY: KEY,
+        SUPABASE_API_KEY: "eyJhbGciOiJIUzI1NiJ9.eyJhIjoxfQ.should-not-win",
+      };
+      const { getEnv, getCredentialAliasesUsed } = await import("./env");
+
+      expect(getEnv().SUPABASE_ANON_KEY).toBe(KEY);
+      expect(getCredentialAliasesUsed()).toEqual([]);
+    });
+
+    it("reports no aliases when only canonical names are used", async () => {
+      process.env = { SUPABASE_URL: URL, SUPABASE_ANON_KEY: KEY };
+      const { getEnv, getCredentialAliasesUsed } = await import("./env");
+
+      getEnv();
+      expect(getCredentialAliasesUsed()).toEqual([]);
+    });
+
+    it("clears alias notes on resetEnv", async () => {
+      process.env = { SUPABASE_URL: URL, SUPABASE_SECRET_KEY: KEY };
+      const { getEnv, getCredentialAliasesUsed, resetEnv } = await import("./env");
+
+      expect(getEnv().SUPABASE_SERVICE_ROLE_KEY).toBe(KEY);
+      expect(getCredentialAliasesUsed()).toHaveLength(1);
+
+      resetEnv();
+      expect(getCredentialAliasesUsed()).toEqual([]);
+    });
+
+    it("still rejects a placeholder supplied through an alias", async () => {
+      // The alias resolves the name; shape validation still applies to the
+      // value, so a placeholder is caught rather than pointed at.
+      process.env = { SUPABASE_URL: "https://your-project.supabase.co" };
+      const { getEnv, getEnvIssues } = await import("./env");
+
+      expect(getEnv().SUPABASE_URL).toBe("");
+      expect(getEnvIssues().map((issue) => issue.variable)).toContain("SUPABASE_URL");
+    });
+  });
+
+  describe("Supabase URL shape (non-alias)", () => {
     it("accepts a custom domain fronting the Supabase gateway", async () => {
       process.env = { SUPABASE_URL: "https://api.example.com" };
       const { getEnv } = await import("./env");
-
       expect(getEnv().SUPABASE_URL).toBe("https://api.example.com");
     });
 
     it("rejects a remote http URL", async () => {
       process.env = { SUPABASE_URL: "http://abcdefghijklmnopqrst.supabase.co" };
       const { getEnv } = await import("./env");
-
       expect(getEnv().SUPABASE_URL).toBe("");
     });
   });
