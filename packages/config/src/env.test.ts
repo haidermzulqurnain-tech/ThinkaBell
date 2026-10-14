@@ -468,6 +468,88 @@ describe("Config: Environment Validation", () => {
     });
   });
 
+  describe("site verification metas", () => {
+    /**
+     * impact.com verifies ownership with a meta tag whose value is in `value=`,
+     * not the HTML-standard `content=`, and other providers use `content=`. So
+     * the layout emits both attributes, and this parser supplies the pairs.
+     */
+    const IMPACT_VALUE = "6b454876-bab0-4187-870e-2435736fd18f";
+
+    it("parses the exact impact.com tag", async () => {
+      const { parseSiteVerifications } = await import("./env");
+
+      expect(parseSiteVerifications(`impact-site-verification=${IMPACT_VALUE}`)).toEqual([
+        { name: "impact-site-verification", value: IMPACT_VALUE },
+      ]);
+    });
+
+    it("returns nothing for empty or absent input", async () => {
+      const { parseSiteVerifications } = await import("./env");
+
+      expect(parseSiteVerifications("")).toEqual([]);
+      expect(parseSiteVerifications(undefined)).toEqual([]);
+      expect(parseSiteVerifications("   ")).toEqual([]);
+    });
+
+    it("supports multiple providers from one variable", async () => {
+      const { parseSiteVerifications } = await import("./env");
+
+      expect(
+        parseSiteVerifications("impact-site-verification=6b45abc, google-site-verification=xyz789"),
+      ).toEqual([
+        { name: "impact-site-verification", value: "6b45abc" },
+        { name: "google-site-verification", value: "xyz789" },
+      ]);
+    });
+
+    it("tolerates the spacing and duplicate commas of hand entry", async () => {
+      const { parseSiteVerifications } = await import("./env");
+
+      expect(
+        parseSiteVerifications(
+          " impact-site-verification = 6b45abc ,, google-site-verification=xyz ",
+        ),
+      ).toEqual([
+        { name: "impact-site-verification", value: "6b45abc" },
+        { name: "google-site-verification", value: "xyz" },
+      ]);
+    });
+
+    it("skips a malformed pair instead of dropping the whole variable", async () => {
+      const { parseSiteVerifications } = await import("./env");
+
+      // One typo must not silently disable the verifications that were correct.
+      expect(parseSiteVerifications("impact-site-verification=6b45abc,no-equals-sign")).toEqual([
+        { name: "impact-site-verification", value: "6b45abc" },
+      ]);
+    });
+
+    it("skips a pair with an empty name or value", async () => {
+      const { parseSiteVerifications } = await import("./env");
+
+      expect(parseSiteVerifications("impact-site-verification=")).toEqual([]);
+      expect(parseSiteVerifications("=orphan")).toEqual([]);
+    });
+
+    it("lets the first occurrence of a name win", async () => {
+      const { parseSiteVerifications } = await import("./env");
+
+      expect(
+        parseSiteVerifications("impact-site-verification=first,impact-site-verification=second"),
+      ).toEqual([{ name: "impact-site-verification", value: "first" }]);
+    });
+
+    it("keeps a value that itself contains an equals sign", async () => {
+      const { parseSiteVerifications } = await import("./env");
+
+      // Only the first separator splits, so a base64-ish token survives whole.
+      expect(parseSiteVerifications("impact-site-verification=ab=cd==ef")).toEqual([
+        { name: "impact-site-verification", value: "ab=cd==ef" },
+      ]);
+    });
+  });
+
   describe("credential name aliases", () => {
     /**
      * The canonical names are the only ones the code and .env.example use, but

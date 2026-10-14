@@ -260,7 +260,34 @@ capital P**. Its routes are case-sensitive, so the earlier `Mediapartners`
 spelling returned 404 and the source silently yielded no offers. If Impact
 reports nothing while the credentials are valid, check this casing first.
 
-### 2.11 AppSumo — SaaS deals, zero credentials
+### 2.11 Verifying site ownership with impact.com
+
+Before impact.com will attribute or approve your promotions, it verifies you own
+the domain. It gives you a meta tag to paste into your homepage's `<head>`:
+
+```html
+<meta name="impact-site-verification" value="6b454876-bab0-4187-870e-2435736fd18f" />
+```
+
+Note the attribute is `value=`, **not** `content=`. That is why this repo does not
+use Next.js's `metadata.verification` — that API only emits `content=`, so it
+would satisfy Google Search Console and silently fail impact.com's check.
+
+Instead set one variable and the layout renders the tag:
+
+| Variable                         | Value                                   |
+| -------------------------------- | --------------------------------------- |
+| `NEXT_PUBLIC_SITE_VERIFICATIONS` | `impact-site-verification=<your value>` |
+
+Each entry is emitted with **both** `content` and `value`, so the same variable
+also works for providers that use the standard attribute. Multiple providers are
+comma-separated: `impact-site-verification=…,google-site-verification=…`.
+
+The full walkthrough, including impact.com's alternative verification methods
+(email, file, or content paste), is in their help centre:
+https://help.impact.com/partner/what-would-you-like-to-learn-about/account-management/account-settings/connect-media-properties/connect-and-verify-a-website
+
+### 2.12 AppSumo — SaaS deals, zero credentials
 
 | What   | Link                        |
 | ------ | --------------------------- |

@@ -10,6 +10,7 @@ import { ErrorBoundary } from "../components/ErrorBoundary";
 import { OneSignalGate } from "../components/OneSignalGate";
 import { CompareProvider } from "../components/CompareProvider";
 import { CompareBar } from "../components/CompareBar";
+import { parseSiteVerifications } from "@thinkabell/config";
 import { getNonce } from "../lib/csp";
 import "./globals.css";
 
@@ -49,6 +50,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const nonce = await getNonce();
   const baseUrl = env.NEXT_PUBLIC_APP_URL;
+  const siteVerifications = parseSiteVerifications(env.NEXT_PUBLIC_SITE_VERIFICATIONS);
 
   const webSiteJsonLd = {
     "@context": "https://schema.org",
@@ -70,6 +72,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <head>
+        {siteVerifications.map(({ name, value }) => (
+          // Both `content` and `value` are emitted: HTML uses `content`, but
+          // impact.com's meta-tag verification reads `value`, so a single
+          // attribute would satisfy one provider and not the other.
+          //
+          // `value` is cast in because React's MetaHTMLAttributes omits it — it
+          // is a real attribute on <meta>, just not one React models.
+          <meta content={value} key={name} name={name} {...({ value } as { value: string })} />
+        ))}
         <script
           type="application/ld+json"
           nonce={nonce}

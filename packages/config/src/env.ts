@@ -211,6 +211,46 @@ function resolveCredentialAliases(
 
 let _aliasNotes: Array<{ canonical: string; alias: string }> = [];
 
+/**
+ * Parses `NEXT_PUBLIC_SITE_VERIFICATIONS` into verification meta tags.
+ *
+ * Accepts a comma-separated list of `name=value` pairs so any provider can be
+ * added by setting one variable, with no code change and no per-provider
+ * special case. The parser is deliberately tolerant of spacing and duplicate
+ * commas, because these values are hand-entered in a host panel where a stray
+ * space is easy — and rejecting a whole list for one malformed pair would silently
+ * drop the verifications that were correct.
+ *
+ * A pair without `=`, or with an empty name or value, is skipped rather than
+ * failing the parse: the verifiers that were supplied correctly still work.
+ */
+export function parseSiteVerifications(raw: string | undefined): Array<{
+  name: string;
+  value: string;
+}> {
+  if (!raw) return [];
+
+  const entries: Array<{ name: string; value: string }> = [];
+  const seen = new Set<string>();
+
+  for (const pair of raw.split(",")) {
+    const separator = pair.indexOf("=");
+    if (separator === -1) continue;
+
+    const name = pair.slice(0, separator).trim();
+    const value = pair.slice(separator + 1).trim();
+    if (!name || !value) continue;
+    // First occurrence wins, so a duplicate name does not silently override an
+    // earlier one in the same variable.
+    if (seen.has(name)) continue;
+
+    seen.add(name);
+    entries.push({ name, value });
+  }
+
+  return entries;
+}
+
 /** The aliases resolved into canonical variables on the last `getEnv()` call. */
 export function getCredentialAliasesUsed(): Array<{ canonical: string; alias: string }> {
   getEnv();
@@ -307,6 +347,13 @@ export const envSchema = z.object({
   // Analytics & Monitoring
   NEXT_PUBLIC_POSTHOG_KEY: z.string().default(""),
   NEXT_PUBLIC_POSTHOG_HOST: z.string().url().default("https://app.posthog.com"),
+
+  // Site-ownership verification meta tags. Comma-separated `name=value` pairs,
+  // e.g. `impact-site-verification=6b45…,google-site-verification=abc…`.
+  // Providers differ in which attribute they read — impact.com uses `value=`,
+  // Google uses `content=` — so both are emitted for each entry, which is what
+  // makes one variable cover every provider without a per-provider special case.
+  NEXT_PUBLIC_SITE_VERIFICATIONS: z.string().default(""),
 
   // Vercel Cron / Job Security
   CRON_SECRET: z.string().default(""),
