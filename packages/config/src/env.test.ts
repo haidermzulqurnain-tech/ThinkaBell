@@ -304,6 +304,94 @@ describe("Config: Environment Validation", () => {
     });
   });
 
+  describe("fail-closed credentials", () => {
+    /**
+     * The health endpoint's `status` means "the app answers", not "every
+     * integration is configured". Without reporting these separately an
+     * operator reading only `healthy` cannot see that a revenue path or the PII
+     * encryption is dead — which is exactly how AMAZON_PARTNER_TAG stayed unset
+     * while the app looked fine.
+     */
+    it("reports every fail-closed credential as unset when the host has none of them", async () => {
+      process.env = { NODE_ENV: "production" };
+      const { getUnsetFailClosedCredentials } = await import("./env");
+      const unset = getUnsetFailClosedCredentials();
+
+      expect(unset.map((entry) => entry.variable)).toEqual([
+        "AMAZON_PARTNER_TAG",
+        "REVALIDATION_SECRET",
+        "RETAILER_LINKS_API_KEY",
+        "ENCRYPTION_KEY",
+        "BLIND_INDEX_KEY",
+        "AMAZON_LIST_URLS",
+      ]);
+      // Exactly the two PII controls are security-critical.
+      expect(unset.filter((entry) => entry.security).map((entry) => entry.variable)).toEqual([
+        "ENCRYPTION_KEY",
+        "BLIND_INDEX_KEY",
+      ]);
+    });
+
+    it("reports a credential as set once any of its names carries a value", async () => {
+      process.env = { AMAZON_PARTNER_TAG: "thinkabell-20" };
+      const { getUnsetFailClosedCredentials } = await import("./env");
+
+      expect(getUnsetFailClosedCredentials().map((entry) => entry.variable)).not.toContain(
+        "AMAZON_PARTNER_TAG",
+      );
+    });
+
+    it("treats a blank value as unset, not as configured", async () => {
+      process.env = { AMAZON_PARTNER_TAG: "" };
+      const { getUnsetFailClosedCredentials } = await import("./env");
+
+      expect(getUnsetFailClosedCredentials().map((entry) => entry.variable)).toContain(
+        "AMAZON_PARTNER_TAG",
+      );
+    });
+
+    it("gives each entry a purpose explaining the consequence", async () => {
+      process.env = {};
+      const { getUnsetFailClosedCredentials, FAIL_CLOSED_CREDENTIALS } = await import("./env");
+
+      const unset = getUnsetFailClosedCredentials();
+      expect(unset).toHaveLength(FAIL_CLOSED_CREDENTIALS.length);
+      for (const entry of unset) {
+        expect(entry.purpose.length).toBeGreaterThan(20);
+      }
+    });
+  });
+
+  describe("Sentry DSN shape (only valid DSNs are accepted)", () => {
+    const REAL = [
+      "https://abc123def456@o0.ingest.sentry.io/1234567",
+      "https://abc123def456@o123456.ingest.sentry.io/1234567",
+      "https://abc123def456@o550960.ingest.us.sentry.io/4507288890724352",
+      "https://abc123def456@o550960.ingest.de.sentry.io/4507288890724352",
+      "https://1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d@o1.ingest.sentry.io/6504691",
+      "https://sentrykey123@sentry.mycompany.com/1",
+      "https://abc123@eu.sentry.io/42",
+    ];
+
+    it.each(REAL)("accepts a real DSN: %s", async (dsn) => {
+      process.env = { SENTRY_DSN: dsn };
+      const { getEnv, getEnvIssues } = await import("./env");
+
+      expect(getEnv().SENTRY_DSN).toBe(dsn);
+      expect(getEnvIssues()).toEqual([]);
+    });
+
+    it("rejects only the placeholder, and reports why", async () => {
+      process.env = { SENTRY_DSN: "https://your-sentry-dsn@ingest.sentry.io/0" };
+      const { getEnv, getEnvIssues } = await import("./env");
+
+      expect(getEnv().SENTRY_DSN).toBe("");
+      const issue = getEnvIssues().find((i) => i.variable === "SENTRY_DSN");
+      expect(issue?.delivered).toBe(true);
+      expect(issue?.reason).toContain("not a valid Sentry DSN");
+    });
+  });
+
   describe("credential name aliases", () => {
     /**
      * The canonical names are the only ones the code and .env.example use, but

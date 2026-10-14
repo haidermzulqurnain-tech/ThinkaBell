@@ -457,6 +457,81 @@ export function getEnv(): Env {
 }
 
 /**
+/**
+ * Credentials whose absence disables a feature outright rather than degrading
+ * it. The health endpoint's `status` means "the app answers", not "every
+ * integration is configured" — so these are reported separately, and named,
+ * because each one is a dead path the operator cannot otherwise see.
+ *
+ * `alternatives` lists accepted alias names: a credential counts as set when any
+ * one of its names carries a value, which is what makes an aliased deployment
+ * read as configured instead of missing.
+ */
+export const FAIL_CLOSED_CREDENTIALS: ReadonlyArray<{
+  variable: string;
+  purpose: string;
+  security: boolean;
+  alternatives: readonly string[];
+}> = [
+  {
+    variable: "AMAZON_PARTNER_TAG",
+    purpose:
+      "Amazon affiliate links fail closed — no link is emitted, so no commission can be attributed",
+    security: false,
+    alternatives: [],
+  },
+  {
+    variable: "REVALIDATION_SECRET",
+    purpose: "POST /api/revalidate rejects every request — cached pages never purge",
+    security: false,
+    alternatives: [],
+  },
+  {
+    variable: "RETAILER_LINKS_API_KEY",
+    purpose: "POST /api/retailer-links rejects every request",
+    security: false,
+    alternatives: [],
+  },
+  {
+    variable: "ENCRYPTION_KEY",
+    purpose: "subscriber emails and push tokens are stored in plaintext",
+    security: true,
+    alternatives: [],
+  },
+  {
+    variable: "BLIND_INDEX_KEY",
+    purpose: "subscriber lookups fall back to lower(email) — not a security control",
+    security: true,
+    alternatives: [],
+  },
+  {
+    variable: "AMAZON_LIST_URLS",
+    purpose: "the credential-free discovery source is inert — nothing populates the catalogue",
+    security: false,
+    alternatives: [],
+  },
+];
+
+/**
+ * The fail-closed credentials that are unset, considering every accepted alias
+ * name. `getEnv()` resolves aliases into the canonical variable, so the
+ * canonical name is checked first and the alternatives as a fallback.
+ */
+export function getUnsetFailClosedCredentials(): Array<{
+  variable: string;
+  purpose: string;
+  security: boolean;
+  alternatives: readonly string[];
+}> {
+  getEnv();
+  return FAIL_CLOSED_CREDENTIALS.filter((entry) =>
+    [entry.variable, ...entry.alternatives].every(
+      (name) => readSourceValue(process.env[name]) === undefined,
+    ),
+  );
+}
+
+/**
  * The environment variables that were unset or rejected, for health reporting
  * and operator diagnostics. Names and reasons only — never values.
  */

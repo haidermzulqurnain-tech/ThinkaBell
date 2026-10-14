@@ -12,6 +12,8 @@ This runbook defines the monitoring strategy, alert thresholds, and incident res
 
 The `config` check lists any environment variable the host delivered that failed validation — **names only, never values**, since the endpoint is unauthenticated. A non-empty list is the fastest way to see which integration is inert and why; it is the check that catches a placeholder credential (see the "Hostinger shows connected, Supabase does not" section of `docs/HOSTINGER_DEPLOYMENT.md`).
 
+The `credentials` check names the **fail-closed** credentials that are unset. These deliberately do not affect `status`, because the app still answers while — for example — a missing `AMAZON_PARTNER_TAG` means no affiliate link can be emitted at all. Keeping them separate is what lets alerting on `status: unhealthy` stay meaningful: `credentials` is the line to review when the app reads "healthy" but a feature is silently dead. Security-critical entries are counted in that line, so `2 security-critical` is worth alerting on separately.
+
 Example healthy response:
 
 ```json
