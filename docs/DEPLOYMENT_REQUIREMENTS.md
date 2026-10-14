@@ -59,7 +59,13 @@ JWT form also works.
 
 **If you already used a different variable name, keep it.** `getEnv()` resolves
 any of these spellings into the canonical variable, so a deployment configured under an
-alternative name still connects rather than appearing unconfigured:
+alternative name still connects rather than appearing unconfigured. Supabase's own
+flows prescribe two different sets, and **both work**:
+
+| Supabase flow                    | Variables it prescribes                                                                | How this app reads them                                                                                                           |
+| -------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Server** (what your host uses) | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_JWKS_URL` | All four accepted — the first three are canonical or aliases; the JWKS URL is unused (the app performs no user JWT verification). |
+| **Next.js App Router**           | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`                     | Both accepted; the URL is read directly, the publishable key is an accepted alias for the anonymous key.                          |
 
 | Canonical                   | Accepted aliases (most specific first)                                                                                                                                     |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

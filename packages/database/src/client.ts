@@ -59,9 +59,27 @@ function logConnection(clientType: "anon" | "service", url: string, key: string)
   );
 }
 
+/**
+ * The Supabase project URL for this client.
+ *
+ * Both spellings are accepted because they are used by different flows:
+ * `SUPABASE_URL` is what Supabase's server / connection-string flow and the
+ * legacy setup use, while `NEXT_PUBLIC_SUPABASE_URL` is what its Next.js App
+ * Router flow prescribes. They are the same value, so either one populates it.
+ *
+ * `prefer` picks the server-side name first, so a deployment that sets both
+ * (which is the recommended setup) behaves identically whichever spelling is
+ * consulted.
+ */
+function resolveSupabaseUrl(prefer: "server" | "public"): string | undefined {
+  return prefer === "public"
+    ? env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL
+    : env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
+}
+
 function createAnonClient(): SupabaseClient<Database> {
   const { url, key } = requireCredentials(
-    env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL,
+    resolveSupabaseUrl("public"),
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY,
     "anon",
   );
@@ -77,7 +95,7 @@ function createAnonClient(): SupabaseClient<Database> {
 
 function createServiceClient(): SupabaseClient<Database> {
   const { url, key } = requireCredentials(
-    env.SUPABASE_URL,
+    resolveSupabaseUrl("server"),
     env.SUPABASE_SERVICE_ROLE_KEY,
     "service",
   );

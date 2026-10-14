@@ -73,6 +73,46 @@ describe("Database: Supabase Client", () => {
       );
     });
 
+    /**
+     * The service client used to read SUPABASE_URL only, while the anon client
+     * also accepted NEXT_PUBLIC_SUPABASE_URL. A deployment following Supabase's
+     * Next.js App Router flow — which prescribes the NEXT_PUBLIC_ pair — then
+     * had a working anon client and a broken service client, so seeding, the
+     * cron jobs, and every service-role write failed with "not configured"
+     * while read paths worked. Both clients accept either spelling.
+     */
+    it("should build the service client from NEXT_PUBLIC_SUPABASE_URL alone", async () => {
+      mockEnv.SUPABASE_URL = "";
+      mockEnv.NEXT_PUBLIC_SUPABASE_URL = "https://public.supabase.co";
+      mockEnv.SUPABASE_SERVICE_ROLE_KEY = "service-key";
+      mockCreateClient.mockReturnValue({} as any);
+      vi.resetModules();
+      const { getSupabaseServiceClient } = await import("./client");
+      getSupabaseServiceClient();
+
+      expect(mockCreateClient).toHaveBeenCalledWith(
+        "https://public.supabase.co",
+        "service-key",
+        expect.any(Object),
+      );
+    });
+
+    it("should prefer SUPABASE_URL for the service client when both are set", async () => {
+      mockEnv.SUPABASE_URL = "https://server.supabase.co";
+      mockEnv.NEXT_PUBLIC_SUPABASE_URL = "https://public.supabase.co";
+      mockEnv.SUPABASE_SERVICE_ROLE_KEY = "service-key";
+      mockCreateClient.mockReturnValue({} as any);
+      vi.resetModules();
+      const { getSupabaseServiceClient } = await import("./client");
+      getSupabaseServiceClient();
+
+      expect(mockCreateClient).toHaveBeenCalledWith(
+        "https://server.supabase.co",
+        "service-key",
+        expect.any(Object),
+      );
+    });
+
     it("should throw when env vars are missing", async () => {
       mockEnv.SUPABASE_URL = "";
       mockEnv.SUPABASE_ANON_KEY = "";
