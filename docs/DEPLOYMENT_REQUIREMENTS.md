@@ -311,9 +311,13 @@ without a code change.
 | `NEXT_PUBLIC_SENTRY_DSN`        | Same value. **Build time.**                                                       | `sentry.client.config.ts:7`     |
 | `SENTRY_TRACES_SAMPLE_RATE`     | Optional; defaults to `0.1`                                                       | `instrumentation.ts:14`         |
 | `SENTRY_AUTH_TOKEN`             | **Build time only.** Enables source-map upload; absent = upload silently skipped. | `next.config.js:59`             |
-| `SENTRY_ORG` / `SENTRY_PROJECT` | **Build time only.**                                                              | `next.config.js:60-61`          |
+| `SENTRY_ORG` / `SENTRY_PROJECT` | **Build time only.** Validated as slugs; a typo is reported by name.              | `next.config.js:60-61`          |
 
-Both DSNs are shape-validated; a placeholder is rejected rather than sent.
+Both DSNs are shape-validated; a placeholder is rejected rather than sent. The
+org and project slugs are validated too, so a malformed one is reported instead
+of failing the upload or shipping maps to the wrong project. Step-by-step setup,
+including how the three build-time variables fit together, is
+[docs/SENTRY_SETUP.md](./SENTRY_SETUP.md).
 
 ### 2.15 Cloudflare — DNS and optional edge geo-routing
 

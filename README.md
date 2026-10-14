@@ -329,6 +329,7 @@ link.
 ## 📦 Deployment Guides
 
 - **Start here — every credential & service link**: See [docs/DEPLOYMENT_REQUIREMENTS.md](docs/DEPLOYMENT_REQUIREMENTS.md).
+- **Sentry setup (project, DSN, source maps)**: See [docs/SENTRY_SETUP.md](docs/SENTRY_SETUP.md).
 - **Hostinger Node.js Hosting (deployment order)**: See [docs/HOSTINGER_DEPLOYMENT.md](docs/HOSTINGER_DEPLOYMENT.md).
 - **Cloudflare CDN & Edge Worker**: See [docs/CLOUDFLARE_SETUP.md](docs/CLOUDFLARE_SETUP.md).
 - **Uptime Monitoring & Health Checks**: See [docs/UPTIME_MONITORING.md](docs/UPTIME_MONITORING.md).

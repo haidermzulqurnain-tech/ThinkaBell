@@ -392,6 +392,69 @@ describe("Config: Environment Validation", () => {
     });
   });
 
+  describe("Sentry build-time variables", () => {
+    /**
+     * These three are read raw by next.config.js, so before they were in the
+     * schema a wrong org or project was invisible: the source-map upload either
+     * failed or went to the wrong project, with nothing reporting which variable
+     * was wrong. They are now validated and surface in getEnvIssues().
+     */
+    it.each([
+      ["soloenterpreneurer"],
+      ["solo-preneur"],
+      ["thinkabell-web"],
+      ["a"],
+      ["org123"],
+      ["my-org-2"],
+    ])("accepts the valid slug %s", async (slug) => {
+      process.env = { SENTRY_ORG: slug, SENTRY_PROJECT: slug };
+      const { getEnv, getEnvIssues } = await import("./env");
+
+      expect(getEnv().SENTRY_ORG).toBe(slug);
+      expect(getEnv().SENTRY_PROJECT).toBe(slug);
+      expect(getEnvIssues()).toEqual([]);
+    });
+
+    it.each([
+      ["SoloEnterpreneurer"], // uppercase
+      ["-leading-hyphen"],
+      ["trailing-hyphen-"],
+      ["has space"],
+      ["under_score"],
+    ])("rejects the invalid slug %s", async (slug) => {
+      process.env = { SENTRY_ORG: slug };
+      const { getEnv, getEnvIssues } = await import("./env");
+
+      expect(getEnv().SENTRY_ORG).toBe("");
+      const issue = getEnvIssues().find((i) => i.variable === "SENTRY_ORG");
+      expect(issue?.delivered).toBe(true);
+      expect(issue?.reason).toContain("not a valid slug");
+    });
+
+    it("treats an unset org or project as unconfigured, not as a problem", async () => {
+      process.env = {};
+      const { getEnv, getEnvIssues } = await import("./env");
+
+      expect(getEnv().SENTRY_ORG).toBe("");
+      expect(getEnv().SENTRY_PROJECT).toBe("");
+      expect(getEnvIssues()).toEqual([]);
+    });
+
+    it("accepts the org and project together, as a build would set them", async () => {
+      process.env = {
+        SENTRY_ORG: "soloenterpreneurer",
+        SENTRY_PROJECT: "thinkabell-web",
+        SENTRY_AUTH_TOKEN: "sntrys_token",
+      };
+      const { getEnv, getEnvIssues } = await import("./env");
+
+      expect(getEnv().SENTRY_ORG).toBe("soloenterpreneurer");
+      expect(getEnv().SENTRY_PROJECT).toBe("thinkabell-web");
+      expect(getEnv().SENTRY_AUTH_TOKEN).toBe("sntrys_token");
+      expect(getEnvIssues()).toEqual([]);
+    });
+  });
+
   describe("credential name aliases", () => {
     /**
      * The canonical names are the only ones the code and .env.example use, but

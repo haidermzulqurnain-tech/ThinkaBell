@@ -39,6 +39,25 @@ const sentryDsn = z
   });
 
 /**
+ * A Sentry organisation or project slug.
+ *
+ * Sentry accepts lowercase letters, digits and hyphens, requires a leading
+ * letter, and rejects a leading or trailing hyphen. Validating that shape
+ * (rather than a particular org name) means a typo is reported instead of
+ * silently uploading source maps to the wrong project, or failing the build
+ * at the upload step with no indication of which variable is wrong.
+ */
+const isSlugShape = (value: string): boolean => /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(value);
+
+const sentrySlug = z
+  .string()
+  .optional()
+  .transform((value) => (value === undefined || value === "" ? "" : value.trim()))
+  .refine((value) => value === "" || isSlugShape(value), {
+    message: "not a valid slug (lowercase letters, digits and hyphens; must start with a letter)",
+  });
+
+/**
  * A Supabase-managed project host is `<project-ref>.supabase.co` (also `.in`
  * and `.red`), where the ref is a lowercase alphanumeric token. A custom
  * domain fronting the Supabase API gateway is also legitimate, so anything
@@ -323,6 +342,18 @@ export const envSchema = z.object({
   NEXT_PUBLIC_SENTRY_DSN: sentryDsn,
   SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
   NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
+
+  // Build-time source-map upload. These are only needed when actually building
+  // with source maps, so an unset value is the normal case and is not reported
+  // as a problem — but a value that IS set is used, and a wrong org or project
+  // fails the upload loudly enough to be worth validating the slugs.
+  //
+  // Declared in the schema so they appear in `getEnvIssues()` output instead of
+  // being invisible, which is how a deployment once uploaded source maps to the
+  // wrong project without any signal.
+  SENTRY_ORG: sentrySlug,
+  SENTRY_PROJECT: sentrySlug,
+  SENTRY_AUTH_TOKEN: z.string().default(""),
 });
 
 export type Env = z.infer<typeof envSchema>;
