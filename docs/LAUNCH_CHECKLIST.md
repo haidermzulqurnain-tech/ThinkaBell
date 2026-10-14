@@ -181,33 +181,42 @@ Format posts with price in brackets, clean non-promotional tone, and link to the
 # 1. Clone repository
 git clone <repository-url> && cd thinkabellclick
 
-# 2. Install dependencies
+# 2. Install dependencies (must use pnpm — npm cannot resolve workspace:* deps)
+corepack enable pnpm
 pnpm install
 
 # 3. Copy environment files (empty placeholders — fill in real values)
 cp .env.example apps/web/.env.local
 cp .env.example apps/jobs/.env
 
-# 4. Set required secrets in .env.local and .env
-#    - SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY
-#    - NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY
-#    - UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN
-#    - ALERTS_API_KEY
-#    - CRON_SECRET
-# Leave a variable EMPTY to mean "not configured". Never paste an example or
-# placeholder value: a placeholder URL is syntactically valid, so it passes a
-# presence check while pointing at a host that does not exist. Values are
-# validated for shape and rejections are reported by variable name in
-# /api/health ("config") and the startup log.
+# 4. Verify the deployment would actually work, before deploying
+pnpm run check:supabase   # stage-by-stage Supabase connectivity
+pnpm verify:hostinger     # standalone bundle + entrypoint + env variables
+```
 
-# 5. Run database schema and migrations in Supabase
-#    - packages/database/schema.sql  (+ packages/database/migrations/*, tracked
-#      in public.schema_migrations — the scripted way is `pnpm db:apply`)
-#    - packages/database/seed.sql
+### Configuration on the host
 
-# 6. Start development servers
-pnpm --filter @thinkabell/web dev
-pnpm --filter @thinkabell/jobs dev
+The order matters in two places — both are covered step by step in
+`docs/HOSTINGER_DEPLOYMENT.md`:
+
+1. **hPanel build settings first** (Step 2 of that guide): application type
+   `Other`, Node `22.x`, package manager `pnpm`, root directory `./`, build
+   command `pnpm run build:standalone`, entry file `apps/web/hostinger-server.js`.
+   Node 22 is required — `@supabase/supabase-js` declares `engines.node >=22.0.0`.
+2. **Environment variables before the first build** (Step 3 of that guide).
+   Every `NEXT_PUBLIC_*` value is inlined into the browser bundle at build time,
+   so a variable added after the build ships an empty value in the bundle.
+   Runtime-only changes then need a restart.
+
+### Verification Pipeline
+
+```bash
+pnpm run type-check                     # TypeScript (6/6 packages)
+pnpm run lint                           # see note below
+pnpm run test                           # Vitest (507 tests, 82 files)
+pnpm run format:check                   # Prettier (repo-wide)
+pnpm tsx scripts/compliance-check.ts    # FTC/sponsored/privacy/unsubscribe scan
+pnpm run check:supabase                 # Supabase reachability, stage by stage
 ```
 
 ### Verification Pipeline

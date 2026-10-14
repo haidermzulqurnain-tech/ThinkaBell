@@ -1,422 +1,503 @@
 # Hostinger Node.js Deployment Guide
 
-This guide details how to deploy the **ThinkaBell** Next.js 15+ application to Hostinger Node.js hosting.
+How to deploy **ThinkaBell** to Hostinger Node.js hosting, in the order the steps have to happen.
+
+The current deployment is: **Hostinger native GitHub integration**, application type `Other`, entry point `apps/web/hostinger-server.js`, and **all secrets served from the Hostinger Environment section**. Vercel's `vercel.json` is inert here — the cron schedule comes from Supabase `pg_cron` instead.
+
+> **Order matters in two places**, and both are the reason this guide is sequenced the way it is:
+>
+> 1. **Environment variables must be set before the first build.** Every `NEXT_PUBLIC_*` value is inlined into the browser bundle at _build_ time. Setting them after the build ships a bundle with an empty value baked in.
+> 2. **A runtime-only variable needs a restart.** Hostinger reads the Environment section at process start, so adding `SUPABASE_*` without restarting leaves the running process with the old values.
 
 ---
 
-## Architecture on Hostinger
+## Deployment sequence
 
-Next.js can build in **standalone mode** (`output: "standalone"` in `next.config.js`, enabled by `pnpm build:standalone`). This builds a self-contained Node.js server containing only the production dependencies needed to run the website.
-
-`next build` with `output: "standalone"` emits only the server runtime — it does **not** copy the client assets (`.next/static`) or `public/` files. `pnpm build:standalone` therefore copies them into the standalone output (`scripts/lib/standalone-assets.js`, shared with `pnpm package:hostinger`), so both deploy layouts are complete: the repository layout (native Hostinger integration) and the packaged bundle (`dist/hostinger-deploy/`).
+| Step | What                                          | Blocks the next step?                      |
+| ---- | --------------------------------------------- | ------------------------------------------ |
+| 1    | Connect the repository (GitHub App)           | Yes — nothing can build without it         |
+| 2    | Configure hPanel build settings               | Yes                                        |
+| 3    | **Set environment variables**                 | Yes — `NEXT_PUBLIC_*` are inlined at build |
+| 4    | First deploy                                  | Yes                                        |
+| 5    | Verify the app and the Supabase connection    | Yes                                        |
+| 6    | Apply the database schema and migrations      | Yes                                        |
+| 7    | Schedule the cron jobs                        | No — but prices never refresh without it   |
+| 8    | Populate products (discovery)                 | No                                         |
+| —    | Troubleshooting / local build / manual upload | Fallbacks                                  |
 
 ---
 
-## Step-by-Step Deployment Walkthrough
+## Step 1: Connect the repository
 
-### Step 1: Build the Standalone Bundle Locally
+Hostinger has two GitHub integrations and **only one builds**:
+
+- **Node.js web app → Import Git repository → Connect with GitHub** (the Hostinger GitHub App) — runs the full pipeline: automatic `pnpm install` → build command → entry file. **This is the one to use.**
+- **Websites → Git** (generic Git deployment) — only copies repository files into a directory. No install, no build, so the app cannot start. Do not use it for ThinkaBell.
+
+Point it at the `main` branch. Every push to `main` then runs install → build → restart.
+
+---
+
+## Step 2: Configure the hPanel build settings
+
+Hostinger auto-detects the framework as **Next.js** — **override it to `Other`**.
+Hostinger's Next.js mode expects the standard single-app standalone layout
+(`.next/standalone/server.js`). This is a pnpm monorepo, so it emits the server
+at `apps/web/.next/standalone/apps/web/server.js`, which that mode cannot find.
+The `Other` type runs the repository's own entrypoint instead.
+
+| Setting              | Value                          | Why                                                                                                                                                                                                                                                                                                                        |
+| -------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Application type** | `Other`                        | Runs our entrypoint instead of Hostinger's Next.js-mode server start, which expects a non-monorepo layout.                                                                                                                                                                                                                 |
+| **Node version**     | `22.x`                         | **Required, not preferred.** `@supabase/supabase-js` declares `engines.node >=22.0.0`. Node 20 still runs but is a version shortfall and is what produced the deprecation warning in the runtime log. It also matches `engines.node` and the CI runners.                                                                   |
+| **Root directory**   | `./`                           | Must stay the repository root: the automatic `pnpm install` needs the workspace root (`pnpm-workspace.yaml`) to resolve the `workspace:*` dependencies. Hostinger's monorepo auto-detection would pick `apps/web` and build only that subdirectory, which breaks the workspace install.                                    |
+| **Build command**    | `pnpm run build:standalone`    | Runs the preflight, then the Next.js build with `OUTPUT=standalone` injected cross-platform, and copies `.next/static` + `public/` into the standalone output. A plain `pnpm run build` (turbo) does **not** emit `.next/standalone`.                                                                                      |
+| **Package manager**  | `pnpm`                         | **Set this explicitly — it is not auto-detected.** If it stays on the `npm` default, the automatic install runs `npm install`, which does not read `pnpm-workspace.yaml`: only root devDependencies install and every workspace package is left without `node_modules`, so the build fails with `next: command not found`. |
+| **Output directory** | _(leave empty)_                | Ignored for `Other` when an entry file is set.                                                                                                                                                                                                                                                                             |
+| **Entry file**       | `apps/web/hostinger-server.js` | Relative to the root directory.                                                                                                                                                                                                                                                                                            |
+| **Port**             | _(leave unset)_                | `hostinger-server.js` binds whatever `PORT` the host assigns; the app itself reads it too.                                                                                                                                                                                                                                 |
+
+**On the pnpm version.** The pin is the `packageManager` field in the root
+`package.json` (currently `pnpm@10.34.6`). `pnpm-workspace.yaml` sets
+`pmOnFail: warn` and `verifyDepsBeforeRun: warn`, so a host whose pnpm shim
+resolves to a newer version (e.g. 11.x) **logs the mismatch and continues**.
+Both the automatic install and the build then run under the same pnpm, which
+keeps `node_modules` in one layout instead of the mixed 10/11 layout that was
+breaking the workspace. Do not add `pmOnFail: download` back: it makes pnpm try
+to download the pinned version, and on this host that attempt is what aborts
+the build.
+
+---
+
+## Step 3: Set the environment variables — **before the first build**
+
+In hPanel → Node.js → **Environment**, add the variables below. Two rules:
+
+- **Set them all before the first deploy**, because `NEXT_PUBLIC_*` values are inlined into the browser bundle at build time. A variable added after the build ships an empty value in the bundle.
+- **Restart after any change.** Runtime-only variables are read at process start.
+
+Every value below comes from the Hostinger Environment section — that is the
+single place this deployment takes its configuration from. Nothing is read from
+a file, and there is no `.env` in the deployed bundle.
+
+### Core (required for a healthy `/api/health`)
+
+| Variable                        | Source                            | Notes                                                                                                                                                              |
+| ------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `NODE_ENV`                      | —                                 | `production`. Set it explicitly: `hostinger-server.js` normalises anything non-standard to `production`, but a standard value avoids the Next.js warning entirely. |
+| `NEXT_PUBLIC_APP_URL`           | —                                 | `https://thinkabell.click`. Must be a full URL with scheme — a bare hostname fails validation.                                                                     |
+| `SUPABASE_URL`                  | Supabase → Project Settings → API | Project URL. Must be a real `https://<ref>.supabase.co` project host.                                                                                              |
+| `SUPABASE_ANON_KEY`             | Supabase → API                    | A JWT or an `sb_publishable_…` key.                                                                                                                                |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase → API                    | A JWT or `sb_secret_…` key. Server-side only.                                                                                                                      |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase → API                    | Same value as `SUPABASE_URL`. **Inlined at build time.**                                                                                                           |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → API                    | Same value as `SUPABASE_ANON_KEY`. **Inlined at build time.**                                                                                                      |
+| `UPSTASH_REDIS_REST_URL`        | Upstash console                   | Must be a real `https://<name>.upstash.io` host.                                                                                                                   |
+| `UPSTASH_REDIS_REST_TOKEN`      | Upstash console                   |                                                                                                                                                                    |
+
+### Security (required — these endpoints fail closed without them)
+
+| Variable                 | Source   | Notes                                                                                     |
+| ------------------------ | -------- | ----------------------------------------------------------------------------------------- |
+| `CRON_SECRET`            | generate | Bearer token for `/api/cron/*`. The same value goes into the `cron_secret` row in Step 7. |
+| `ALERTS_API_KEY`         | generate | Bearer token for `/api/alerts`.                                                           |
+| `REVALIDATION_SECRET`    | generate | Bearer token for `POST /api/revalidate`.                                                  |
+| `RETAILER_LINKS_API_KEY` | generate | Bearer token for `POST /api/retailer-links`.                                              |
+| `ENCRYPTION_KEY`         | generate | `openssl rand -hex 32`. Until set, PII is stored in plaintext.                            |
+| `BLIND_INDEX_KEY`        | generate | A **different** `openssl rand -hex 32` value.                                             |
+
+### Notifications
+
+| Variable                       | Source            | Notes                                              |
+| ------------------------------ | ----------------- | -------------------------------------------------- |
+| `BREVO_API_KEY`                | Brevo console     | Email sending.                                     |
+| `BREVO_SENDER_EMAIL`           | Brevo console     | A verified sender address — must be a valid email. |
+| `BREVO_SENDER_NAME`            | —                 | Optional; defaults to `ThinkaBell`.                |
+| `CONTACT_EMAIL`                | —                 | Optional contact address.                          |
+| `ONESIGNAL_APP_ID`             | OneSignal console | REST app ID.                                       |
+| `ONESIGNAL_REST_API_KEY`       | OneSignal console | REST API key.                                      |
+| `NEXT_PUBLIC_ONESIGNAL_APP_ID` | OneSignal console | Browser app ID. **Inlined at build time.**         |
+
+### Affiliate links
+
+| Variable                                | Source               | Notes                                                                      |
+| --------------------------------------- | -------------------- | -------------------------------------------------------------------------- |
+| `AMAZON_PARTNER_TAG`                    | Amazon Associates    | US tag. Links fail closed until set.                                       |
+| `AMAZON_PARTNER_TAG_UK` / `_DE` / `_CA` | Amazon Associates    | Optional regional tags.                                                    |
+| `AMAZON_LIST_URLS`                      | Your curation        | JSON array of `{ url, marketplace }` — see `docs/AMAZON_LIST_CURATION.md`. |
+| `AMAZON_LIST_MARKETPLACE`               | —                    | Optional; defaults to `US`.                                                |
+| `AMAZON_LIST_MAX_ITEMS`                 | —                    | Optional; defaults to `100`.                                               |
+| `AMAZON_LIST_FETCH_DELAY_MS`            | —                    | Optional; defaults to `1000`.                                              |
+| `EBAY_CLIENT_ID` / `EBAY_CLIENT_SECRET` | eBay Developer       | For the Browse API source.                                                 |
+| `EBAY_AFFILIATE_CAMPAIGN_ID`            | eBay Partner Network | For affiliate attribution.                                                 |
+| `WALMART_API_KEY`                       | Walmart console      | Optional source credentials.                                               |
+
+### Discovery (Step 8)
+
+| Variable            | Source        | Notes                                                                                                                                                                                                                                                 |
+| ------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DISCOVERY_SOURCES` | Your curation | A single-line JSON array of `{ name, type, queries, enabled }`. **Read directly from `process.env` by the jobs package, so it is not validated by the env schema** — a malformed value is logged by the runner rather than reported by `/api/health`. |
+
+### Variables that bypass the env schema
+
+Three variables are read directly from `process.env` by the package that uses
+them, so they are **not** shape-validated and will **not** appear in the `config`
+line of `/api/health`:
+
+| Variable            | Read by           | Effect when missing or malformed                                                                |
+| ------------------- | ----------------- | ----------------------------------------------------------------------------------------------- |
+| `DISCOVERY_SOURCES` | `apps/jobs`       | Logged by the runner; treated as "no sources configured" (zero products).                       |
+| `ENCRYPTION_KEY`    | `packages/shared` | PII stored in plaintext. Must be 64-char hex.                                                   |
+| `BLIND_INDEX_KEY`   | `packages/shared` | Blind index falls back to `lower(email)`, which is not a security control. Must be 64-char hex. |
+
+`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` and their
+`NEXT_PUBLIC_` equivalents **are** validated, which is why a placeholder there is
+caught and these three are not.
+
+### Optional
+
+| Variable                                   | Source          | Notes                                                                                   |
+| ------------------------------------------ | --------------- | --------------------------------------------------------------------------------------- |
+| `PARTNERSTACK_API_KEY`                     | PartnerStack    | SaaS affiliate source.                                                                  |
+| `IMPACT_ACCOUNT_SID` / `IMPACT_AUTH_TOKEN` | Impact          | SaaS affiliate source.                                                                  |
+| `AFFILIATE_ATTRIBUTION_ID`                 | —               | Optional; defaults to `thinkabell`.                                                     |
+| `EDGE_PROXY_TRUSTED`                       | —               | `true` only when behind the Cloudflare edge-worker proxy. Never used for authorization. |
+| `EXCHANGE_RATE_API_URL`                    | —               | Defaults to `https://api.frankfurter.app/latest`.                                       |
+| `NEXT_PUBLIC_POSTHOG_KEY` / `_HOST`        | PostHog console | Analytics, consent-gated. **Inlined at build time.**                                    |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`    | Sentry console  | Error tracking. Both empty = Sentry never initialises.                                  |
+| `SENTRY_TRACES_SAMPLE_RATE`                | —               | Optional; defaults to `0.1`.                                                            |
+
+### Never paste a placeholder
+
+The values in `.env.example` are shipped **empty**, and that is deliberate. A
+placeholder such as `https://your-project.supabase.co` is non-empty, so it
+passes a presence check, and it is a _syntactically valid_ URL, so nothing else
+rejects it — the client is built and pointed at a host that does not exist.
+Hostinger then shows the connection as configured while Supabase receives no
+requests, which is the exact symptom this prevents.
+
+Supabase URLs and keys are validated for **shape** (a real project ref; a JWT or
+an `sb_` key), so a malformed value is dropped and reported **by variable name**
+in `/api/health` and the startup log instead of being used.
+
+**GitHub Actions secrets** (repo Settings → Secrets and variables → Actions) are
+separate from all of the above: only `CRON_SECRET` (same value) is used by the CI
+smoke test. The `HOSTINGER_*` deploy secrets are no longer needed — deploys run
+through the native integration.
+
+---
+
+## Step 4: Deploy
 
 ```bash
-# In the root repository
-pnpm install
-pnpm package:hostinger   # builds with OUTPUT=standalone (cross-platform) and packages dist/hostinger-deploy/
+git push origin main
 ```
 
-`pnpm package:hostinger` runs two steps: `pnpm build:standalone` (production build with `output: "standalone"`, injecting `OUTPUT=standalone` into the build environment so it works identically on Windows, macOS, and Linux) and `node scripts/prepare-hostinger.js` (copies the standalone runtime, `.next/static` chunks, `public/` assets, and `hostinger-server.js` into `dist/hostinger-deploy/`).
+Hostinger runs: `pnpm install` → `pnpm run build:standalone` →
+`node apps/web/hostinger-server.js`.
 
-**Windows note:** the standalone output requires symlink support — enable Developer Mode (Settings → Privacy & security → For developers) or run from an elevated terminal. The build fails fast with guidance if symlinks are unavailable; alternatively deploy the full project and run `next start`.
-
-This compiles the application and packages all standalone server files, `.next/static` CSS/JS chunks, and `public/` assets into:
-`dist/hostinger-deploy/`
+To redeploy without a new commit, use **Restart Application** in hPanel.
 
 ---
 
-### Step 2: Configure Hostinger hPanel
+## Step 5: Verify
 
-Hostinger auto-detects the framework as **Next.js** — **override it to `Other`**. Hostinger's Next.js mode applies `output: "standalone"` itself and then starts the bundled server from the standard single-app layout (`.next/standalone/server.js`). This monorepo emits the standalone server at `apps/web/.next/standalone/apps/web/server.js`, which that mode cannot locate. The deterministic configuration uses the **Other** application type with the repository's own entrypoint:
+**1. Health endpoint** — `GET https://thinkabell.click/api/health`
 
-| Setting              | Value                          | Why                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| -------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Application type** | `Other`                        | Runs our entrypoint instead of Hostinger's Next.js-mode server start, which expects the standard (non-monorepo) standalone layout.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| **Node version**     | `22.x`                         | Matches the `engines.node` field in `package.json` and the CI runners.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| **Root directory**   | `./`                           | Must stay the repository root: the automatic `pnpm install` needs the workspace root (`pnpm-workspace.yaml`) to resolve the `workspace:*` dependencies. Hostinger's monorepo auto-detection would pick `apps/web` and build only that subdirectory, which breaks the workspace install.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| **Build command**    | `pnpm run build:standalone`    | Injects `OUTPUT=standalone` cross-platform and copies `.next/static` + `public/` into the standalone output. A plain `pnpm run build` (turbo) does **not** emit `.next/standalone`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| **Package manager**  | `pnpm`                         | **Set this explicitly in hPanel — it is not auto-detected.** The _version_ is pinned by the `packageManager` field in the root `package.json` (currently `pnpm@10.34.6`); `pnpm-workspace.yaml` sets `pmOnFail: warn` and `verifyDepsBeforeRun: warn`, so a host whose `pnpm` shim resolves to a newer version (e.g. 11.x) **logs the mismatch and continues** instead of aborting. The automatic `pnpm install` and the build then run under the same pnpm, which keeps `node_modules` in one layout rather than the mixed 10/11 layout that was breaking the workspace. If the setting is left on the default (`npm`), the automatic install runs `npm install`, which does not read `pnpm-workspace.yaml`: only the root devDependencies are installed and every workspace package (including `apps/web`) is left without `node_modules`, so the build fails with `next: command not found`. |
-| **Output directory** | _(leave empty)_                | Ignored for `Other` when an entry file is set.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| **Entry file**       | `apps/web/hostinger-server.js` | Relative to the root directory. Resolves the standalone server at `apps/web/.next/standalone/apps/web/server.js`, binds the `PORT` Hostinger assigns, and falls back to `next start` when no standalone build exists.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+```json
+{ "status": "healthy", "checks": { "config": "ok", "database": "ok", "cache": "ok" } }
+```
 
-With these settings the native GitHub integration runs the full pipeline on Hostinger: `pnpm install` (automatic) → `pnpm run build:standalone` → `node apps/web/hostinger-server.js`. No manual upload is needed — push to `main` and Hostinger rebuilds.
+| `checks` value                             | Meaning                                                                                 |
+| ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `config: "ok"`                             | Every environment variable the host delivered passed validation.                        |
+| `config: "rejected (defaults applied): …"` | Names the variables that failed — that integration is inert. Values are never returned. |
+| `database: "error: …not configured…"`      | `SUPABASE_URL`/`SUPABASE_ANON_KEY` are missing.                                         |
+| `database: "degraded: Invalid API key"`    | The URL reached Supabase but the key was rejected — re-copy both.                       |
+| `cache: "error"`                           | Upstash is unset; rate limiting falls back to in-memory.                                |
 
----
-
-### Step 3: Manual upload (fallback)
-
-The native GitHub integration (Step 2) builds on Hostinger directly, so no upload is needed. Use this fallback only if the native integration is unavailable (e.g. the GitHub App cannot access the repo):
-
-1. Run `pnpm package:hostinger` (requires symlink support — on Windows, enable Developer Mode).
-2. Compress the contents of `dist/hostinger-deploy/` into a `.zip` file.
-3. In Hostinger **File Manager**, upload the zip to your **Application Root** (`public_html`) and extract it.
-
-The deployable files are the **built standalone bundle** in `dist/hostinger-deploy/` — **not** the raw repository files. The raw repo (source code, `package.json`, `apps/`, `packages/`, `scripts/`) cannot run on Hostinger: it has no `node_modules` and no `.next/standalone` build output, so `hostinger-server.js` cannot start.
-
----
-
-### Step 4: Configure Environment Variables in Hostinger
-
-In the Hostinger Node.js control panel (**Environment** section), add the variables below. Values marked **generate** are created by you with `openssl rand -hex 32` (two different values for `ENCRYPTION_KEY` and `BLIND_INDEX_KEY`). Values marked **console** come from the named provider's dashboard.
-
-**Core (required for a healthy `/api/health`):**
-
-| Variable                        | Source                                    | Description                                                            |
-| ------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------- |
-| `NODE_ENV`                      | —                                         | `production`                                                           |
-| `PORT`                          | —                                         | Leave unset; Hostinger assigns the port dynamically                    |
-| `NEXT_PUBLIC_APP_URL`           | —                                         | `https://thinkabell.click` — drives unsubscribe links and `utm_source` |
-| `SUPABASE_URL`                  | Supabase console (Project Settings → API) | Project URL                                                            |
-| `SUPABASE_ANON_KEY`             | Supabase console                          | Public anon key                                                        |
-| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase console                          | Secret key — server-side only, never browser-exposed                   |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase console                          | Same as `SUPABASE_URL` (browser-facing)                                |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase console                          | Same as `SUPABASE_ANON_KEY` (browser-facing)                           |
-| `UPSTASH_REDIS_REST_URL`        | Upstash console                           | Redis REST URL                                                         |
-| `UPSTASH_REDIS_REST_TOKEN`      | Upstash console                           | Redis REST token                                                       |
-
-**Security (required — endpoints fail closed without them):**
-
-| Variable                 | Source                     | Description                                                        |
-| ------------------------ | -------------------------- | ------------------------------------------------------------------ |
-| `CRON_SECRET`            | generate                   | Bearer token authorizing `/api/cron/*`                             |
-| `ALERTS_API_KEY`         | generate                   | Bearer token authorizing `/api/alerts`                             |
-| `REVALIDATION_SECRET`    | generate                   | Bearer token authorizing `POST /api/revalidate` (ISR cache purge)  |
-| `RETAILER_LINKS_API_KEY` | generate                   | Bearer token authorizing `POST /api/retailer-links` (admin writes) |
-| `ENCRYPTION_KEY`         | generate                   | Encrypts PII at rest                                               |
-| `BLIND_INDEX_KEY`        | generate (different value) | Subscriber blind-index key                                         |
-
-**Notifications (required for alert delivery):**
-
-| Variable                       | Source            | Description                        |
-| ------------------------------ | ----------------- | ---------------------------------- |
-| `BREVO_API_KEY`                | Brevo console     | Email sending                      |
-| `BREVO_SENDER_EMAIL`           | Brevo console     | Verified sender address            |
-| `BREVO_SENDER_NAME`            | —                 | Optional; defaults to `ThinkaBell` |
-| `ONESIGNAL_APP_ID`             | OneSignal console | REST app ID                        |
-| `ONESIGNAL_REST_API_KEY`       | OneSignal console | REST API key                       |
-| `NEXT_PUBLIC_ONESIGNAL_APP_ID` | OneSignal console | Browser app ID (Web Push)          |
-
-**Affiliate (required for revenue links; links fail closed until set):**
-
-| Variable                                | Source               | Description                                                                   |
-| --------------------------------------- | -------------------- | ----------------------------------------------------------------------------- |
-| `AMAZON_PARTNER_TAG`                    | Amazon Associates    | US partner tag                                                                |
-| `AMAZON_PARTNER_TAG_UK` / `_DE` / `_CA` | Amazon Associates    | Optional regional tags                                                        |
-| `EBAY_AFFILIATE_CAMPAIGN_ID`            | eBay Partner Network | Campaign ID                                                                   |
-| `AFFILIATE_ATTRIBUTION_ID`              | —                    | Optional; defaults to `thinkabell`                                            |
-| `AMAZON_LIST_URLS`                      | Your curation        | JSON array of `{ url, marketplace }` entries (`docs/AMAZON_LIST_CURATION.md`) |
-
-**Optional:**
-
-| Variable                                | Source          | Description                                      |
-| --------------------------------------- | --------------- | ------------------------------------------------ |
-| `NEXT_PUBLIC_POSTHOG_KEY`               | PostHog console | Analytics (consent-gated)                        |
-| `NEXT_PUBLIC_POSTHOG_HOST`              | —               | Defaults to `https://app.posthog.com`            |
-| `EXCHANGE_RATE_API_URL`                 | —               | Defaults to `https://api.frankfurter.app/latest` |
-| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | Sentry console  | Error tracking (consent-gated)                   |
-
-**GitHub Actions secrets** (repo Settings → Secrets and variables → Actions) are separate from the above: only `CRON_SECRET` (same value as above) is used by the CI smoke test. The five `HOSTINGER_*` deploy secrets are **no longer needed** — the SCP deploy workflow was removed; deploys run through Hostinger's native GitHub integration (Step 2). Delete any `HOSTINGER_*` secrets you added earlier.
-
----
-
-### Step 5: Start & Verify Application
-
-1. In the Hostinger Node.js panel, click **Run** or **Restart Application**.
-2. Visit `https://thinkabell.click/api/health` to confirm the server, database connection, and Redis cache are green (`200 OK`).
-3. Visit `https://thinkabell.click` to test deal browsing, search, and subscriptions.
-
----
-
-### Step 6: Populate Products (Discovery)
-
-The database starts empty — products are populated by the discovery job.
-
-1. In the Hostinger Node.js panel (**Environment** section), add:
-   - `DISCOVERY_SOURCES` — a JSON array (single line) of sources to run. AppSumo needs **no credentials** (it harvests public pages); PartnerStack and Impact need the credentials from the Step 4 SaaS section. Example (software deals, credential-free):
-     ```
-     [{"name":"appsumo","type":"software","queries":["productivity","crm","seo","email marketing","ai tools","project management"],"enabled":true}]
-     ```
-     Each query harvests the top 20 matching deals; the same deal found by several queries is upserted, not duplicated.
-2. Click **Restart Application** — Hostinger loads environment variables at app start.
-3. Trigger a run (the `CRON_SECRET` from Step 4 authorizes it):
-   ```bash
-   curl -X POST https://thinkabell.click/api/cron/product-discovery \
-     -H "Authorization: Bearer <CRON_SECRET>"
-   ```
-   Expect `{"discovered":N,"sources":["appsumo"],"errors":[]}`. The endpoint is rate-limited to 10 requests/minute, and concurrent runs are skipped via a job lock — a `discovered: 0` response with sources configured means another run holds the lock, so wait and retry.
-4. Verify: `GET /api/deals` lists products; `GET /api/deals?category=software` lists software deals.
-
-**Recurring runs:** the `vercel.json` cron schedules only run on Vercel, so on Hostinger nothing fires them. Schedule the three endpoints from inside Supabase instead — see **Step 6.5: Schedule the cron jobs** below. A Hostinger hPanel cron job works as a fallback, but it lives outside the repository, so a schedule change is a manual hPanel edit rather than a migration.
-
----
-
-### Step 6.5: Schedule the cron jobs
-
-Hostinger does not run Vercel's `crons` array, so `vercel.json` is inert on this deployment. Schedule the jobs in Supabase instead: `pg_cron` fires on a 6-hour cadence (`0 */6 * * *`, the same schedule) and `pg_net` makes the HTTP call. The app stays stateless, and the schedule is version-controlled — it survives a redeploy.
-
-1. Enable the extensions: Supabase Dashboard → **Database → Extensions** → enable `pg_cron` and `pg_net`.
-
-2. Apply the migration (it creates the jobs and their settings table):
-
-   ```bash
-   SUPABASE_DB_URL="postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres" pnpm db:apply
-   ```
-
-   `pnpm db:apply` applies `schema.sql` and then every file in `packages/database/migrations/` that is not yet recorded in `public.schema_migrations`, so it is safe to re-run.
-
-3. Supply the two settings rows. **The migration does not hardcode either value**, and both are read from the database at scheduling time:
-
-   ```sql
-   insert into public.cron_settings (key, value) values
-     ('site_url', 'https://thinkabell.click'),
-     ('cron_secret', '<CRON_SECRET from Step 4>')
-   on conflict (key) do update set value = excluded.value, updated_at = now();
-   ```
-
-   `site_url` is the public origin the cron endpoints run on. `cron_secret` **must equal `CRON_SECRET`** exactly, because the routes authorize the request against that environment variable. Rows are protected by RLS: only the `postgres`/`service_role` roles can read them, and the anon key cannot.
-
-4. Re-run the scheduling function to pick the values up:
-
-   ```sql
-   select public.schedule_thinkabell_crons();
-   ```
-
-   Expect a `NOTICE` naming the three scheduled jobs. If `cron_settings` is missing a row the function raises a `NOTICE` and schedules nothing, so a misconfigured deployment stays inert rather than calling the endpoints unauthenticated.
-
-Jobs are created **only if the extension is already enabled** — applying the migration before enabling it fails on the `create extension` line, which is the message telling you to do step 1.
-
-**Changing the schedule or secret** is an edit to the settings rows plus a re-run of `schedule_thinkabell_crons()`, which unschedules the existing jobs before recreating them. Nothing else needs to change.
-
-**Verify a job runs** by checking `cron.job_run_details` for a result, or by triggering the endpoint manually:
+**2. Supabase connection, stage by stage** — run on the host:
 
 ```bash
-curl -X POST https://thinkabell.click/api/cron/product-discovery -H "Authorization: Bearer <CRON_SECRET>"
+pnpm run check:supabase
 ```
 
-Note that `pg_net` dispatches asynchronously: the job row records the request being _queued_, not its HTTP result. A 401 in the route logs means the `cron_secret` row and the app's `CRON_SECRET` have drifted apart.
+Reports `config`, `node`, `reach`, `auth`, and `data` separately, exit code 0 only
+when a real query through the app's own client succeeds. See the troubleshooting
+table below for what a failing stage means.
 
----
+**3. The site** — browse `/`, `/deals`, `/search`, and confirm the runtime log
+shows the client connected to a real project:
 
-## Troubleshooting
+```
+[Database] Supabase anon client connected to project "abcdefghij…" (key …1234)
+```
 
-### "Linked the GitHub repo in hPanel" — two different integrations
+**4. Current runtime path.** The deployed build may run either layout, and the
+startup log says which:
 
-Hostinger has two GitHub integrations, and only one builds your app:
+- `Loading server bundle from: …` — the **standalone** server (smaller, only production deps).
+- `Using \`next start\` (no standalone output; full-project deploy).` — the **full-project** path, when no standalone output was produced. Fully supported; it just ships the whole project rather than a traced bundle.
 
-- **Node.js web app → Import Git repository → Connect with GitHub** (the Hostinger GitHub App): runs the full pipeline — automatic `pnpm install` → build command → entry file. This is the integration that deploys ThinkaBell. Configure it with the Step 2 settings (application type `Other`, build command `pnpm run build:standalone`, entry file `apps/web/hostinger-server.js`).
-- **Websites → Git** (the generic Git deployment): only copies repository files into a directory — no install, no build. A raw checkout has no `node_modules` and no `.next/standalone` output, so the app cannot start. Do not use this integration for ThinkaBell.
-
-If the native integration fails, check in this order:
-
-1. **Build settings** — the deploy log's "Preparing build" section shows the effective settings. The application type must be `Other` with the Step 2 values; Hostinger's auto-detected `Next.js` type starts its own standalone server from the standard single-app layout, which a monorepo does not produce.
-2. **Corepack cache** — a `MODULE_NOT_FOUND` for `~/.cache/node/corepack/v1/pnpm/<version>/bin/pnpm.cjs` during install is a corrupted Corepack cache; see the Corepack troubleshooting below.
-3. **Runtime logs** — a build that succeeds but a process that crashes on startup is almost always a missing Environment variable (Step 4); check the Runtime Logs in the Node.js dashboard.
-
-### Preflight check
-
-Run the fail-closed preflight checker locally to see exactly what is missing before you deploy:
+**5. Preflight.** The fail-closed preflight runs as the first thing in the build
+command (`scripts/verify-build-env.js`), so a wrong package manager or an
+incomplete install fails the build immediately with the exact settings rather
+than deep inside the pipeline. To see the same check standalone:
 
 ```bash
 pnpm verify:hostinger
 ```
 
-It reports `[PASS]`/`[WARN]`/`[FAIL]` for the standalone build, the client assets inside it, the entrypoint, the packaged bundle (when present), and the runtime environment variables, and exits non-zero if the deployment would ship a broken app.
+It reports `[PASS]`/`[WARN]`/`[FAIL]` for the standalone build, the client assets
+inside it, the entrypoint, the packaged bundle, and the runtime environment
+variables, and exits non-zero if the deployment would ship a broken app. A pnpm
+_version_ mismatch is a `[WARN]`, not a `[FAIL]` — see the pnpm entries in
+troubleshooting.
 
-### App starts but `/api/health` is unhealthy
+**Reading its output against the current deployment.** The two standalone checks
+(`Standalone server missing`, `Standalone client assets missing`) validate the
+standalone layout specifically. They `[FAIL]` when no standalone output was
+produced — which is the case on the current deployment, where the runtime log
+shows `Using \`next start\` (no standalone output; full-project deploy)`and the
+app runs correctly. So those two failures are expected and harmless **only** when
+you are deliberately using the full-project path. If you intend the standalone
+path, run`pnpm run build:standalone` and re-check.
 
-The server is up but a fail-closed integration is unconfigured. Set the **Core**, **Security**, **Notifications**, and **Affiliate** variables in Step 4 on the Hostinger Node.js panel (**Environment** section), then **Restart Application**. The most common gaps are `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY` (database) and `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` (cache).
+The `[WARN]` lines are not failures: the deploy bundle is only needed for a manual
+upload, and the runtime environment variables are set on the host (Step 3), not
+locally.
 
-If `/api/health` reports `database: degraded: Could not find the table 'public.products' in the schema cache` (and `/api/deals` or `/api/search` return `500`), the Supabase **connection is fine but the schema was never applied** to the project. Supabase credentials alone do not create tables. Apply the schema once (it is idempotent, safe to re-run):
+---
+
+## Step 6: Apply the database schema and migrations
+
+The app connects over Supabase's REST API, but the schema itself is DDL, which
+that API cannot run. Apply it over the direct Postgres connection:
 
 ```bash
-# Scripted (recommended) — SUPABASE_DB_URL is the direct Postgres
-# connection string from Supabase Dashboard → Project Settings →
-# Database → Connection string. Local .env only, never on the app host.
 SUPABASE_DB_URL="postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres" pnpm db:apply
 ```
 
-Or paste `packages/database/schema.sql` into the Supabase SQL editor and run it. PostgREST reloads its schema cache automatically on DDL, so no further restart is needed.
+`pnpm db:apply` applies `packages/database/schema.sql`, then every file in
+`packages/database/migrations/` that is not yet recorded in
+`public.schema_migrations` — so it is idempotent and safe to re-run. This is
+what keeps the cron schedule (Step 7) under version control.
 
-### App starts but `/api/health` is unhealthy
+`SUPABASE_DB_URL` is a **separate admin credential** from `SUPABASE_URL`. Set it
+in your local `.env` for this command only — the running app never needs it.
 
-Start here: `GET /api/health` returns a `checks` object. `database` is the Supabase check and `cache` is Redis.
+Then confirm: tables `products`, `price_history`, `subscribers`, `alert_queue`,
+`retailer_links`, `click_tracking`, `alert_dead_letter`, `job_runs` exist, and
+RLS is active on all of them.
+
+---
+
+## Step 7: Schedule the cron jobs
+
+Hostinger does not run Vercel's `crons` array, so `vercel.json` is inert here.
+Schedule the jobs in Supabase instead: `pg_cron` fires on a 6-hour cadence
+(`0 */6 * * *`) and `pg_net` makes the HTTP call. The app stays stateless and
+the schedule is version-controlled.
+
+1. Enable `pg_cron` and `pg_net` (Supabase → Database → Extensions). **Do this first** — the migration fails on the `create extension` line otherwise.
+2. `pnpm db:apply` (already done in Step 6; it records the migration).
+3. Insert the two settings rows. Neither is hardcoded — the migration reads them at scheduling time:
+
+   ```sql
+   insert into public.cron_settings (key, value) values
+     ('site_url', 'https://thinkabell.click'),
+     ('cron_secret', '<CRON_SECRET from Step 3>')
+   on conflict (key) do update set value = excluded.value, updated_at = now();
+   ```
+
+   `cron_secret` **must equal `CRON_SECRET` exactly** — the routes authorize the
+   request against that environment variable. Rows are `TO service_role` only,
+   so the anon key cannot read the secret.
+
+4. Run the scheduler:
+
+   ```sql
+   select public.schedule_thinkabell_crons();
+   ```
+
+   Expect a `NOTICE` naming the three jobs. If a settings row is missing, it
+   raises a `NOTICE` and schedules **nothing** — a half-configured deployment
+   stays inert rather than calling the endpoints unauthenticated.
+
+The three jobs are `thinkabell-product-discovery`, `thinkabell-fetch-prices`, and
+`thinkabell-send-alerts`. **Changing the schedule or secret** is an edit to the
+settings rows plus a re-run of the function, which unschedules before recreating.
+
+`pg_net` dispatches asynchronously, so a job row records a request being
+_queued_, not its HTTP result. Verify with `cron.job_run_details`, or trigger
+the endpoint directly:
+
+```bash
+curl -X POST https://thinkabell.click/api/cron/fetch-prices \
+  -H "Authorization: Bearer <CRON_SECRET>"
+```
+
+---
+
+## Step 8: Populate products (discovery)
+
+The database starts empty. Set `DISCOVERY_SOURCES` in the Environment section,
+restart, then trigger a run:
+
+```bash
+curl -X POST https://thinkabell.click/api/cron/product-discovery \
+  -H "Authorization: Bearer <CRON_SECRET>"
+```
+
+`appsumo` needs no credentials (it harvests public pages). For the `amazon-list`
+source, see `docs/AMAZON_LIST_CURATION.md` — no Amazon login is used or stored.
+Expect `{"discovered":N,"sources":[…],"errors":[]}`; a `discovered: 0` with sources
+configured means another run holds the job lock, so retry after it completes.
+
+---
+
+## Fallbacks
+
+### Local build → manual upload
+
+Only needed if the native GitHub integration is unavailable:
+
+```bash
+pnpm install
+pnpm package:hostinger     # → dist/hostinger-deploy/
+```
+
+Then zip the **contents** of `dist/hostinger-deploy/` and upload via Hostinger
+File Manager. Uploading the raw repository instead does not work: it has no
+`node_modules` and no build output.
+
+**Windows note:** standalone output requires symlink support — enable Developer
+Mode or run elevated. Otherwise use the full-project path (`next start`), which
+needs no symlinks.
+
+### Local verification
+
+```bash
+pnpm run type-check
+pnpm run lint
+pnpm run test
+pnpm run format:check
+pnpm tsx scripts/compliance-check.ts
+pnpm run check:supabase
+```
+
+---
+
+## Troubleshooting
+
+### "Hostinger shows the Supabase connection configured, but Supabase shows nothing"
+
+A placeholder credential. See Step 3 — check the `config` line of `/api/health`
+first; it names the offending variables. Run `pnpm run check:supabase` on the
+host for the stage-by-stage answer.
+
+The cause is named in `/api/health`'s `config` line and in the Runtime Logs,
+which print the same list with a reason per variable:
 
 ```
-{"status":"unhealthy","checks":{"config":"ok","database":"ok","cache":"error: ..."}}
+⚠️ [Config] 2 environment variable(s) rejected (2 invalid, 0 unset)...
+   - SUPABASE_URL (invalid value): value: not a Supabase project URL
+   - SUPABASE_ANON_KEY (invalid value): value: not a Supabase key
 ```
 
-- **`database: error: ... not configured ...`** — the app is not connected to Supabase. See the dedicated section below.
-- **`database: degraded: Invalid API key`** — `SUPABASE_URL` reached Supabase but `SUPABASE_ANON_KEY` was rejected. Re-copy both from Dashboard → Project Settings → API. A key copied with a trailing newline or whitespace is the usual cause.
-- **`cache: error`** — `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` are unset or wrong. Rate limiting and circuit breakers fall back to in-memory state, so the app still works but per-instance limits reset on restart.
+Values are never printed, only names and reasons. The common causes, in order of
+likelihood:
 
-### App is not connected to Supabase (environment variables are set)
+| Symptom in the log / health check     | Cause                                                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `SUPABASE_URL (invalid value)`        | Not a URL, or a placeholder. Must be `https://<ref>.supabase.co` with a real project ref.        |
+| `SUPABASE_ANON_KEY (invalid value)`   | A placeholder, or a key copied with surrounding whitespace. Must be a JWT or `sb_publishable_…`. |
+| `NEXT_PUBLIC_APP_URL (invalid value)` | Missing its scheme — `https://thinkabell.click`, not `thinkabell.click`.                         |
+| `PORT (invalid value)`                | Non-numeric. Leave it unset so Hostinger assigns it.                                             |
+| `BREVO_SENDER_EMAIL (invalid value)`  | A sender without a domain, e.g. `noreply@localhost`.                                             |
+| `config: "ok"`, `database: "ok"`      | The environment arrived intact — the problem is elsewhere.                                       |
 
-If Hostinger's **Environment** section clearly holds the Supabase credentials but the app still cannot connect, the variables are almost certainly never reaching `process.env` — and the config layer reports exactly which ones. Add this check first:
-
-1. `GET /api/health` now includes a `config` check that lists the **names** of the variables that failed validation, never their values:
-
-   ```
-   "config":"rejected (defaults applied): NEXT_PUBLIC_APP_URL"
-   ```
-
-   Empty `checks` plus a valid `database` means the environment arrived intact.
-
-2. The startup log (Hostinger **Runtime Logs**) prints the same list with a reason per variable:
-   ```
-   ⚠️ [Config] 1 environment variable(s) rejected (1 invalid, 0 unset). Defaults applied; missing credentials are inert.
-      - NEXT_PUBLIC_APP_URL (invalid value): value: Invalid url
-   ```
-
-The common causes, in order of likelihood:
-
-| Symptom in the log / health check         | Cause                                                                                                            |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_APP_URL (invalid value)`     | The URL is missing its scheme. `https://thinkabell.click` is required; `thinkabell.click` is not a valid URL.    |
-| `PORT (invalid value)`                    | A non-numeric value. Leave `PORT` unset so Hostinger assigns it.                                                 |
-| `SUPABASE_URL (invalid value)`            | Not a URL, or the dashboard URL was pasted into the key field (or vice versa). It must start with `https://`.    |
-| `BREVO_SENDER_EMAIL (invalid value)`      | A sender address without a domain, e.g. `noreply@localhost`. Contact-form sends fail until it is a real address. |
-| No `config` check at all, `database` fine | Nothing is wrong — the rest of the health output is a different problem.                                         |
-
-Why this used to be invisible: the config layer validated the whole environment in one pass and, on **any** failure, discarded every value and fell back to defaults — so one malformed variable silently disabled the Supabase credentials alongside it, with only a `console.warn` on a host that discards stdout. Validation is now per-variable: a rejected variable falls back to _its own_ default, the credentials the host delivered keep working, and the offending name is reported in the logs and in `/api/health`.
+This used to be invisible: the config layer validated the whole environment in
+one pass and, on **any** failure, discarded every value and fell back to
+defaults — so one malformed variable silently disabled the Supabase credentials
+alongside it, signalled only by a `console.warn` on a host that discards stdout.
+Validation is now per-variable: a rejected variable falls back to _its own_
+default, the values the host did deliver keep working, and the offending name is
+reported in both the logs and `/api/health`.
 
 Two more environment-specific gotchas:
 
-- **The value is set on the build step, not the runtime.** Hostinger's **Environment** section applies to the running app; a build-time-only value is baked into the build (and `NEXT_PUBLIC_*` values are inlined at build time). Set them under Environment and click **Restart Application** — Hostinger reloads them at process start, so a change without a restart does nothing.
-- **The variable is defined in `.env` instead of the Environment section.** Files are only a fallback: `packages/config` reads `.env` through dotenv, which never overrides a value the host already delivered, so a local `.env` cannot supply a variable that Hostinger also sets — and because `.env*` is gitignored it is not in the deployed bundle at all. Use the Environment section.
+- **The value is set at build time, not runtime.** `NEXT_PUBLIC_*` values are inlined into the browser bundle, so a variable present only at runtime ships an empty value in the bundle. Set them in Environment (Step 3) and redeploy.
+- **The variable changed but the app was not restarted.** Hostinger reads the Environment section at process start; a change without a restart does nothing.
 
-If the environment is correct but `database` still fails, verify from a shell on the host:
+### App starts but `/api/health` is unhealthy
 
-```bash
-curl -s https://thinkabell.click/api/health | head -c 400
-```
+The server is up but a fail-closed integration is unconfigured. Set the Core,
+Security, Notifications, and Affiliate variables (Step 3), then **Restart
+Application**. The most common gaps are the Supabase set and the Upstash set.
 
-### Hostinger shows the Supabase connection configured, but Supabase shows no requests
-
-This is a placeholder credential, not a broken integration. `.env.example`
-used to ship `SUPABASE_URL=https://your-project.supabase.co` and
-`SUPABASE_ANON_KEY=your-supabase-anon-key`; either value is non-empty, so the
-fail-closed guard passed it, and the URL is _syntactically valid_, so nothing
-else rejected it. The client was constructed and pointed at a host that does
-not exist — Hostinger sees a configured value, Supabase receives nothing.
-
-Supabase credentials are now validated for shape (a real project ref for the
-URL, a JWT or `sb_publishable_`/`sb_secret_` key for the key), so a rejected
-value is dropped and reported by variable name rather than used. Check:
-
-```bash
-curl -s https://thinkabell.click/api/health
-```
-
-A non-empty `config` check — `rejected (defaults applied): SUPABASE_URL,
-SUPABASE_ANON_KEY, …` — means the host delivered values that failed
-validation. Set the five variables (`SUPABASE_URL`, `SUPABASE_ANON_KEY`,
-`SUPABASE_SERVICE_ROLE_KEY`, and the two `NEXT_PUBLIC_` equivalents) to real
-values from Supabase → Project Settings → API, then restart. The
-`NEXT_PUBLIC_` pair must be present at **build** time too, since Next.js
-inlines them into the browser bundle.
-
-The same applies to `SENTRY_DSN`/`NEXT_PUBLIC_SENTRY_DSN` (a malformed DSN
-logs `Invalid Sentry Dsn` on every boot), `UPSTASH_REDIS_REST_URL` (a
-placeholder like `https://your-redis.upstash.io` is a valid URL pointing at
-nothing), and `NEXT_PUBLIC_POSTHOG_KEY`. `.env.example` ships empty values
-with instructions for all of them.
-
-#### Verify the connection from the host
-
-`/api/health` answers the question from inside the app. For a stage-by-stage
-answer, including which of the four possible causes it is, run:
-
-```bash
-pnpm run check:supabase            # or: pnpm tsx scripts/check-supabase-connection.ts
-pnpm run check:supabase -- --json  # machine-readable, for monitoring
-```
-
-The script reports each stage separately, because they need different fixes and
-collapsing them into one error is what makes the symptom hard to diagnose:
-
-| Stage  | Meaning when it fails                                                                      |
-| ------ | ------------------------------------------------------------------------------------------ |
-| config | A variable is unset or malformed in this environment (the placeholder case).               |
-| node   | The runtime Node is older than the `node: >=22.0.0` that `@supabase/supabase-js` requires. |
-| reach  | The project host is unreachable — DNS, TLS, egress, or a URL that does not resolve.        |
-| auth   | The host answered but rejected the key (401/403).                                          |
-| data   | The request **reached** Supabase; the failure is RLS or schema, not the connection.        |
-
-Exit code is 0 only when a real query through the app's own client succeeds, so
-it can gate a deploy. No secret is ever printed — only the last four characters
-of a key, so you can confirm which value is loaded.
-
-`--table` probes a specific table (default `products`): pass a table you know
-exists to separate an RLS problem from a missing table.
-
-On the `node` stage: `@supabase/supabase-js` declares `engines.node >=22.0.0`,
-so Node 20 is a genuine version shortfall rather than a cosmetic warning. The
-host currently runs Node 20 while the repo pins `>=22` and CI uses 22 — correct
-the hPanel Node version, not the code.
-
-> **Do not add a standalone `db.js`.** A root- or app-level script that calls
-> `createClient()` with `process.env.SUPABASE_API_KEY` duplicates
-> `packages/database/src/client.ts` with two defects: `SUPABASE_API_KEY` is not a
-> variable this repo reads (it uses `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`),
-> so it would connect as `undefined`, and the table name is a placeholder. Such a
-> file is never imported, so it silently does nothing while looking like the
-> connection path.
-
-`packages/database` logs the project ref on first client construction — e.g.
-`[Database] Supabase anon client connected to project "abcdefghij…" (key …1234)`
-— so the runtime log names the project it connected to. Key presence only is
-logged, never the key.
-
-### `node_modules` disappears or is rebuilt mid-build
-
-`verifyDepsBeforeRun` defaults to `install`, which makes `pnpm run` / `pnpm exec`
-remove and rebuild `node_modules` whenever they consider the tree stale — which
-a pnpm whose version differs from the one that installed always does. On a host
-with an empty store or restricted network that fails the build, and it can
-destroy the tree outright.
-
-`pnpm-workspace.yaml` sets `verifyDepsBeforeRun: warn`, so runs are read-only
-with respect to `node_modules` and installs happen only when asked for.
-
-### Build fails with `next: command not found`
-
-`sh: line 1: next: command not found` — usually with `WARN Local package.json exists, but node_modules missing` — means the dependency install ran with **npm** instead of pnpm. npm does not read `pnpm-workspace.yaml`, so a root `npm install` installs only the root devDependencies and leaves every workspace package without its dependencies.
-
-Fix the hPanel → Node.js → Build settings (**Package manager: `pnpm`**, **Build command: `pnpm run build:standalone`**) and redeploy.
-
-`scripts/verify-build-env.js` runs before the build and reports what it finds. Two conditions are fatal, because the workspace root is genuinely unresolvable without them: the wrong package manager (npm does not read `pnpm-workspace.yaml`) and an incomplete install. A **pnpm version mismatch is advisory** — it is logged and the build proceeds, because `pmOnFail: warn` in `pnpm-workspace.yaml` makes that the deliberate policy. A hard failure there would re-block the build the policy exists to unblock.
-
-### Build fails on `pnpm install` (Corepack `MODULE_NOT_FOUND`)
-
-If you build **on Hostinger** (native GitHub integration) and it fails during `pnpm install` with a `MODULE_NOT_FOUND` for a path like `~/.cache/node/corepack/v1/pnpm/<version>/bin/pnpm.cjs`, that is a **corrupted Corepack cache** on the build environment — not an invalid pnpm version.
-
-Hostinger runs `pnpm install` **automatically, before your build command** — so a build command that clears the cache cannot fix it (the failure happens first). The fix is in the repository: the `packageManager` field is pinned to **`pnpm@10.34.6`** (the latest pnpm 10.x, matching the lockfile's `lockfileVersion: '9.0'` format, which the pnpm 10 line writes natively). Corepack downloads that version fresh on the build environment — there is no cached entry for it to be corrupted — so the automatic install succeeds.
-
-If you ever hit this again with a different version, clear the Corepack cache once via SSH (hPanel → Advanced → SSH Access; Premium Web or higher): `rm -rf ~/.cache/node/corepack` — the next automatic install re-downloads the pinned version fresh.
-
-### Build fails on a pnpm version mismatch
-
-pnpm aborting with a bad-version error (`ERR_PNPM_BAD_PM_VERSION`, or a message that the running version differs from the declared one) means a build step resolved a **different pnpm than the one that installed** — typically a pnpm 11 host shelling out through the Corepack shim while install used the pinned version. The authoritative version is the `packageManager` field of the root `package.json` (currently `pnpm@10.34.6`).
-
-Two mechanisms in this repository prevent it:
-
-1. `pnpm-workspace.yaml` sets `pmOnFail: download` (added in pnpm 11), so any pnpm 11+ host downloads and runs the pinned version instead of aborting. Leave it at the default `download`; if you manage pnpm externally (asdf/mise/Volta), set `pmOnFail: ignore`.
-2. `scripts/build-standalone.js` invokes the Next.js CLI directly (`node_modules/next/dist/bin/next build`) instead of `pnpm --filter @thinkabell/web run build`, so the build does not trigger a second package-manager resolution that can pull a different version.
-
-As a safety net, the root `build` and `build:standalone` scripts run `scripts/verify-build-env.js` first: it reads the pin from `package.json` and exits non-zero with the exact hPanel settings when the active pnpm version does not match, instead of failing mid-build.
-
-A mismatch that is merely _warned about_ is still dangerous: pnpm 10 and pnpm 11 lay out `node_modules` differently, so installing with one and building with the other leaves a broken mixed layout. Do not silence it with `pmOnFail: warn`.
+If `/api/health` reports
+`database: degraded: Could not find the table 'public.products' in the schema cache`
+(and `/api/deals` or `/api/search` return `500`), the connection is **fine but the
+schema was never applied** — credentials alone do not create tables. Apply it
+once with `pnpm db:apply` (Step 6); it is idempotent, so re-running is safe.
 
 ### Approving dependency build scripts
 
-Dependency lifecycle (postinstall) scripts are approved in `pnpm-workspace.yaml` under `allowBuilds` (`@sentry/cli`, `core-js`, `esbuild`, `protobufjs`, `sharp`, `unrs-resolver`, `workerd`) — a package not listed there cannot run its build scripts. pnpm 11 removed `onlyBuiltDependencies`, so the `pnpm` field of `package.json` and `.npmrc`'s `only-built-dependencies` are both ignored there (the former is also warned about) and no longer declare approvals. Keep `allowBuilds` the single source of truth; when a dependency reports an ignored build script, add it there.
+Dependency lifecycle (postinstall) scripts are approved in `pnpm-workspace.yaml`
+under `allowBuilds` (`@sentry/cli`, `core-js`, `esbuild`, `protobufjs`, `sharp`,
+`unrs-resolver`, `workerd`) — a package not listed there cannot run its build
+scripts. `strictDepBuilds` defaults to `true`, so an install that reaches an
+unreviewed build fails with `ERR_PNPM_IGNORED_BUILDS`; pnpm also auto-lists
+ignored builds into `pnpm-workspace.yaml` with a placeholder value so you can
+set them explicitly.
 
-### GitHub Pages vs Hostinger
+pnpm 11 removed `onlyBuiltDependencies`, so the `pnpm` field of `package.json`
+and `.npmrc`'s `only-built-dependencies` are both ignored there (the former also
+warns) and no longer declare approvals. Keep `allowBuilds` the single source of
+truth; when a dependency reports an ignored build script, add it there.
 
-GitHub Pages (`https://<user>.github.io/ThinkaBell/`) only serves static files. ThinkaBell needs a Node.js runtime (API routes, middleware, server components, ISR), so GitHub Pages cannot run the full app — it is a static preview at best. Hostinger Node.js hosting is the production target.
+### What each `check:supabase` stage means
+
+| Stage    | A failure means                                                                                     |
+| -------- | --------------------------------------------------------------------------------------------------- |
+| `config` | A variable is unset or malformed in this environment.                                               |
+| `node`   | The runtime Node is older than the `>=22.0.0` that `@supabase/supabase-js` requires. Fix in hPanel. |
+| `reach`  | The project host is unreachable — DNS, TLS, egress, or a URL that does not resolve.                 |
+| `auth`   | The host answered but rejected the key (401/403). Re-copy both values.                              |
+| `data`   | The request **reached** Supabase; the problem is RLS or schema, not the connection.                 |
+
+Exit code is 0 only when a real query through the app's own client succeeds, so
+it can gate a deploy. `--table <name>` probes a specific table (default
+`products`), and `--json` gives machine-readable output.
+
+### Build fails with `next: command not found`
+
+The install ran with **npm** instead of pnpm. npm does not read
+`pnpm-workspace.yaml`, so workspace packages get no dependencies. Fix the
+Package manager setting (Step 2) and redeploy. `scripts/verify-build-env.js`
+fails fast with the exact settings when the package manager is wrong or the
+install is incomplete; a pnpm _version_ mismatch is advisory and only logged.
+
+### Build aborts on a pnpm version check
+
+`pmOnFail: download` tries to download the pinned version and aborts when it
+cannot. It is set to `warn` (Step 2) so the host's pnpm is used and logged
+instead. Same for `verifyDepsBeforeRun: warn` — its default, `install`, would
+make `pnpm run` try to rebuild `node_modules` on any mismatch, which can destroy
+a working tree on a host with an empty store.
+
+### `node_modules` disappears or is rebuilt mid-build
+
+Same cause — `verifyDepsBeforeRun` defaulting to `install`. Already set to
+`warn`.
+
+### `Invalid Sentry Dsn` on every boot
+
+A placeholder `SENTRY_DSN`. Empty means Sentry never initialises, which is the
+correct unconfigured state.
+
+### Build fails during `pnpm install` (`MODULE_NOT_FOUND` for a Corepack path)
+
+A corrupted Corepack cache on the build environment — not an invalid version.
+Hostinger installs **before** your build command, so a build command that clears
+the cache cannot fix it; retry the deploy.
