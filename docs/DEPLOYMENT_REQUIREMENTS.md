@@ -434,6 +434,49 @@ not at the CSP check.
 
 ---
 
+## 4. Checking whether each integration actually works
+
+Two levels of check, because they answer different questions.
+
+`/api/health` reports **what is configured**: `config` names variables the host
+delivered that failed validation, `credentials` names the fail-closed ones that
+are unset, and `database` / `cache` run real queries.
+
+`pnpm run check:connections` reports **what works**. It calls a read-only
+account or listing endpoint on every service that has credentials, so a key that
+is present but wrong — otherwise indistinguishable from a good one, because the
+alert job runs, the send returns `false`, and the only symptom is that no
+notification arrives — is reported as failing with the remedy that matches the
+cause.
+
+```bash
+pnpm run check:connections           # configured services only
+pnpm run check:connections --verbose # include the unconfigured ones
+pnpm run check:connections --json    # machine-readable, for monitoring
+```
+
+Exit code is 0 only when every configured service answers and authenticates, so
+it can gate a deploy. A service whose variables are unset is reported as `unset`
+rather than as a failure, so a minimal deployment — Supabase alone — passes.
+
+| Service      | Endpoint used (all read-only)                                          |
+| ------------ | ---------------------------------------------------------------------- |
+| Supabase     | a `select` through the app's own anon client                           |
+| Upstash      | `GET <rest-url>/ping/`                                                 |
+| Brevo        | `GET https://api.brevo.com/v3/account`                                 |
+| OneSignal    | `GET https://onesignal.com/api/v1/apps`                                |
+| Impact       | `GET /MediaPartners/{sid}/Campaigns` — the same request the app makes  |
+| PartnerStack | `GET /api/v2/marketplace/programs` — likewise                          |
+| Sentry       | the DSN only; sending an event to confirm a DSN would be a side effect |
+
+A `5xx` is reported as the provider failing rather than as a bad credential, so
+the remedy is to retry rather than re-copy a key that is fine. Where a provider
+has a documented key prefix (Brevo's `xkeysib-`), a value without it is reported
+as a **placeholder** rather than a rejection — the two need different fixes, and a
+copied example is the more common of the two.
+
+Run it on the host, where the real credentials are.
+
 ## 5. Complete ordered runbook
 
 ### Phase 1 — accounts (no deployment yet)

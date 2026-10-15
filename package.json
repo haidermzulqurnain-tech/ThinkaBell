@@ -27,6 +27,7 @@
     "verify:hostinger": "tsx scripts/verify-hostinger-deploy.ts",
     "db:apply": "tsx scripts/apply-schema.ts",
     "check:supabase": "tsx scripts/check-supabase-connection.ts",
+    "check:connections": "tsx scripts/check-connections.ts",
     "simulate": "tsx scripts/simulate-pipeline.ts",
     "clean": "turbo run clean"
   },
