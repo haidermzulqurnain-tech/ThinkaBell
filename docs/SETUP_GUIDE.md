@@ -347,9 +347,9 @@ Before deploying for production, set the secrets (`wrangler secret put <NAME>`):
 
 ### 9.3 Vercel cron jobs
 
-`vercel.json` defines **three** cron jobs (Vercel dashboard → Cron Jobs mirrors these; all are POST endpoints requiring header `Authorization: Bearer <CRON_SECRET>`, with a per-IP fail-closed rate limit of 10 requests / 60 s):
+`packages/database/migrations/0001_cron_schedule.sql` defines **three** `pg_cron` jobs (all are POST endpoints requiring header `Authorization: Bearer <CRON_SECRET>`, with a per-IP fail-closed rate limit of 10 requests / 60 s):
 
-| Job               | Endpoint                      | Schedule (from `vercel.json`) |
+| Job               | Endpoint                      | Schedule (from the migration) |
 | ----------------- | ----------------------------- | ----------------------------- |
 | Product discovery | `/api/cron/product-discovery` | `0 */6 * * *` (every 6 hours) |
 | Price fetch       | `/api/cron/fetch-prices`      | `0 */6 * * *` (every 6 hours) |
@@ -359,7 +359,7 @@ Vercel cron jobs send `POST` by default, which matches the route handlers. A `40
 
 ### 9.4 Cron jobs on Hostinger
 
-`vercel.json` only applies on Vercel. On a Hostinger deployment nothing schedules the jobs, so prices never refresh and alerts never send. Schedule them inside Supabase instead — `pg_cron` fires the schedule and `pg_net` makes the HTTP call, which keeps the app stateless and puts the schedule in the repository:
+The jobs are scheduled inside Supabase — `pg_cron` fires the schedule and `pg_net` makes the HTTP call, which keeps the app stateless and puts the schedule in the repository:
 
 1. Enable `pg_cron` and `pg_net` (Supabase → Database → Extensions).
 2. `pnpm db:apply` — applies `packages/database/schema.sql` and then every not-yet-applied file in `packages/database/migrations/`, tracked in `public.schema_migrations`.

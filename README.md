@@ -299,8 +299,7 @@ link.
 
 ```bash
 # Discovery runs via the /api/cron/product-discovery endpoint
-# Scheduled every 6 hours by Vercel Cron (vercel.json) or, on Hostinger, by
-# Supabase pg_cron — see apps/jobs/README.md
+# Scheduled every 6 hours by Supabase pg_cron — see apps/jobs/README.md
 # The endpoint invokes runProductDiscovery() from @thinkabell/jobs,
 # which uses advisory lock 1004 to prevent concurrent runs
 ```
@@ -329,6 +328,7 @@ link.
 ## 📦 Deployment Guides
 
 - **Start here — every credential & service link**: See [docs/DEPLOYMENT_REQUIREMENTS.md](docs/DEPLOYMENT_REQUIREMENTS.md).
+- **API & cron security (generating the four tokens)**: See [docs/API_SECURITY_SETUP.md](docs/API_SECURITY_SETUP.md).
 - **Sentry setup (project, DSN, source maps)**: See [docs/SENTRY_SETUP.md](docs/SENTRY_SETUP.md).
 - **Hostinger Node.js Hosting (deployment order)**: See [docs/HOSTINGER_DEPLOYMENT.md](docs/HOSTINGER_DEPLOYMENT.md).
 - **Cloudflare CDN & Edge Worker**: See [docs/CLOUDFLARE_SETUP.md](docs/CLOUDFLARE_SETUP.md).

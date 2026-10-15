@@ -2,7 +2,7 @@
 
 How to deploy **ThinkaBell** to Hostinger Node.js hosting, in the order the steps have to happen.
 
-The current deployment is: **Hostinger native GitHub integration**, application type `Other`, entry point `apps/web/hostinger-server.js`, and **all secrets served from the Hostinger Environment section**. Vercel's `vercel.json` is inert here — the cron schedule comes from Supabase `pg_cron` instead.
+The current deployment is: **Hostinger native GitHub integration**, application type `Other`, entry point `apps/web/hostinger-server.js`, and **all secrets served from the Hostinger Environment section**. The cron schedule comes from Supabase `pg_cron`, applied with `pnpm db:apply`.
 
 This guide is the **order**. For what each credential is, where it comes from, and the signup/dashboard link for every external service, see **[DEPLOYMENT_REQUIREMENTS.md](./DEPLOYMENT_REQUIREMENTS.md)**.
 
@@ -295,7 +295,7 @@ RLS is active on all of them.
 
 ## Step 7: Schedule the cron jobs
 
-Hostinger does not run Vercel's `crons` array, so `vercel.json` is inert here.
+Hostinger has no cron array of its own; the schedule runs inside Supabase.
 Schedule the jobs in Supabase instead: `pg_cron` fires on a 6-hour cadence
 (`0 */6 * * *`) and `pg_net` makes the HTTP call. The app stays stateless and
 the schedule is version-controlled.

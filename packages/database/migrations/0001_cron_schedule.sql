@@ -1,13 +1,13 @@
 -- Scheduled job triggers for the cron endpoints in app/api/cron.
 --
 -- Hostinger does not run Vercel's crons array, so on this deployment
--- vercel.json is inert. Poll over HTTP instead, from inside Supabase:
+-- Poll over HTTP instead, from inside Supabase:
 -- pg_cron fires on a schedule and pg_net makes the request, which keeps
 -- the app server stateless and means the schedule survives a redeploy.
 --
 -- Nothing is hardcoded here. Both the site URL and the Bearer secret come
 -- from public.cron_settings, which the operator fills in once. The schedule
--- is 5-field crontab, same cadence as vercel.json.
+-- is 5-field crontab, every 6 hours.
 --
 -- Requires the pg_cron and pg_net extensions (Supabase: Database →
 -- Extensions). Enable them before applying this migration.

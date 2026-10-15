@@ -30,12 +30,16 @@ concurrently, and each records a row in `job_runs`.
 
 ## Schedules
 
-All three jobs run on the same cadence: **every 6 hours (`0 */6 * * *`)**.
-The cadence is declared in two places, which must agree:
+All three jobs run on the same cadence: **every 6 hours (`0 */6 * * *`)**, from
+the `pg_cron` migration.
+The cadence is declared in one place:
 
-- `vercel.json` — the `crons` array, used when the app is deployed to **Vercel**
 - `packages/database/migrations/0001_cron_schedule.sql` — the `pg_cron` jobs,
-  used when the app is deployed to **Hostinger**
+  applied with `pnpm db:apply`
+
+`vercel.json` used to duplicate it and has been removed: it declared these jobs
+against routes that only handle `POST`, while Vercel Cron invokes `GET`, so on
+Vercel all three returned `405` while looking scheduled.
 
 Hostinger does not run Vercel's `crons` array, so on that deployment only the
 `pg_cron` jobs fire. Apply them with `pnpm db:apply`, then set the two
@@ -63,7 +67,7 @@ pnpm dev
 
 ## Production Deployment
 
-Invoked by Vercel Cron (`vercel.json`) or Supabase `pg_cron`
-(`migrations/0001_cron_schedule.sql`). This package is not a serverless
+Invoked by Supabase `pg_cron` (`migrations/0001_cron_schedule.sql`), applied
+with `pnpm db:apply`. This package is not a serverless
 function in either case — the endpoints in `apps/web` call the runners in this
 package over HTTP, so no separate deployment is required.
