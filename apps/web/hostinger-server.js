@@ -59,26 +59,42 @@ const bundleServerPath = path.join(__dirname, "apps", "web", "server.js");
 const repoServerPath = path.join(__dirname, ".next", "standalone", "apps", "web", "server.js");
 const localServerPath = path.join(__dirname, "server.js");
 
-let serverEntry = null;
+const buildDir = path.join(__dirname, ".next");
+const candidates = [
+  ["deployed bundle", bundleServerPath],
+  ["repository checkout", repoServerPath],
+  ["bundle root", localServerPath],
+];
 
-if (fs.existsSync(bundleServerPath)) {
-  serverEntry = bundleServerPath;
-} else if (fs.existsSync(repoServerPath)) {
-  serverEntry = repoServerPath;
-} else if (fs.existsSync(localServerPath)) {
-  serverEntry = localServerPath;
-}
+// Log which layout was found and which was not. A "Starting..." that never
+// reaches "Ready" is otherwise indistinguishable from a build that produced
+// nothing, and this line is what tells the two apart.
+const found = candidates.find(([, candidate]) => fs.existsSync(candidate));
 
-if (serverEntry) {
-  console.log(`[Hostinger] Loading server bundle from: ${serverEntry}`);
-  require(serverEntry);
+if (found) {
+  console.log(`[Hostinger] Layout: ${found[0]}`);
+  console.log(`[Hostinger] Loading server bundle from: ${found[1]}`);
+  require(found[1]);
 } else {
-  // No standalone build is present: a plain `next build` was run (or OUTPUT was
-  // not "standalone"). This is the supported Hostinger path — deploy the full
-  // project and run `next start`. Start the standard Next.js production server
-  // from the app directory so Next.js finds next.config.js and the .next build
-  // output. PORT is already set above from the environment.
   console.log("[Hostinger] Using `next start` (no standalone output; full-project deploy).");
+
+  // `next start` needs the build output in the app directory. Report it
+  // explicitly: a missing or empty .next is the cause of a server that hangs at
+  // "Starting...", and the entry point is the only place that can say so.
+  if (!fs.existsSync(buildDir)) {
+    console.error(
+      `[Hostinger] No .next directory at ${buildDir}. The build did not produce output where ` +
+        "this entrypoint expects it, so `next start` cannot start.",
+    );
+  } else if (!fs.existsSync(path.join(buildDir, "BUILD_ID"))) {
+    console.error(
+      `[Hostinger] ${buildDir} exists but has no BUILD_ID — it is not a complete build. ` +
+        "Check the build command in hPanel is `pnpm run build:standalone`.",
+    );
+  } else {
+    console.log(`[Hostinger] Build output found: ${buildDir}`);
+  }
+
   process.chdir(__dirname);
   process.argv = [
     process.argv[0],
