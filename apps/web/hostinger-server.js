@@ -15,21 +15,36 @@ const HOSTNAME = process.env.HOSTNAME || "0.0.0.0";
 process.env.PORT = String(PORT);
 process.env.HOSTNAME = HOSTNAME;
 
-// Next.js warns about a "non-standard NODE_ENV" and then behaves
-// inconsistently, because several code paths branch on it. Some hosts set it to
-// a value outside the documented set. This entrypoint is the production server,
-// so normalize anything non-standard to "production" rather than inheriting it,
-// while leaving an already-standard value (including "development", so the same
-// file still works for a local run) untouched.
+// This file is the production entrypoint: it only ever starts the production
+// server (`next start` or the standalone server), never `next dev`. So NODE_ENV
+// must be `production` by the time Next boots.
+//
+// `next` warns — and enables dev-mode code paths — when NODE_ENV is
+// `development` while running `start`, which is exactly what a host that leaves
+// NODE_ENV at its default produces. It also warns for any value outside the
+// documented set. Both are normalised here rather than inherited.
 const STANDARD_NODE_ENVS = ["development", "production", "test"];
-if (!STANDARD_NODE_ENVS.includes(process.env.NODE_ENV)) {
-  if (process.env.NODE_ENV) {
-    console.warn(
-      `[Hostinger] Non-standard NODE_ENV "${process.env.NODE_ENV}" — normalizing to "production".`,
-    );
-  }
+
+function normalizeNodeEnv() {
+  const current = process.env.NODE_ENV;
+
+  if (current === "production") return;
+
+  const reason =
+    current && STANDARD_NODE_ENVS.includes(current)
+      ? // Standard, but wrong for this entrypoint: `next start` in development
+        // mode both warns and changes behaviour.
+        "this is the production entrypoint, which starts `next start`"
+      : // Unknown value: Next warns about anything outside the documented set.
+        `"${current ?? ""}" is not a valid NODE_ENV`;
+
+  console.warn(
+    `[Hostinger] NODE_ENV "${current ?? "(unset)"}" — normalizing to "production": ${reason}.`,
+  );
   process.env.NODE_ENV = "production";
 }
+
+normalizeNodeEnv();
 
 console.log(`[Hostinger] Starting ThinkaBell server on http://${HOSTNAME}:${PORT}`);
 
