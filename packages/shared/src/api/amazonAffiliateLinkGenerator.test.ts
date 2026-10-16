@@ -59,8 +59,19 @@ describe("AmazonAffiliateLinkGenerator", () => {
       expect(marketplace.code).toBe("US");
     });
 
-    it("fails closed when the marketplace tag is not configured", async () => {
+    it("falls back to the global partner tag when per-marketplace tag is empty", async () => {
       mockConfig.AMAZON_PARTNER_TAG_DE = "";
+      const { resolveAmazonMarketplace } = await import("./amazonAffiliateLinkGenerator");
+
+      const marketplace = resolveAmazonMarketplace("DE");
+      expect(marketplace.code).toBe("DE");
+      expect(marketplace.partnerTag).toBe("thinkabell-us-20"); // global tag
+      mockConfig.AMAZON_PARTNER_TAG_DE = "thinkabell-de-21";
+    });
+
+    it("fails closed when both per-marketplace and global tags are empty", async () => {
+      mockConfig.AMAZON_PARTNER_TAG_DE = "";
+      mockConfig.AMAZON_PARTNER_TAG = "";
       const { resolveAmazonMarketplace, AmazonAffiliateLinkError } =
         await import("./amazonAffiliateLinkGenerator");
 
@@ -69,6 +80,7 @@ describe("AmazonAffiliateLinkGenerator", () => {
         /partner tag not configured for marketplace DE/,
       );
       mockConfig.AMAZON_PARTNER_TAG_DE = "thinkabell-de-21";
+      mockConfig.AMAZON_PARTNER_TAG = "thinkabell-us-20";
     });
 
     it("fails closed when the US fallback tag is not configured", async () => {
@@ -133,6 +145,64 @@ describe("AmazonAffiliateLinkGenerator", () => {
     it("throws on a malformed ASIN", async () => {
       const { buildAmazonProductUrl } = await import("./amazonAffiliateLinkGenerator");
       expect(() => buildAmazonProductUrl("zzz")).toThrow(/Invalid Amazon ASIN/);
+    });
+  });
+
+  describe("isValidBrowseNode", () => {
+    it("accepts valid browse node IDs", async () => {
+      const { isValidBrowseNode } = await import("./amazonAffiliateLinkGenerator");
+      expect(isValidBrowseNode("214331835011")).toBe(true);
+      expect(isValidBrowseNode("172465")).toBe(true);
+    });
+
+    it("rejects invalid browse node IDs", async () => {
+      const { isValidBrowseNode } = await import("./amazonAffiliateLinkGenerator");
+      expect(isValidBrowseNode("short")).toBe(false);
+      expect(isValidBrowseNode("abc123")).toBe(false);
+      expect(isValidBrowseNode("")).toBe(false);
+    });
+  });
+
+  describe("generateAmazonNodeLink", () => {
+    it("generates a US browse node affiliate link", async () => {
+      const { generateAmazonNodeLink } = await import("./amazonAffiliateLinkGenerator");
+      const link = generateAmazonNodeLink("214331835011");
+      expect(link).toBe(
+        "https://amazon.com/b?node=214331835011&linkCode=ll2&tag=thinkabell-us-20&language=en_US&ref_=as_li_ss_tl",
+      );
+    });
+
+    it("generates a UK browse node affiliate link", async () => {
+      const { generateAmazonNodeLink } = await import("./amazonAffiliateLinkGenerator");
+      const link = generateAmazonNodeLink("560780", "UK");
+      expect(link).toContain("amazon.co.uk");
+      expect(link).toContain("node=560780");
+      expect(link).toContain("tag=thinkabell-uk-21");
+    });
+
+    it("throws on a malformed browse node ID", async () => {
+      const { generateAmazonNodeLink } = await import("./amazonAffiliateLinkGenerator");
+      expect(() => generateAmazonNodeLink("not-a-node")).toThrow(/Invalid Amazon browse node/);
+    });
+  });
+
+  describe("buildAmazonShortLink", () => {
+    it("passes through a valid Amazon short link", async () => {
+      const { buildAmazonShortLink } = await import("./amazonAffiliateLinkGenerator");
+      const url = "https://amzn.to/4ysiqN9";
+      expect(buildAmazonShortLink(url)).toBe(url);
+    });
+
+    it("rejects a non-Amazon short link", async () => {
+      const { buildAmazonShortLink } = await import("./amazonAffiliateLinkGenerator");
+      expect(() => buildAmazonShortLink("https://bit.ly/3xyz")).toThrow(/Not an Amazon short link/);
+    });
+
+    it("rejects an invalid short-link code", async () => {
+      const { buildAmazonShortLink } = await import("./amazonAffiliateLinkGenerator");
+      expect(() => buildAmazonShortLink("https://amzn.to/short")).toThrow(
+        /Invalid Amazon short-link/,
+      );
     });
   });
 });

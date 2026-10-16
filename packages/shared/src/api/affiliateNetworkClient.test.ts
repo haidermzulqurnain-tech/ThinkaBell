@@ -67,15 +67,29 @@ describe("AffiliateNetworkClient", () => {
       expect(() => affiliateNetworkClient.generateAmazonLink("B08N5WRWNW")).toThrow(
         /partner tag not configured/,
       );
+      mockConfig.AMAZON_PARTNER_TAG = "thinkabell-us-20";
     });
 
-    it("should fail closed when the regional partner tag is missing", async () => {
+    it("falls back to the global partner tag when the regional tag is missing", async () => {
+      mockConfig.AMAZON_PARTNER_TAG = "thinkabell-us-20";
       mockConfig.AMAZON_PARTNER_TAG_UK = "";
       const { affiliateNetworkClient } = await import("./affiliateNetworkClient");
 
+      const link = affiliateNetworkClient.generateAmazonLink("B08N5WRWNW", "UK");
+      expect(link).toContain("thinkabell-us-20"); // global tag
+      mockConfig.AMAZON_PARTNER_TAG_UK = "thinkabell-uk-21";
+    });
+
+    it("fails closed when both regional and global partner tags are empty", async () => {
+      mockConfig.AMAZON_PARTNER_TAG_UK = "";
+      mockConfig.AMAZON_PARTNER_TAG = "";
+      const { affiliateNetworkClient } = await import("./affiliateNetworkClient");
+
       expect(() => affiliateNetworkClient.generateAmazonLink("B08N5WRWNW", "UK")).toThrow(
-        /partner tag not configured for marketplace UK/,
+        /partner tag not configured/,
       );
+      mockConfig.AMAZON_PARTNER_TAG_UK = "thinkabell-uk-21";
+      mockConfig.AMAZON_PARTNER_TAG = "thinkabell-us-20";
     });
 
     it("should throw on a malformed ASIN", async () => {

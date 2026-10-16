@@ -101,8 +101,22 @@ describe("GeoRouter", () => {
       expect(buildAmazonCtaLink({ affiliateUrl: "https://amazon.com/dp/zzz" })).toBeNull();
     });
 
-    it("fails closed when the marketplace tag is unconfigured", async () => {
+    it("falls back to the global partner tag when the regional tag is unconfigured", async () => {
+      mockConfig.AMAZON_PARTNER_TAG = "thinkabell-us-20";
       mockConfig.AMAZON_PARTNER_TAG_DE = "";
+      const { buildAmazonCtaLink } = await import("./georouter");
+      const cta = buildAmazonCtaLink({
+        asin: "B08N5WRWNW",
+        headers: headersOf({ "x-vercel-ip-country": "DE" }),
+      });
+      expect(cta).not.toBeNull();
+      expect(cta!.marketplace).toBe("DE");
+      mockConfig.AMAZON_PARTNER_TAG_DE = "thinkabell-de-21";
+    });
+
+    it("fails closed when both regional and global partner tags are unconfigured", async () => {
+      mockConfig.AMAZON_PARTNER_TAG_DE = "";
+      mockConfig.AMAZON_PARTNER_TAG = "";
       const { buildAmazonCtaLink } = await import("./georouter");
       const cta = buildAmazonCtaLink({
         asin: "B08N5WRWNW",
@@ -110,6 +124,7 @@ describe("GeoRouter", () => {
       });
       expect(cta).toBeNull();
       mockConfig.AMAZON_PARTNER_TAG_DE = "thinkabell-de-21";
+      mockConfig.AMAZON_PARTNER_TAG = "thinkabell-us-20";
     });
 
     it("returns null when no ASIN can be resolved", async () => {

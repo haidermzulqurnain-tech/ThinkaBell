@@ -297,6 +297,12 @@ export const envSchema = z.object({
   // Delay in ms between consecutive list fetches (polite rate limiting).
   AMAZON_LIST_FETCH_DELAY_MS: z.coerce.number().default(1000),
 
+  // Amazon categories (dynamic, not hardcoded products).
+  // JSON array of { code, name, type, browseNodes, queries, enabled } entries.
+  // Each browseNodes entry maps a marketplace code to { nodeId, label }.
+  // Drives product discovery and affiliate link generation per category.
+  AMAZON_CATEGORIES: z.string().default(""),
+
   // Edge proxy trust (anti-spoofing control). When "true", the origin
   // honors the x-thinkabell-country header injected by the Cloudflare
   // edge-worker proxy. Keep "false" on direct deployments where the
