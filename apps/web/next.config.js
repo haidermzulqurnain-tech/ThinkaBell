@@ -60,6 +60,11 @@ const sentryWebpackPluginOptions = {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
+  // Disabling source maps when no auth token is configured avoids the memory-heavy
+  // sourcemap upload step during builds where there is no Sentry project to upload to.
+  sourceMaps: {
+    disable: !process.env.SENTRY_AUTH_TOKEN,
+  },
 };
 
 module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);
