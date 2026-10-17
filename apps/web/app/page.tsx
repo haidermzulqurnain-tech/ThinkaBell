@@ -219,7 +219,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-orange-500/25 hover:bg-orange-700 transition-all min-h-[44px]"
                 >
                   <Flame className="h-5 w-5" />
-                  <span>View Today's Best Deal</span>
+                  <span>View Today&apos;s Best Deal</span>
                 </Link>
               </div>
             </div>
