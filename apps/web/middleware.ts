@@ -15,6 +15,17 @@ function generateNonce(): string {
 }
 
 /**
+ * Safely extracts hostname from a URL string, returns empty string on failure.
+ */
+function safeHostname(urlString: string): string {
+  try {
+    return new URL(urlString).hostname;
+  } catch {
+    return "";
+  }
+}
+
+/**
  * Per-request Content Security Policy with a cryptographically random nonce.
  * The nonce is injected into the request headers (x-nonce) so server components
  * can attach it to inline <script> tags (JSON-LD, hydration payloads).
@@ -23,17 +34,36 @@ export function middleware(request: NextRequest) {
   const nonce = generateNonce();
 
   const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com";
-  const posthogHostname = new URL(posthogHost).hostname;
+  const posthogHostname = safeHostname(posthogHost);
+
   const sentryDsn = process.env.SENTRY_DSN || "";
-  const sentryIngestHost = sentryDsn ? new URL(sentryDsn).hostname : "";
+  const sentryIngestHost = safeHostname(sentryDsn);
+
+  const connectSources = [
+    "'self'",
+    "https://onesignal.com",
+    posthogHostname,
+    "https://us-assets.i.posthog.com",
+    "https://us.i.posthog.com",
+    sentryIngestHost,
+  ].filter(Boolean).join(" ");
+
+  const scriptSources = [
+    "'self'",
+    `'nonce-${nonce}'`,
+    "https://cdn.onesignal.com",
+    "https://cdn.posthog.com",
+    "https://us-assets.i.posthog.com",
+    posthogHostname,
+  ].filter(Boolean).join(" ");
 
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' https://cdn.onesignal.com https://cdn.posthog.com ${posthogHostname} https://us-assets.i.posthog.com`,
+    `script-src ${scriptSources}`,
     "style-src 'self' https://fonts.googleapis.com 'unsafe-inline'",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https:",
-    `connect-src 'self' https://onesignal.com ${posthogHostname} https://us-assets.i.posthog.com https://us.i.posthog.com${sentryIngestHost ? ` ${sentryIngestHost}` : ""}`,
+    `connect-src ${connectSources}`,
     "frame-ancestors 'none'",
     "form-action 'self'",
     "base-uri 'self'",
