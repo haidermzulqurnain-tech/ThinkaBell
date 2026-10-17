@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 
-export const revalidate = 60; // ISR cache for 60 seconds
+export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -33,13 +33,11 @@ export async function generateMetadata(): Promise<Metadata> {
 
 async function getDeals(): Promise<Product[]> {
   try {
-    // 1. Try cache first
     const cached = await redis.get<Product[]>("top-deals");
     if (cached && Array.isArray(cached) && cached.length > 0) {
       return cached;
     }
 
-    // 2. Fetch from database
     const { data: topDeals, error } = await getSupabaseAnonClient()
       .from("products")
       .select("*")
@@ -51,7 +49,6 @@ async function getDeals(): Promise<Product[]> {
     }
 
     const deals = topDeals as unknown as Product[];
-    // Cache for 60 seconds
     await redis.set("top-deals", deals, { ex: 60 });
     return deals;
   } catch {
@@ -85,7 +82,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <div className="space-y-16 pb-16">
-      {/* Hero Section */}
+      {process.env.NODE_ENV !== "production" && (
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="p-4 bg-blue-100 border border-blue-500 rounded text-sm text-center">
+            <p className="text-blue-800">
+              <strong>Beta version:</strong> This is a beta release — features may change.
+            </p>
+          </div>
+        </div>
+      )}
+
       <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/80 to-white py-16 sm:py-24 border-b border-gray-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3.5 py-1 text-xs font-semibold text-blue-800 mb-6">
@@ -119,7 +125,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </a>
           </div>
 
-          {/* Social Proof badges */}
           <div className="mt-12 flex flex-wrap justify-center items-center gap-8 text-xs text-gray-500">
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="h-4 w-4 text-emerald-600" />
@@ -137,7 +142,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
       </section>
 
-      {/* SaaS Section */}
       {softwareDeals.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 mb-6">
@@ -155,7 +159,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </section>
       )}
 
-      {/* Deal of the Day */}
       {dealOfTheDay && (
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 mb-6">
@@ -209,14 +212,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                           % OFF
                         </span>
                       </div>
-                    )}
+                  )}
                 </div>
                 <Link
                   href={`/deal/${dealOfTheDay.slug}`}
                   className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-orange-500/25 hover:bg-orange-700 transition-all min-h-[44px]"
                 >
                   <Flame className="h-5 w-5" />
-                  <span>View Today&#39;s Best Deal</span>
+                  <span>View Today's Best Deal</span>
                 </Link>
               </div>
             </div>
@@ -224,9 +227,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </section>
       )}
 
-      {/* Main Deals Showcase */}
       <section id="deals" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Filter Navigation */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 pb-5">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Featured Price Drops</h2>
@@ -269,7 +270,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </div>
         </div>
 
-        {/* Deals Grid */}
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredDeals.map((product) => (
             <DealCard key={product.id} product={product} />
@@ -277,7 +277,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
       </section>
 
-      {/* How It Works */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold text-gray-900">How It Works</h2>

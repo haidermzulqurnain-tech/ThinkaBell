@@ -24,14 +24,16 @@ export function middleware(request: NextRequest) {
 
   const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com";
   const posthogHostname = new URL(posthogHost).hostname;
+  const sentryDsn = process.env.SENTRY_DSN || "";
+  const sentryIngestHost = sentryDsn ? new URL(sentryDsn).hostname : "";
 
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' https://cdn.onesignal.com https://cdn.posthog.com ${posthogHostname}`,
+    `script-src 'self' 'nonce-${nonce}' https://cdn.onesignal.com https://cdn.posthog.com ${posthogHostname} https://us-assets.i.posthog.com`,
     "style-src 'self' https://fonts.googleapis.com 'unsafe-inline'",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https:",
-    `connect-src 'self' https://onesignal.com ${posthogHostname}`,
+    `connect-src 'self' https://onesignal.com ${posthogHostname} https://us-assets.i.posthog.com https://us.i.posthog.com${sentryIngestHost ? ` ${sentryIngestHost}` : ""}`,
     "frame-ancestors 'none'",
     "form-action 'self'",
     "base-uri 'self'",

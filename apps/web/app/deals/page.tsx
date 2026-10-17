@@ -132,6 +132,14 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      {process.env.NODE_ENV !== "production" && (
+        <div className="mb-6 p-4 bg-blue-100 border border-blue-500 rounded text-sm text-center">
+          <p className="text-blue-800">
+            <strong>Beta version:</strong> This is a beta release — features may change.
+          </p>
+        </div>
+      )}
+
       <script
         type="application/ld+json"
         nonce={nonce}
